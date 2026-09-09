@@ -1,2 +1,8 @@
 # Project exclude paths
 /mecanica-dbo-v2/target/
+mecanica-dbo-front/node_modules/
+mecanica-dbo-front/dist/
+mecanica-dbo-front/.angular/
+mecanica-dbo-ocr/__pycache__/
+*.pyc
+.idea/

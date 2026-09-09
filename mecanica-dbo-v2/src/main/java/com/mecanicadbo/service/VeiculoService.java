@@ -16,6 +16,14 @@ public class VeiculoService {
     private final ClienteRepository clienteRepo;
 
     @Transactional(readOnly = true)
+    public List<Veiculo> listar(String q) {
+        if (q != null && !q.isBlank()) {
+            return veiculoRepo.findByPlacaContainingIgnoreCaseOrModeloContainingIgnoreCase(q, q);
+        }
+        return veiculoRepo.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public Veiculo buscarPorId(Long id) {
         return veiculoRepo.findById(id)
             .orElseThrow(() -> new RecursoNaoEncontradoException(

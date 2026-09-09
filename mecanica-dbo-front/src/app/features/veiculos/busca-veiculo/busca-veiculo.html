@@ -1,0 +1,18 @@
+﻿<div class="busca-container">
+  <h2>Busca por Placa</h2>
+  <mat-form-field appearance="outline">
+    <mat-label>Placa</mat-label>
+    <input matInput [(ngModel)]="placa" (keyup.enter)="buscar()" placeholder="ABC-1234" />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+  <button mat-raised-button color="primary" (click)="buscar()">Buscar</button>
+
+  <mat-spinner *ngIf="carregando" diameter="40" />
+  <p *ngIf="erro" class="erro">{{ erro }}</p>
+
+  <div *ngIf="veiculo" class="veiculo-card">
+    <h3>{{ veiculo.marca }} {{ veiculo.modelo }} — {{ veiculo.placa }}</h3>
+    <p>Cor: {{ veiculo.cor }} | Combustível: {{ veiculo.combustivel }}</p>
+    <p *ngIf="veiculo.anoFabricacao">Ano: {{ veiculo.anoFabricacao }}</p>
+  </div>
+</div>

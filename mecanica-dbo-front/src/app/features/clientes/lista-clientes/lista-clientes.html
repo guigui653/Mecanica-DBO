@@ -1,0 +1,65 @@
+<div class="header">
+  <h2>Clientes</h2>
+  <button mat-flat-button color="primary" (click)="abrirForm()">
+    <mat-icon>add</mat-icon> Novo Cliente
+  </button>
+</div>
+
+<div class="busca">
+  <mat-form-field appearance="outline" style="width: 400px;">
+    <mat-label>Buscar por nome, CPF ou telefone</mat-label>
+    <input matInput [(ngModel)]="termoBusca" (keyup.enter)="carregar()">
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+  <button mat-stroked-button (click)="carregar()">Buscar</button>
+</div>
+
+@if (erro) {
+  <p style="color: red;">{{ erro }}</p>
+}
+
+@if (carregando) {
+  <mat-spinner diameter="40"></mat-spinner>
+} @else {
+  <table mat-table [dataSource]="clientes" class="mat-elevation-z2">
+
+    <ng-container matColumnDef="nome">
+      <th mat-header-cell *matHeaderCellDef>Nome</th>
+      <td mat-cell *matCellDef="let c">{{ c.nome }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="cpf">
+      <th mat-header-cell *matHeaderCellDef>CPF</th>
+      <td mat-cell *matCellDef="let c">{{ c.cpf || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="telefone1">
+      <th mat-header-cell *matHeaderCellDef>Telefone</th>
+      <td mat-cell *matCellDef="let c">{{ c.telefone1 }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef>E-mail</th>
+      <td mat-cell *matCellDef="let c">{{ c.email || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="acoes">
+      <th mat-header-cell *matHeaderCellDef>Ações</th>
+      <td mat-cell *matCellDef="let c">
+        <button mat-icon-button color="primary" (click)="abrirForm(c)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="inativar(c)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+    <tr mat-row *matRowDef="let row; columns: colunas;"></tr>
+  </table>
+
+  @if (clientes.length === 0) {
+    <p style="margin-top: 16px; color: #666;">Nenhum cliente encontrado.</p>
+  }
+}

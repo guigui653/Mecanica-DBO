@@ -8,7 +8,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/ordens")
+@RequestMapping({"/api/ordens", "/api/ordens-servico"})
 @RequiredArgsConstructor
 @Tag(name = "Ordens de Serviço")
 public class PdfController {

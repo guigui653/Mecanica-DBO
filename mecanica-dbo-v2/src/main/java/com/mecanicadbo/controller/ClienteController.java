@@ -1,15 +1,16 @@
 package com.mecanicadbo.controller;
 
+import com.mecanicadbo.dto.VeiculoResumoDTO;
 import com.mecanicadbo.model.Cliente;
-import com.mecanicadbo.model.Veiculo;
 import com.mecanicadbo.service.ClienteService;
-import com.mecanicadbo.service.VeiculoService;
+import com.mecanicadbo.service.VeiculoConsultaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -19,7 +20,7 @@ import java.util.List;
 public class ClienteController {
 
     private final ClienteService clienteService;
-    private final VeiculoService veiculoService;
+    private final VeiculoConsultaService veiculoConsulta;
 
     @GetMapping
     @Operation(summary = "Listar ou buscar clientes",
@@ -36,8 +37,8 @@ public class ClienteController {
 
     @GetMapping("/{id}/veiculos")
     @Operation(summary = "Listar veículos de um cliente")
-    public List<Veiculo> veiculosDoCliente(@PathVariable Long id) {
-        return veiculoService.listarPorCliente(id);
+    public List<VeiculoResumoDTO> veiculosDoCliente(@PathVariable Long id) {
+        return veiculoConsulta.listarPorCliente(id);
     }
 
     @PostMapping

@@ -10,4 +10,6 @@ public interface VeiculoRepository extends JpaRepository<Veiculo, Long> {
     Optional<Veiculo> findByPlacaIgnoreCase(String placa);
 
     List<Veiculo> findByClienteIdAndAtivoTrue(Long clienteId);
+
+    List<Veiculo> findByPlacaContainingIgnoreCaseOrModeloContainingIgnoreCase(String placa, String modelo);
 }

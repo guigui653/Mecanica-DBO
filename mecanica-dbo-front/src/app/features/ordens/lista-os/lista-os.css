@@ -1,0 +1,12 @@
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.filtros { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+table { width: 100%; }
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}

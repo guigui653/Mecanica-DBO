@@ -102,7 +102,7 @@ def gerar_pdf(os_data: dict, caminho_saida: str):
     modelo        = veiculo.get("modelo", "—")
     cor           = veiculo.get("cor", "—")
     combustivel   = veiculo.get("combustivel", "—")
-    km            = os_data.get("kmEntrada", "—")
+    km = os_data.get("kmEntrada") or "—"
     data_entrada  = fmt_data(os_data.get("dataEntrada"))
     data_saida    = fmt_data(os_data.get("dataSaidaReal") or os_data.get("dataSaidaPrevista"))
     reclamacoes   = os_data.get("reclamacoes", "—")
@@ -443,5 +443,7 @@ if __name__ == "__main__":
         }
         gerar_pdf(os_teste, "/home/claude/recibo_teste.pdf")
     else:
-        os_data = json.loads(sys.argv[1])
+        # Lê JSON do arquivo temporário (evita problema de aspas no Windows)
+        with open(sys.argv[1], encoding="utf-8") as f:
+            os_data = json.load(f)
         gerar_pdf(os_data, sys.argv[2])
