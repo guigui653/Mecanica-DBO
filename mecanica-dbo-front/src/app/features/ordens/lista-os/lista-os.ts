@@ -40,6 +40,7 @@ export class ListaOs implements OnInit {
   termoBusca = '';
   carregando = false;
   erro = '';
+  excluindoId: number | null = null;
 
   ngOnInit() {
     this.carregar();
@@ -125,6 +126,32 @@ export class ListaOs implements OnInit {
 
   novaOs() {
     this.router.navigate(['/ordens/nova']);
+  }
+
+  excluirOs(event: Event, o: OsViewItem) {
+    event.stopPropagation();
+    if (!o.id) return;
+
+    const confirma = window.confirm(
+      `Excluir ${o.num} (${o.placa} — ${o.cliente})?\n\nEsta ação não pode ser desfeita.`
+    );
+    if (!confirma) return;
+
+    this.excluindoId = o.id;
+    this.service.excluir(o.id).subscribe({
+      next: () => {
+        this.todasOrdens = this.todasOrdens.filter(x => x.id !== o.id);
+        this.aplicarFiltros();
+        this.excluindoId = null;
+        this.cdr.markForCheck();
+      },
+      error: (e) => {
+        this.excluindoId = null;
+        const msg = e?.error?.mensagem ?? 'Não foi possível excluir a OS.';
+        window.alert(msg);
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   private obterLabelStatus(status: StatusOs): string {

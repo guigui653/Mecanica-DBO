@@ -107,4 +107,9 @@ export class OrdemServicoService {
   gerarPdf(osId: number): Observable<Blob> {
     return this.http.get(`${this.base}/${osId}/pdf`, { responseType: 'blob' });
   }
+
+  /** DELETE /ordens/{id} — só permitido quando status === 'ENTREGUE' */
+  excluir(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${id}`);
+  }
 }

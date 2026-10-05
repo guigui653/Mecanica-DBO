@@ -61,4 +61,36 @@
   color: color-mix(in srgb, var(--color-text) 55%, transparent);
 }
 .table-scroll { overflow-x: auto; max-width: 100%; }
-.table-scroll .table { min-width: 780px; }
+.table-scroll .table { min-width: 800px; }
+
+.os-acao {
+  text-align: center;
+  padding: 0 4px;
+}
+
+.btn-excluir {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: color-mix(in srgb, var(--color-text) 35%, transparent);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  font-size: 13px;
+}
+
+.btn-excluir:hover:not(:disabled) {
+  color: #c0392b;
+  background: color-mix(in srgb, #c0392b 8%, transparent);
+  border-color: color-mix(in srgb, #c0392b 30%, transparent);
+}
+
+.btn-excluir:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

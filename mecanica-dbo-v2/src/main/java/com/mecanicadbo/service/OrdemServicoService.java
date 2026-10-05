@@ -216,6 +216,22 @@ public class OrdemServicoService {
         entityManager.refresh(os);
     }
 
+    /**
+     * Exclui uma OS. Só é permitido se ela já estiver com status ENTREGUE.
+     * Os filhos (itens de peça, itens de serviço e notas fiscais) são apagados
+     * em cascata pelo JPA (CascadeType.ALL nos relacionamentos da entidade).
+     */
+    @Transactional
+    public void excluir(Long id) {
+        OrdemServico os = buscarPorId(id);
+        if (os.getStatus() != StatusOs.ENTREGUE) {
+            throw new RegraDeNegocioException(
+                    "Só é possível excluir uma OS com status ENTREGUE. "
+                  + "Esta OS está com status: " + os.getStatus() + ".");
+        }
+        osRepo.delete(os);
+    }
+
     // ------------------------------------------------------------------
 
     /**

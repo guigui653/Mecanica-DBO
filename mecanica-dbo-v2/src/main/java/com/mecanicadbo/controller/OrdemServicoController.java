@@ -153,4 +153,11 @@ public class OrdemServicoController {
         service.removerServico(osId, itemId);
         return consulta.buscarCompleta(osId);
     }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Excluir OS — só permitido quando o status for ENTREGUE")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        service.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
 }
