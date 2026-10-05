@@ -4,7 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter } from '@angular/router';
 import { App } from './app';
 
-import { AuthService } from './core/services/auth.service';
+import { AuthService } from './core/services/auth';
 
 describe('Shell da oficina', () => {
   let http: HttpTestingController;

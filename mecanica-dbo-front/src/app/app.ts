@@ -2,7 +2,7 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { catchError, of } from 'rxjs';
-import { AuthService } from './core/services/auth.service';
+import { AuthService } from './core/services/auth';
 
 @Component({
   selector: 'app-root',

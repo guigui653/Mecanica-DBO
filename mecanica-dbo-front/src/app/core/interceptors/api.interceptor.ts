@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../services/auth';
 
 const METODOS_SEGUROS = ['GET', 'HEAD', 'OPTIONS'];
 

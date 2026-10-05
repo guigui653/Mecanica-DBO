@@ -47,7 +47,6 @@ import java.util.Map;
 public class SecurityConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
-    private static final String SENHA_PADRAO = "mecanica2024";
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -68,12 +67,12 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder encoder) {
-        if (SENHA_PADRAO.equals(password)) {
-            log.warn("################################################################");
-            log.warn("# Usando a SENHA PADRÃO do login. Defina APP_PASSWORD antes de  #");
-            log.warn("# colocar o sistema na rede da oficina.                         #");
-            log.warn("################################################################");
+        // Sem senha padrão: a senha vem só da variável de ambiente APP_PASSWORD.
+        if (password == null || password.isBlank()) {
+            throw new IllegalStateException(
+                    "Defina a variável de ambiente APP_PASSWORD com a senha do login antes de iniciar o sistema.");
         }
+        log.info("Login configurado para o usuário '{}'.", username);
         var usuario = User.withUsername(username)
                 .password(encoder.encode(password))
                 .roles("ADMIN")
@@ -101,27 +100,27 @@ public class SecurityConfig {
         var csrfHandler = new CsrfTokenRequestAttributeHandler();
 
         http
-                .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .csrfTokenRequestHandler(csrfHandler))
-                .securityContext(sc -> sc.securityContextRepository(repo))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/login", "/api/auth/me", "/api/auth/logout").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .anyRequest().authenticated())
-                .formLogin(f -> f.disable())
-                .httpBasic(b -> b.disable())
-                .logout(l -> l.disable()) // logout é feito pelo AuthController
-                .exceptionHandling(e -> e
-                        .authenticationEntryPoint((req, res, ex) ->
-                                escreverJson(res, 401, "Sessão expirada ou usuário não autenticado."))
-                        .accessDeniedHandler((req, res, ex) ->
-                                escreverJson(res, 403, "Acesso negado (token CSRF ausente ou inválido).")))
-                // Força a gravação do cookie XSRF-TOKEN em toda resposta (Spring Security 6 só o grava se alguém ler o token)
-                .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class);
+            .cors(Customizer.withDefaults())
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrfTokenRequestHandler(csrfHandler))
+            .securityContext(sc -> sc.securityContextRepository(repo))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/me", "/api/auth/logout").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/error").permitAll()
+                .anyRequest().authenticated())
+            .formLogin(f -> f.disable())
+            .httpBasic(b -> b.disable())
+            .logout(l -> l.disable()) // logout é feito pelo AuthController
+            .exceptionHandling(e -> e
+                .authenticationEntryPoint((req, res, ex) ->
+                        escreverJson(res, 401, "Sessão expirada ou usuário não autenticado."))
+                .accessDeniedHandler((req, res, ex) ->
+                        escreverJson(res, 403, "Acesso negado (token CSRF ausente ou inválido).")))
+            // Força a gravação do cookie XSRF-TOKEN em toda resposta (Spring Security 6 só o grava se alguém ler o token)
+            .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class);
 
         return http.build();
     }

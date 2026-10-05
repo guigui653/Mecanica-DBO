@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -153,6 +155,23 @@ public class GlobalExceptionHandler {
         log.error("Falha na geração do PDF: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(erro(500,
                 "Não foi possível gerar o recibo em PDF. O detalhe foi gravado no log do servidor."));
+    }
+
+    /**
+     * Exceções de segurança lançadas DENTRO de um controller (ex.: @PreAuthorize).
+     * Sem estes handlers, o handler genérico abaixo as transformaria em 500.
+     * As que acontecem nos filtros (sem sessão, CSRF) são respondidas pelo SecurityConfig.
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleNaoAutenticado(AuthenticationException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(erro(401, "Sessão expirada ou usuário não autenticado."));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAcessoNegado(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(erro(403, "Acesso negado."));
     }
 
     /**
