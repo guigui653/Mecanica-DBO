@@ -6,6 +6,7 @@ import com.mecanicadbo.service.OrdemServicoConsultaService;
 import com.mecanicadbo.service.OrdemServicoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
@@ -14,6 +15,21 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * O QUE MUDOU AQUI
+ * ----------------
+ * Os três @RequestBody que recebiam entidade (OrdemServico, ItemPeca,
+ * ItemServico) passaram a receber DTOs de request, e todos ganharam @Valid.
+ *
+ * O motivo é sério. Com a entidade no corpo, um POST assim:
+ *
+ *     POST /api/ordens/veiculo/1
+ *     { "id": 1, "status": "ENTREGUE", "totalGeral": 99999 }
+ *
+ * não criava OS nenhuma. O repo.save() com id preenchido faz merge, ou seja,
+ * UPDATE na OS 1 — e todo campo ausente no JSON vira null no banco. Um POST
+ * apagava uma OS antiga. Os DTOs não têm campo id, então não há o que mandar.
+ */
 @RestController
 @RequestMapping("/api/ordens")
 @RequiredArgsConstructor
@@ -24,7 +40,7 @@ public class OrdemServicoController {
     private final OrdemServicoConsultaService consulta;
 
     @GetMapping
-    @Operation(summary = "Buscar OS por cliente ou placa")
+    @Operation(summary = "Buscar OS por cliente, placa ou número")
     public List<OrdemServicoDTO> buscar(@RequestParam(required = false) String q) {
         return consulta.buscar(q);
     }
@@ -35,11 +51,20 @@ public class OrdemServicoController {
         return consulta.listarAbertas();
     }
 
+    /**
+     * inicio e fim agora são opcionais (required = false).
+     *
+     * Antes os dois eram obrigatórios: chamar /periodo?inicio=2026-01-01 sem o
+     * fim devolvia 500 do Spring, e não um erro explicando o que faltava.
+     * Agora dá para pedir "tudo a partir de janeiro" mandando só o início.
+     */
     @GetMapping("/periodo")
-    @Operation(summary = "Listar OS por período")
+    @Operation(summary = "Listar OS por período (início e fim são opcionais)")
     public List<OrdemServicoDTO> porPeriodo(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim
     ) {
         return consulta.listarPorPeriodo(inicio, fim);
     }
@@ -60,11 +85,21 @@ public class OrdemServicoController {
     @Operation(summary = "Criar nova OS para um veículo")
     public ResponseEntity<OrdemServicoDTO> criar(
             @PathVariable Long veiculoId,
-            @RequestBody OrdemServico os
+            @RequestBody @Valid CriarOsRequest dados
     ) {
-        OrdemServico salva = service.criar(veiculoId, os);
+        OrdemServico salva = service.criar(veiculoId, dados);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(consulta.buscarCompleta(salva.getId()));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar dados da OS — campos não enviados são preservados")
+    public OrdemServicoDTO atualizar(
+            @PathVariable Long id,
+            @RequestBody @Valid AtualizarOsRequest dados
+    ) {
+        service.atualizar(id, dados);
+        return consulta.buscarCompleta(id);
     }
 
     @PatchMapping("/{id}/status")
@@ -81,7 +116,7 @@ public class OrdemServicoController {
     @Operation(summary = "Adicionar peça à OS")
     public ResponseEntity<OrdemServicoDTO> adicionarPeca(
             @PathVariable Long id,
-            @RequestBody ItemPeca item
+            @RequestBody @Valid ItemPecaRequest item
     ) {
         service.adicionarPeca(id, item);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -102,7 +137,7 @@ public class OrdemServicoController {
     @Operation(summary = "Adicionar serviço à OS")
     public ResponseEntity<OrdemServicoDTO> adicionarServico(
             @PathVariable Long id,
-            @RequestBody ItemServico item
+            @RequestBody @Valid ItemServicoRequest item
     ) {
         service.adicionarServico(id, item);
         return ResponseEntity.status(HttpStatus.CREATED)

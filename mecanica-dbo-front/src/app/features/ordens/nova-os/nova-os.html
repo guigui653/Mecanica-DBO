@@ -1,0 +1,56 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <a routerLink="/ordens">← Ordens de serviço</a>
+      <h1 class="page-title">Nova ordem de serviço</h1>
+      <p class="page-subtitle">Selecione o veículo e registre a entrada na oficina.</p>
+    </div>
+  </div>
+
+  <div class="card nova-os-card">
+    <form (ngSubmit)="buscarVeiculo()" class="busca-placa">
+      <div class="field">
+        <label for="nova-placa">Placa do veículo</label>
+        <input id="nova-placa" name="placa" class="input" maxlength="8" placeholder="ABC1D23"
+               [ngModel]="placa()" (ngModelChange)="alterarPlaca($event)" [disabled]="buscando() || salvando()">
+      </div>
+      <button type="submit" class="btn btn-secondary" [disabled]="buscando() || salvando()">
+        {{ buscando() ? 'Buscando…' : 'Buscar veículo' }}
+      </button>
+    </form>
+
+    @if (veiculo(); as v) {
+      <p class="veiculo-selecionado" role="status">
+        <strong>{{ v.placa }}</strong> · {{ v.marca }} {{ v.modelo }}
+        <br>Proprietário: {{ v.cliente?.nome ?? 'Não informado' }}
+      </p>
+    }
+
+    <form (ngSubmit)="criar()">
+      <div class="grid-2">
+        <div class="field">
+          <label for="nova-km">Quilometragem na entrada</label>
+          <input id="nova-km" name="km" class="input" type="number" min="0" max="2147483647" step="1"
+                 [ngModel]="km()" (ngModelChange)="km.set($event)" [disabled]="salvando()">
+        </div>
+        <div class="field">
+          <label for="nova-previsao">Previsão de entrega</label>
+          <input id="nova-previsao" name="previsao" class="input" type="date"
+                 [ngModel]="previsao()" (ngModelChange)="previsao.set($event)" [disabled]="salvando()">
+        </div>
+      </div>
+      <div class="field">
+        <label for="nova-reclamacoes">Reclamações do cliente</label>
+        <textarea id="nova-reclamacoes" name="reclamacoes" class="textarea" placeholder="Descreva o que o cliente relatou"
+                  [ngModel]="reclamacoes()" (ngModelChange)="reclamacoes.set($event)" [disabled]="salvando()"></textarea>
+      </div>
+      @if (erro()) { <p class="field-error" role="alert">{{ erro() }}</p> }
+      <div class="row">
+        <button type="submit" class="btn btn-primary" [disabled]="!veiculo() || buscando() || salvando()">
+          {{ salvando() ? 'Criando…' : 'Criar ordem de serviço' }}
+        </button>
+        <a routerLink="/veiculos" class="btn btn-ghost">Cadastrar veículo</a>
+      </div>
+    </form>
+  </div>
+</div>

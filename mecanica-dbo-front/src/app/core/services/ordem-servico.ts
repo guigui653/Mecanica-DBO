@@ -1,7 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { OrdemServico, ItemPeca, ItemServico, StatusOs } from '../../shared/models/ordem-servico.model';
+import {
+  OrdemServico, ItemPeca, ItemServico, StatusOs, AtualizarOsRequest
+} from '../../shared/models/ordem-servico.model';
 
 @Injectable({ providedIn: 'root' })
 export class OrdemServicoService {
@@ -70,24 +72,35 @@ export class OrdemServicoService {
     );
   }
 
-  /** POST /ordens/{osId}/pecas — 201 Created */
-  adicionarPeca(osId: number, item: ItemPeca): Observable<ItemPeca> {
-    return this.http.post<ItemPeca>(`${this.base}/${osId}/pecas`, item);
+  /**
+   * PUT /ordens/{id} — km, previsão, reclamações e diagnóstico.
+   * Recusado com 409 se a OS já estiver ENTREGUE.
+   */
+  atualizar(id: number, dados: AtualizarOsRequest): Observable<OrdemServico> {
+    return this.http.put<OrdemServico>(`${this.base}/${id}`, dados);
   }
 
-  /** DELETE /ordens/{osId}/pecas/{itemId} — 204 No Content */
-  removerPeca(osId: number, itemId: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${osId}/pecas/${itemId}`);
+  // Os métodos de itens devolvem a OS completa: o trigger do banco recalcula
+  // os totais e a resposta já vem com os valores novos, sem um GET extra.
+
+  /** POST /ordens/{osId}/pecas — 201 Created */
+  adicionarPeca(osId: number, item: ItemPeca): Observable<OrdemServico> {
+    return this.http.post<OrdemServico>(`${this.base}/${osId}/pecas`, item);
+  }
+
+  /** DELETE /ordens/{osId}/pecas/{itemId} */
+  removerPeca(osId: number, itemId: number): Observable<OrdemServico> {
+    return this.http.delete<OrdemServico>(`${this.base}/${osId}/pecas/${itemId}`);
   }
 
   /** POST /ordens/{osId}/servicos — 201 Created */
-  adicionarServico(osId: number, item: ItemServico): Observable<ItemServico> {
-    return this.http.post<ItemServico>(`${this.base}/${osId}/servicos`, item);
+  adicionarServico(osId: number, item: ItemServico): Observable<OrdemServico> {
+    return this.http.post<OrdemServico>(`${this.base}/${osId}/servicos`, item);
   }
 
-  /** DELETE /ordens/{osId}/servicos/{itemId} — 204 No Content */
-  removerServico(osId: number, itemId: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${osId}/servicos/${itemId}`);
+  /** DELETE /ordens/{osId}/servicos/{itemId} */
+  removerServico(osId: number, itemId: number): Observable<OrdemServico> {
+    return this.http.delete<OrdemServico>(`${this.base}/${osId}/servicos/${itemId}`);
   }
 
   /** GET /ordens/{osId}/pdf — retorna Blob (application/pdf) */

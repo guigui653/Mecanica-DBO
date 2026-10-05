@@ -1,0 +1,180 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Painel do dia</h1>
+      <p class="page-subtitle">{{ hoje | date:'EEEE, d \'de\' MMMM':'':'pt-BR' }}</p>
+    </div>
+    <div class="row">
+      <button class="btn btn-secondary" (click)="recarregar()">Atualizar</button>
+      <a routerLink="/ordens" class="btn btn-primary">Abrir ordem de serviço</a>
+    </div>
+  </div>
+
+  @if (erro()) {
+    <div class="alert-erro">
+      {{ erro() }}
+      <button class="btn btn-ghost" (click)="recarregar()">Tentar de novo</button>
+    </div>
+  }
+
+  @if (carregando()) {
+    <div class="spinner-wrap">Carregando dados da oficina…</div>
+  } @else {
+
+    <!-- ── MÉTRICAS ────────────────────────────────────── -->
+    <div class="grid-4" style="margin-bottom:22px">
+
+      <div class="metric">
+        <div class="metric-label">No pátio agora</div>
+        <div class="metric-value">{{ noPatio().length }}</div>
+        <div class="metric-note">
+          {{ abertas().length }} aguardando · {{ emAndamento().length }} em serviço
+        </div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Prontas para entrega</div>
+        <div class="metric-value">{{ concluidas().length }}</div>
+        <div class="metric-note">
+          @if (concluidas().length > 0) {
+            avisar o cliente
+          } @else {
+            nenhuma no momento
+          }
+        </div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Faturamento do mês</div>
+        <div class="metric-value">{{ faturamentoMes() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</div>
+        <div class="metric-note">apenas OS entregues</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Clientes</div>
+        <div class="metric-value">{{ clientes().length }}</div>
+        <div class="metric-note">
+          @if (clientesNovosMes() > 0) {
+            {{ clientesNovosMes() }} novo(s) este mês
+          } @else {
+            nenhum novo este mês
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <div class="painel-grid">
+
+      <!-- ── VEÍCULOS NO PÁTIO ─────────────────────────── -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Veículos no pátio</h2>
+          <a routerLink="/ordens" class="btn btn-ghost">Ver todas</a>
+        </div>
+
+        @if (patioOrdenado().length === 0) {
+          <div class="table-empty">
+            Nenhum veículo na oficina agora.
+          </div>
+        } @else {
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Veículo</th>
+                <th>Cliente</th>
+                <th>Parado há</th>
+                <th>Situação</th>
+                <th class="col-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (os of patioOrdenado(); track os.id) {
+                <tr class="clickable" (click)="abrirOs(os.id)">
+                  <td>
+                    <span class="placa">{{ os.veiculo?.placa ?? '—' }}</span>
+                    <div class="text-sm text-faint" style="margin-top:3px">
+                      {{ os.veiculo?.marca }} {{ os.veiculo?.modelo }}
+                    </div>
+                  </td>
+                  <td>{{ os.veiculo?.cliente?.nome ?? '—' }}</td>
+                  <td class="tabular">
+                    @if (diasParado(os.dataEntrada) === 0) {
+                      entrou hoje
+                    } @else {
+                      {{ diasParado(os.dataEntrada) }}
+                      {{ diasParado(os.dataEntrada) === 1 ? 'dia' : 'dias' }}
+                    }
+                  </td>
+                  <td>
+                    <span [class]="classeBadge(os.status)">
+                      {{ rotuloStatus(os.status) }}
+                    </span>
+                  </td>
+                  <td class="col-right">
+                    {{ (os.totalGeral ?? 0) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <!-- ── COLUNA LATERAL ────────────────────────────── -->
+      <div class="col" style="gap:16px">
+
+        <!-- Prontas para entrega -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Prontas para entrega</h2>
+          </div>
+
+          @if (concluidas().length === 0) {
+            <div class="text-sm text-faint" style="padding:6px 0">
+              Nenhuma OS concluída aguardando retirada.
+            </div>
+          } @else {
+            <div class="col" style="gap:10px">
+              @for (os of concluidas(); track os.id) {
+                <button type="button" class="item-linha" (click)="abrirOs(os.id)">
+                  <div>
+                    <span class="placa">{{ os.veiculo?.placa }}</span>
+                    <div class="text-sm text-soft" style="margin-top:3px">
+                      {{ os.veiculo?.cliente?.nome }}
+                    </div>
+                  </div>
+                  <span class="tabular text-sm">
+                    {{ (os.totalGeral ?? 0) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                  </span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Atalhos -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Atalhos</h2>
+          </div>
+          <div class="col" style="gap:7px">
+            <a routerLink="/ordens" class="btn btn-secondary btn-block">
+              Abrir ordem de serviço
+            </a>
+            <a routerLink="/clientes" class="btn btn-secondary btn-block">
+              Cadastrar cliente
+            </a>
+            <a routerLink="/veiculos" class="btn btn-secondary btn-block">
+              Consultar placa
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  }
+
+</div>

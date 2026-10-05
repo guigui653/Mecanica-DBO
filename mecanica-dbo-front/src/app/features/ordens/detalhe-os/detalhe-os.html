@@ -1,1 +1,397 @@
-﻿<p>detalhe-os — em desenvolvimento</p>
+<div class="page">
+
+  @if (carregando()) {
+    <div class="spinner-wrap">Carregando ordem de serviço…</div>
+  } @else if (erro()) {
+    <div class="alert-erro">
+      {{ erro() }}
+      <div class="row">
+        <button class="btn btn-ghost" (click)="recarregar()">Tentar de novo</button>
+        <a routerLink="/ordens" class="btn btn-secondary">Voltar à lista</a>
+      </div>
+    </div>
+  } @else {
+   @if (os(); as o) {
+
+    <!-- ── CABEÇALHO ─────────────────────────────────────── -->
+    <div class="page-header">
+      <div>
+        <a routerLink="/ordens" class="voltar-link">← Ordens de serviço</a>
+        <div class="row" style="margin-top:6px">
+          <h1 class="page-title">OS #{{ o.id }}</h1>
+          <span [class]="classeBadge(o.status)">{{ rotulo(o.status) }}</span>
+        </div>
+        <p class="page-subtitle">
+          Entrada {{ o.dataEntrada | date:'dd/MM/yyyy' }}
+          @if (o.status !== 'ENTREGUE') {
+            · {{ diasNaOficina() }}
+            {{ diasNaOficina() === 1 ? 'dia' : 'dias' }} na oficina
+          } @else if (o.dataSaidaReal) {
+            · entregue em {{ o.dataSaidaReal | date:'dd/MM/yyyy' }}
+          }
+        </p>
+      </div>
+
+      <div class="row">
+        <button class="btn btn-secondary" [disabled]="salvando() || gerandoPdf()" (click)="baixarPdf()">{{ gerandoPdf() ? 'Gerando recibo…' : 'Baixar recibo' }}</button>
+        @if (proximoPasso(); as passo) {
+          <button class="btn btn-primary"
+                  [disabled]="salvando()"
+                  (click)="avancarStatus()">
+            {{ passo.rotulo }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (somenteLeitura()) {
+      <div class="aviso-leitura">
+        Esta OS foi entregue e está fechada para edição. O histórico fica
+        preservado para consulta futura do veículo.
+      </div>
+    }
+
+    <!-- ── VEÍCULO E CLIENTE ─────────────────────────────── -->
+    <div class="card faixa-veiculo">
+      <div class="veiculo-bloco">
+        <span class="placa placa-grande">{{ o.veiculo?.placa ?? '—' }}</span>
+        <div>
+          <div class="veiculo-nome">{{ o.veiculo?.marca }} {{ o.veiculo?.modelo }}</div>
+          <div class="text-sm text-faint">
+            {{ o.veiculo?.cor }}
+            @if (o.veiculo?.combustivel) { · {{ o.veiculo?.combustivel | titlecase }} }
+            @if (o.veiculo?.anoFabricacao) { · {{ o.veiculo?.anoFabricacao }} }
+          </div>
+        </div>
+      </div>
+
+      <div class="divisor-vertical"></div>
+
+      <div>
+        <div class="metric-label">Proprietário</div>
+        <div class="cliente-nome">{{ o.veiculo?.cliente?.nome ?? '—' }}</div>
+        <div class="text-sm text-faint">{{ o.veiculo?.cliente?.telefone1 }}</div>
+      </div>
+    </div>
+
+    <!-- ── CORPO ─────────────────────────────────────────── -->
+    <div class="os-grid">
+
+      <div class="col" style="gap:16px">
+
+        <!-- Queixa e laudo -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Queixa e diagnóstico</h2>
+            @if (temAlteracoes() && !somenteLeitura()) {
+              <button class="btn btn-primary"
+                      [disabled]="salvando()"
+                      (click)="salvar()">
+                {{ salvando() ? 'Salvando…' : 'Salvar alterações' }}
+              </button>
+            }
+          </div>
+
+          @if (temAlteracoes() && !somenteLeitura()) {
+            <p class="field-hint" role="status">Há alterações ainda não salvas. Salve antes de mudar a situação ou baixar o recibo.</p>
+          }
+          @if (formErro()) {
+            <p class="field-error" role="alert">{{ formErro() }}</p>
+          }
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="km">Quilometragem na entrada</label>
+              <input id="km" class="input" type="number" min="0"
+                     [ngModel]="fKm()"
+                     (ngModelChange)="fKm.set($event)"
+                     [disabled]="somenteLeitura() || salvando()"
+                     placeholder="87500">
+            </div>
+            <div class="field">
+              <label for="prev">Previsão de entrega</label>
+              <input id="prev" class="input" type="date"
+                     [ngModel]="fSaidaPrevista()"
+                     (ngModelChange)="fSaidaPrevista.set($event)"
+                     [disabled]="somenteLeitura() || salvando()">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="recl">Reclamações do cliente</label>
+            <textarea id="recl" class="textarea"
+                      [ngModel]="fReclamacoes()"
+                      (ngModelChange)="fReclamacoes.set($event)"
+                      [disabled]="somenteLeitura() || salvando()"
+                      placeholder="Barulho na suspensão, direção pesada…"></textarea>
+          </div>
+
+          <div class="field" style="margin-bottom:0">
+            <label for="diag">Diagnóstico do mecânico</label>
+            <textarea id="diag" class="textarea textarea-alto"
+                      [ngModel]="fDiagnostico()"
+                      (ngModelChange)="fDiagnostico.set($event)"
+                      [disabled]="somenteLeitura() || salvando()"
+                      placeholder="1 - Direção hidráulica vazando na caixa…"></textarea>
+            <span class="field-hint">Este texto sai no recibo entregue ao cliente.</span>
+          </div>
+        </div>
+
+        <!-- Peças -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Peças</h2>
+            <span class="text-sm text-faint">{{ pecas().length }} item(ns)</span>
+          </div>
+
+          @if (pecas().length === 0) {
+            <div class="table-empty">Nenhuma peça lançada.</div>
+          } @else {
+            <div class="table-scroll"><table class="table">
+              <thead>
+                <tr>
+                  <th>Descrição</th>
+                  <th class="col-right">Qtd</th>
+                  <th class="col-right">Unitário</th>
+                  <th class="col-right">Total</th>
+                  @if (!somenteLeitura()) { <th class="col-actions"></th> }
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of pecas(); track p.id) {
+                  <tr>
+                    <td>
+                      {{ p.descricao }}
+                      @if (p.pagoPeloCliente) {
+                        <span class="tag-cliente">pago pelo cliente</span>
+                      }
+                    </td>
+                    <td class="col-right">{{ p.quantidade }}</td>
+                    <td class="col-right">
+                      {{ p.valorUnitario | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                    </td>
+                    <td class="col-right"
+                        [class.valor-fora]="p.pagoPeloCliente">
+                      {{ (p.valorTotal ?? 0) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                    </td>
+                    @if (!somenteLeitura()) {
+                      <td class="col-actions">
+                        <button class="btn btn-ghost"
+                                [disabled]="salvando()"
+                                (click)="removerPeca(p)">Remover</button>
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table></div>
+          }
+
+          @if (!somenteLeitura()) {
+            <div class="linha-nova">
+              <div class="field campo-desc">
+                <label for="pdesc">Nova peça</label>
+                <input id="pdesc" class="input" maxlength="200" [disabled]="salvando()"
+                       [class.is-invalid]="pErro() && !pDescricao().trim()"
+                       [ngModel]="pDescricao()"
+                       (ngModelChange)="pDescricao.set($event); pErro.set(null)"
+                       placeholder="Pastilha de freio dianteira">
+              </div>
+              <div class="field campo-qtd">
+                <label for="pqtd">Qtd</label>
+                <input id="pqtd" class="input" type="number" min="0.001" step="any" [disabled]="salvando()"
+                       [ngModel]="pQuantidade()"
+                       (ngModelChange)="pQuantidade.set($event)">
+              </div>
+              <div class="field campo-valor">
+                <label for="pval">Valor unitário</label>
+                <input id="pval" class="input" type="number" min="0" step="0.01" [disabled]="salvando()"
+                       [class.is-invalid]="pErro() && pValor() === null"
+                       [ngModel]="pValor()"
+                       (ngModelChange)="pValor.set($event); pErro.set(null)"
+                       placeholder="74,28">
+              </div>
+              <button class="btn btn-secondary btn-add"
+                      [disabled]="salvando()"
+                      (click)="adicionarPeca()">Adicionar</button>
+            </div>
+
+            <label class="radio" style="margin-top:2px">
+              <input type="checkbox" [disabled]="salvando()"
+                     [ngModel]="pPagoCliente()"
+                     (ngModelChange)="pPagoCliente.set($event)">
+              <span class="dot"></span>
+              Peça trazida ou paga pelo cliente — fica fora do total cobrado
+            </label>
+
+            @if (pErro()) {
+              <div class="field-error" style="margin-top:6px">{{ pErro() }}</div>
+            }
+          }
+        </div>
+
+        <!-- Serviços -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Mão de obra</h2>
+            <span class="text-sm text-faint">{{ servicos().length }} item(ns)</span>
+          </div>
+
+          @if (servicos().length === 0) {
+            <div class="table-empty">Nenhum serviço lançado.</div>
+          } @else {
+            <div class="table-scroll"><table class="table">
+              <thead>
+                <tr>
+                  <th>Descrição</th>
+                  <th class="col-right">Valor</th>
+                  @if (!somenteLeitura()) { <th class="col-actions"></th> }
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of servicos(); track s.id) {
+                  <tr>
+                    <td>{{ s.descricao }}</td>
+                    <td class="col-right">
+                      {{ s.valor | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                    </td>
+                    @if (!somenteLeitura()) {
+                      <td class="col-actions">
+                        <button class="btn btn-ghost"
+                                [disabled]="salvando()"
+                                (click)="removerServico(s)">Remover</button>
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table></div>
+          }
+
+          @if (!somenteLeitura()) {
+            <div class="linha-nova">
+              <div class="field campo-desc">
+                <label for="sdesc">Novo serviço</label>
+                <input id="sdesc" class="input" maxlength="200" [disabled]="salvando()"
+                       [class.is-invalid]="sErro() && !sDescricao().trim()"
+                       [ngModel]="sDescricao()"
+                       (ngModelChange)="sDescricao.set($event); sErro.set(null)"
+                       placeholder="Troca de rolamento">
+              </div>
+              <div class="field campo-valor">
+                <label for="sval">Valor</label>
+                <input id="sval" class="input" type="number" min="0" step="0.01" [disabled]="salvando()"
+                       [class.is-invalid]="sErro() && sValor() === null"
+                       [ngModel]="sValor()"
+                       (ngModelChange)="sValor.set($event); sErro.set(null)"
+                       placeholder="200,00">
+              </div>
+              <button class="btn btn-secondary btn-add"
+                      [disabled]="salvando()"
+                      (click)="adicionarServico()">Adicionar</button>
+            </div>
+
+            @if (sErro()) {
+              <div class="field-error" style="margin-top:6px">{{ sErro() }}</div>
+            }
+          }
+        </div>
+
+      </div>
+
+      <!-- ── LATERAL ─────────────────────────────────────── -->
+      <div class="col lateral" style="gap:16px">
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Totais</h2>
+          </div>
+
+          <div class="linha-total">
+            <span class="text-soft">Peças</span>
+            <span class="tabular">
+              {{ (o.totalPecas ?? 0) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+            </span>
+          </div>
+          <div class="linha-total">
+            <span class="text-soft">Mão de obra</span>
+            <span class="tabular">
+              {{ (o.totalServicos ?? 0) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+            </span>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="linha-total linha-geral">
+            <span>Total</span>
+            <span class="tabular">
+              {{ (o.totalGeral ?? 0) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+            </span>
+          </div>
+
+          @if (totalPagoPeloCliente() > 0) {
+            <div class="nota-cliente">
+              {{ totalPagoPeloCliente() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+              em peças do cliente não entram neste total.
+            </div>
+          }
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Andamento</h2>
+          </div>
+
+          <div class="linha-total">
+            <span class="text-soft">Situação</span>
+            <span [class]="classeBadge(o.status)">{{ rotulo(o.status) }}</span>
+          </div>
+          <div class="linha-total">
+            <span class="text-soft">Entrada</span>
+            <span class="tabular">{{ o.dataEntrada | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="linha-total">
+            <span class="text-soft">Previsão</span>
+            <span class="tabular">
+              {{ o.dataSaidaPrevista ? (o.dataSaidaPrevista | date:'dd/MM/yyyy') : '—' }}
+            </span>
+          </div>
+          @if (o.dataSaidaReal) {
+            <div class="linha-total">
+              <span class="text-soft">Entrega</span>
+              <span class="tabular">{{ o.dataSaidaReal | date:'dd/MM/yyyy' }}</span>
+            </div>
+          }
+          @if (o.kmEntrada != null) {
+            <div class="linha-total">
+              <span class="text-soft">Quilometragem</span>
+              <span class="tabular">{{ o.kmEntrada | number:'1.0-0':'pt-BR' }} km</span>
+            </div>
+          }
+
+          @if (proximoPasso(); as passo) {
+            <button class="btn btn-primary btn-block"
+                    style="margin-top:12px"
+                    [disabled]="salvando()"
+                    (click)="avancarStatus()">
+              {{ passo.rotulo }}
+            </button>
+          }
+        </div>
+
+      </div>
+
+    </div>
+   }
+  }
+
+  <!-- ── TOASTS ──────────────────────────────────────────── -->
+  @if (toasts().length > 0) {
+    <div class="toast-wrap">
+      @for (t of toasts(); track t.id) {
+        <div class="toast" [class.toast-error]="t.erro">{{ t.texto }}</div>
+      }
+    </div>
+  }
+
+</div>

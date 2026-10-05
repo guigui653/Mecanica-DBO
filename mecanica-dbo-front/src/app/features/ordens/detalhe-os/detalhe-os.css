@@ -1,1 +1,191 @@
-﻿
+/* ============================================================
+   Detalhe da ordem de serviço
+   Arquivo: src/app/features/ordens/detalhe-os/detalhe-os.css
+   ============================================================ */
+
+.voltar-link {
+  font-size: 12.5px;
+  color: var(--color-text-soft);
+}
+
+.table-scroll { overflow-x: auto; max-width: 100%; }
+.table-scroll .table { min-width: 520px; }
+.voltar-link:hover {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+/* ── Faixa do veículo ───────────────────────────────────── */
+
+.faixa-veiculo {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.veiculo-bloco {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.placa-grande {
+  font-size: 15px;
+  padding: 6px 12px;
+  letter-spacing: 0.08em;
+}
+
+.veiculo-nome {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.cliente-nome {
+  font-size: 15px;
+  margin-top: 3px;
+}
+
+.divisor-vertical {
+  width: 1px;
+  align-self: stretch;
+  background: var(--color-divider);
+}
+
+/* ── Grade principal ────────────────────────────────────── */
+
+.os-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.lateral {
+  position: sticky;
+  top: 16px;
+}
+
+/* ── Aviso de OS fechada ────────────────────────────────── */
+
+.aviso-leitura {
+  background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--color-accent-700);
+  margin-bottom: 16px;
+}
+
+.alert-erro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: color-mix(in srgb, #c53030 7%, transparent);
+  border: 1px solid color-mix(in srgb, #c53030 25%, transparent);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-size: 13.5px;
+  color: #9b2c2c;
+}
+
+/* ── Linha de inclusão de item ──────────────────────────── */
+
+.linha-nova {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-divider);
+  flex-wrap: wrap;
+}
+
+.linha-nova .field {
+  margin-bottom: 0;
+}
+
+.campo-desc  { flex: 1 1 200px; min-width: 0; }
+.campo-qtd   { flex: 0 0 68px; }
+.campo-valor { flex: 0 0 130px; }
+
+.btn-add {
+  flex: none;
+  min-height: 40px;
+}
+
+/* ── Marcações na tabela de peças ───────────────────────── */
+
+.tag-cliente {
+  display: inline-block;
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+  padding: 2px 7px;
+  margin-left: 7px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--color-accent) 13%, transparent);
+  color: var(--color-accent-700);
+  white-space: nowrap;
+}
+
+/* Valor que não entra no total cobrado */
+.valor-fora {
+  color: var(--color-text-faint);
+  text-decoration: line-through;
+}
+
+/* ── Totais ─────────────────────────────────────────────── */
+
+.linha-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 13.5px;
+}
+
+.linha-geral {
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 500;
+  padding: 4px 0 2px;
+}
+
+.linha-geral .tabular {
+  color: var(--color-accent-700);
+}
+
+.nota-cliente {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--color-text-faint);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-divider);
+}
+
+/* ── Textarea do diagnóstico ────────────────────────────── */
+
+.textarea-alto {
+  min-height: 150px;
+}
+
+/* ── Responsivo ─────────────────────────────────────────── */
+
+@media (max-width: 1080px) {
+  .os-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lateral {
+    position: static;
+  }
+  .divisor-vertical {
+    display: none;
+  }
+}

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -80,7 +80,7 @@ import { Cliente } from '../../../shared/models/cliente.model';
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button (click)="fechar()">Cancelar</button>
+      <button mat-button (click)="fechar()" [disabled]="salvando">Cancelar</button>
       <button mat-flat-button color="primary"
               [disabled]="form.invalid || salvando" (click)="salvar()">
         {{ salvando ? 'Salvando...' : 'Salvar' }}
@@ -88,7 +88,8 @@ import { Cliente } from '../../../shared/models/cliente.model';
     </mat-dialog-actions>
   `,
   styles: [`
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; min-width: 520px; padding-top: 8px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; min-width: 0; padding-top: 8px; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
     .full { grid-column: 1 / -1; }
   `]
 })
@@ -97,6 +98,7 @@ export class FormVeiculo implements OnInit {
   private service = inject(VeiculoService);
   private clienteService = inject(ClienteService);
   private ref = inject(MatDialogRef<FormVeiculo>);
+  private cdr = inject(ChangeDetectorRef);
   data = inject<{ veiculo?: Veiculo; clienteId?: number } | null>(MAT_DIALOG_DATA);
 
   clientes: Cliente[] = [];
@@ -116,18 +118,24 @@ export class FormVeiculo implements OnInit {
 
   ngOnInit() {
     this.clienteService.listar().subscribe({
-      next: (c) => (this.clientes = c),
-      error: () => (this.erro = 'Não foi possível carregar os clientes')
+      next: c => { this.clientes = c; this.cdr.markForCheck(); },
+      error: () => { this.erro = 'Não foi possível carregar os clientes'; this.cdr.markForCheck(); }
     });
   }
 
   salvar() {
+    if (this.salvando || this.form.invalid) { this.form.markAllAsTouched(); return; }
+    const placa = (this.form.value.placa ?? '').trim().toUpperCase().replace(/[\s-]/g, '');
+    if (!/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(placa)) {
+      this.erro = 'Informe uma placa válida, como ABC1234 ou ABC1D23.';
+      return;
+    }
     this.salvando = true;
     this.erro = '';
     const v = this.form.value;
 
     const veiculoPayload: Veiculo = {
-      placa: (v.placa ?? '').toUpperCase().trim(),
+      placa,
       marca: v.marca ?? '',
       modelo: v.modelo ?? '',
       cor: v.cor ?? '',
@@ -143,11 +151,16 @@ export class FormVeiculo implements OnInit {
       ? this.service.atualizar(veiculoId, veiculoPayload)
       : this.service.criar(clienteId, veiculoPayload);
 
+    this.form.disable();
+    this.ref.disableClose = true;
     req.subscribe({
       next: (resp) => this.ref.close(resp),
       error: (e) => {
         this.erro = e.error?.mensagem ?? e.error?.message ?? 'Erro ao salvar veículo';
         this.salvando = false;
+        this.form.enable();
+        this.ref.disableClose = false;
+        this.cdr.markForCheck();
       }
     });
   }

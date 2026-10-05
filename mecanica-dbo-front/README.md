@@ -1,498 +1,538 @@
-﻿# Mecânica DBO — Frontend Angular
+# Mecânica DBO — Frontend
 
-Aplicação web em Angular 22 com Angular Material, responsável pela interface de gestão da oficina Mecânica DBO.
-Consome a API REST do backend Spring Boot 3.3.3.
-
----
-
-## Índice
-
-- [Tecnologias](#tecnologias)
-- [Estrutura do projeto](#estrutura-do-projeto)
-- [Configuração inicial](#configuração-inicial)
-- [Rotas](#rotas)
-- [Módulos e funcionalidades](#módulos-e-funcionalidades)
-- [Serviços (core)](#serviços-core)
-- [Modelos de dados](#modelos-de-dados)
-- [Integração com o backend](#integração-com-o-backend)
-- [Testes](#testes)
-- [Como executar](#como-executar)
+Interface web do sistema de gestão da **Mecânica DBO**, construída em **Angular 22** com design system próprio em Vanilla CSS. Conecta-se à API REST do backend Spring Boot em `http://localhost:8080/api`.
 
 ---
 
-## Tecnologias
+## Sumário
 
-- Angular 22 (standalone components)
-- Angular Material — tabelas, formulários, dialogs, snackbars
-- RxJS — programação reativa / HTTP
-- TypeScript
-- CSS — estilos dos componentes
+- [Stack e versões](#stack-e-versões)
+- [Como rodar](#como-rodar)
+- [Estrutura de pastas](#estrutura-de-pastas)
+- [Design System](#design-system)
+- [Roteamento](#roteamento)
+- [Shell da aplicação](#shell-da-aplicação)
+- [Telas](#telas)
+- [Serviços Core](#serviços-core)
+- [Modelos Shared](#modelos-shared)
+- [Interceptor HTTP](#interceptor-http)
+- [Internacionalização](#internacionalização)
+- [Build e testes](#build-e-testes)
+- [Variáveis de ambiente](#variáveis-de-ambiente)
+- [Decisões de arquitetura](#decisões-de-arquitetura)
 
 ---
 
-## Estrutura do projeto
+## Stack e versões
+
+| Tecnologia | Versão |
+|---|---|
+| Angular | 22.1.x |
+| TypeScript | 6.0.x |
+| RxJS | 7.8.x |
+| Angular CDK / Material | 22.1.x (CDK apenas) |
+| Node / npm | 22.x / 11.x |
+| Tipografia | Inter + Fraunces (Google Fonts) |
+| CSS | Vanilla CSS — design system global em `src/styles.css` |
+| Testes | Vitest 4 + jsdom |
+
+> **Sem TailwindCSS, sem Bootstrap.** Todo estilo vem do design system em `styles.css` ou dos arquivos `.css` de cada componente.
+
+---
+
+## Como rodar
+
+```bash
+# 1. Instalar dependências (apenas na primeira vez)
+npm install
+
+# 2. Subir o servidor de desenvolvimento
+npm start
+# Acesse: http://localhost:4200
+
+# 3. Build de produção (opcional)
+npm run build
+# Saída em: dist/mecanica-dbo-front/
+```
+
+> O backend precisa estar rodando em `http://localhost:8080` para que as chamadas de API funcionem.
+> O interceptor prefixia todas as URLs relativas com a `apiUrl` do environment automaticamente.
+
+---
+
+## Estrutura de pastas
 
 ```
 src/
 ├── app/
+│   ├── app.ts               # Componente raiz — sidebar + router-outlet
+│   ├── app.html             # Shell: sidebar fixa + main com router-outlet
+│   ├── app.css              # Estilos do shell e da sidebar
+│   ├── app.routes.ts        # Tabela de rotas da aplicação
+│   ├── app.config.ts        # ApplicationConfig (providers globais)
+│   │
 │   ├── core/
 │   │   ├── interceptors/
-│   │   │   └── api.interceptor.ts      # prefixo da API + tratamento de erro
+│   │   │   └── api.interceptor.ts   # Prefixa URLs relativas com apiUrl
 │   │   └── services/
-│   │       ├── cliente.service.ts
-│   │       ├── veiculo.service.ts
-│   │       └── ordem-servico.service.ts
+│   │       ├── ordem-servico.ts     # OrdemServicoService
+│   │       ├── cliente.ts           # ClienteService
+│   │       └── veiculo.ts           # VeiculoService
 │   │
 │   ├── features/
 │   │   ├── dashboard/
-│   │   │   ├── dashboard.ts            # OS abertas + atalhos
+│   │   │   ├── dashboard.ts
 │   │   │   ├── dashboard.html
 │   │   │   └── dashboard.css
-│   │   │
+│   │   ├── ordens/
+│   │   │   ├── lista-os/
+│   │   │   │   ├── lista-os.ts
+│   │   │   │   ├── lista-os.html
+│   │   │   │   └── lista-os.css
+│   │   │   └── detalhe-os/
+│   │   │       ├── detalhe-os.ts
+│   │   │       ├── detalhe-os.html
+│   │   │       └── detalhe-os.css
 │   │   ├── clientes/
-│   │   │   ├── lista-clientes/
-│   │   │   │   ├── lista-clientes.ts
-│   │   │   │   ├── lista-clientes.html
-│   │   │   │   └── lista-clientes.css
-│   │   │   └── form-cliente/
-│   │   │       └── form-cliente.ts     # dialog de cadastro/edição
-│   │   │
-│   │   ├── veiculos/
-│   │   │   ├── busca-veiculo/
-│   │   │   │   ├── busca-veiculo.ts    # busca por placa
-│   │   │   │   ├── busca-veiculo.html
-│   │   │   │   └── busca-veiculo.css
-│   │   │   └── form-veiculo/
-│   │   │       └── form-veiculo.ts     # dialog de cadastro/edição
-│   │   │
-│   │   └── ordens/
-│   │       ├── lista-os/
-│   │       │   ├── lista-os.ts
-│   │       │   ├── lista-os.html
-│   │       │   └── lista-os.css
-│   │       └── detalhe-os/
-│   │           ├── detalhe-os.ts       # itens, status, PDF
-│   │           ├── detalhe-os.html
-│   │           └── detalhe-os.css
+│   │   │   └── lista-clientes/
+│   │   │       ├── lista-clientes.ts
+│   │   │       ├── lista-clientes.html
+│   │   │       └── lista-clientes.css
+│   │   └── veiculos/
+│   │       ├── busca-veiculo/
+│   │       │   ├── busca-veiculo.ts
+│   │       │   ├── busca-veiculo.html
+│   │       │   └── busca-veiculo.css
+│   │       └── form-veiculo/
+│   │           └── form-veiculo.ts
 │   │
-│   ├── shared/
-│   │   └── models/
-│   │       ├── cliente.model.ts
-│   │       ├── veiculo.model.ts
-│   │       └── ordem-servico.model.ts
-│   │
-│   ├── app.ts
-│   ├── app.html
-│   ├── app.config.ts
-│   └── app.routes.ts
+│   └── shared/
+│       ├── components/
+│       │   └── sidebar/           # Componente legado (substituído pelo app.html)
+│       └── models/
+│           ├── ordem-servico.model.ts
+│           ├── cliente.model.ts
+│           └── veiculo.model.ts
 │
 ├── environments/
-│   ├── environment.ts
-│   └── environment.prod.ts
-├── main.ts
-└── styles.css
+│   ├── environment.ts             # dev — apiUrl: http://localhost:8080/api
+│   └── environment.prod.ts        # prod
+├── styles.css                     # Design system global
+├── main.ts                        # Bootstrap + registro do locale pt-BR
+└── index.html                     # Ponto de entrada HTML
 ```
 
 ---
 
-## Configuração inicial
+## Design System
 
-### `src/environments/environment.ts`
+Definido em `src/styles.css`. Todas as telas usam essas classes — nenhum componente inventa estilo do zero.
+
+### Tokens CSS (`:root`)
+
+| Variável | Valor / Uso |
+|---|---|
+| `--color-bg` | `#faf9f7` — fundo geral |
+| `--color-surface` | `#ffffff` — fundo de cards e inputs |
+| `--color-text` | `#1a1917` — texto principal |
+| `--color-text-soft` | texto secundário (60% opaco) |
+| `--color-text-faint` | texto terciário (45% opaco) |
+| `--color-accent` | `#b68235` — dourado da oficina |
+| `--color-accent-700` | `#8f6526` — dourado escuro |
+| `--color-divider` | bordas e separadores |
+| `--color-dark` | `#1a1917` — sidebar |
+| `--font-heading` | Fraunces (serifada elegante) |
+| `--font-body` | Inter (sans-serif limpa) |
+| `--radius` | `4px` |
+
+### Cores de status da OS
+
+| Status | Cor |
+|---|---|
+| `ABERTA` | `#b68235` (dourado) |
+| `EM_ANDAMENTO` | `#2b6cb0` (azul) |
+| `CONCLUIDA` | `#2f855a` (verde) |
+| `ENTREGUE` | `#4a5568` (cinza) |
+
+### Classes globais
+
+| Classe | Descrição |
+|---|---|
+| `.card` | Container branco com borda e padding |
+| `.card-header` | Flex row com título e ações |
+| `.table` | Tabela com cabeçalho uppercase |
+| `.badge` | Pílula de status com ponto colorido |
+| `.badge-aberta/em-andamento/concluida/entregue` | Variantes de cor |
+| `.placa` | Placa visual (borda, letter-spacing) |
+| `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-danger` | Botões |
+| `.field`, `.input`, `.textarea`, `.select` | Formulários |
+| `.toast`, `.toast-wrap`, `.toast-error` | Notificações flutuantes |
+| `.metric` | Card de KPI do painel |
+| `.view-header`, `.view-content` | Estrutura de página |
+| `.page`, `.page-header`, `.page-title` | Estrutura alternativa |
+| `.grid-2/3/4`, `.row`, `.row-between`, `.col` | Helpers de layout |
+| `.tag`, `.tag-accent`, `.tag-neutral`, `.tag-outline` | Tags de situação |
+| `.chip`, `.chip.active` | Filtros em pílula |
+| `.seg`, `.seg-opt` | Controle segmentado |
+| `.dialog-backdrop`, `.dialog`, `.dialog-body`, `.dialog-actions` | Modais |
+
+---
+
+## Roteamento
+
+Arquivo: `src/app/app.routes.ts`
+
+| Rota | Componente | Lazy? |
+|---|---|---|
+| `/` | Redireciona para `/dashboard` | — |
+| `/dashboard` | `Dashboard` | Sim |
+| `/clientes` | `ListaClientes` | Sim |
+| `/veiculos` | `BuscaVeiculo` | Sim |
+| `/ordens` | `ListaOs` | Sim |
+| `/ordens/nova` | `NovaOs` | Sim |
+| `/ordens/:id` | `DetalheOs` | Sim |
+
+> A rota estática `/ordens/nova` deve vir antes de `/ordens/:id`. A rota de detalhe exige o segmento de ID e não captura `/ordens` sozinha.
+
+Todos os componentes usam `loadComponent` — lazy loading automático do Angular 17+.
+
+---
+
+## Shell da aplicação
+
+Arquivo: `src/app/app.ts` + `src/app/app.html`
+
+A aplicação é um shell com **sidebar fixa à esquerda** e `<router-outlet>` no conteúdo à direita.
+
+### O que o shell faz
+
+- Exibe a **sidebar de navegação** com links para as 4 seções
+- Mostra **contadores ao vivo** no menu:
+  - "Ordens de Serviço" — número de OS abertas (via `GET /ordens/abertas`)
+  - "Clientes" — total de clientes (via `GET /clientes`)
+- Exibe **indicador de status da API** no rodapé:
+  - Ponto verde + hora da última sincronização quando online
+  - "API offline" quando a chamada falha
+- Os contadores são carregados no `ngOnInit` via `HttpClient` direto no componente raiz, usando `/ordens/abertas` como health check implícito
+
+---
+
+## Telas
+
+### Painel (Dashboard)
+
+**Rota:** `/dashboard` | **Arquivo:** `features/dashboard/dashboard.ts`
+
+Carrega dados reais via `forkJoin` (ordens + clientes em paralelo) e exibe métricas computadas com `signal` + `computed`.
+
+#### Métricas
+
+| Métrica | Fonte |
+|---|---|
+| Carros no pátio | OS com status `ABERTA` ou `EM_ANDAMENTO` |
+| Prontos para entrega | OS com status `CONCLUIDA` |
+| Faturamento do mês | Soma de `totalGeral` das OS `ENTREGUE` no mês corrente |
+| Clientes novos | Clientes com `criadoEm` no mês corrente |
+
+#### Lista "Pátio"
+
+Ordenada do mais antigo ao mais recente (encalhado no topo). Linha clicável navega para `/ordens/:id`.
+
+#### Comportamento offline
+
+Se `GET /ordens` falhar, exibe mensagem de erro com botão "Tentar novamente".
+
+---
+
+### Lista de OS
+
+**Rota:** `/ordens` | **Arquivo:** `features/ordens/lista-os/lista-os.ts`
+
+Carrega somente as ordens retornadas pela API e mostra placa, veículo e proprietário reais. Sem registros, apresenta estado vazio. Falhas da API apresentam mensagem e botão de tentar novamente. O campo mecânico fica sem valor porque a API atual não fornece essa informação.
+
+#### Filtros
+
+| Filtro | Status correspondente |
+|---|---|
+| Todas | Todos |
+| Em serviço | `EM_ANDAMENTO` |
+| Aguardando | `ABERTA` |
+| Prontas | `CONCLUIDA` |
+| Entregues | `ENTREGUE` |
+
+Campo de busca por texto livre (número, placa, carro, cliente, mecânico).
+
+#### Clique em linha
+
+- OS com `id` real → navega para `/ordens/:id`
+- Não são acrescentadas ordens de demonstração.
+
+---
+
+### Nova OS
+
+**Rota:** `/ordens/nova` | **Arquivo:** `features/ordens/nova-os/nova-os.ts`
+
+Busca o veículo cadastrado pela placa, recebe quilometragem, previsão e reclamações, e cria a OS pelo endpoint existente. Ao criar, navega para o detalhe da OS retornada. Os botões de nova ordem nas demais telas usam essa rota.
+
+---
+
+### Detalhe da OS
+
+**Rota:** `/ordens/:id` | **Arquivo:** `features/ordens/detalhe-os/detalhe-os.ts`
+
+Tela principal de trabalho do mecânico. Usa exclusivamente `signal` e `computed` do Angular — sem `@Input`, sem NgRx.
+
+#### Seções
+
+**1. Cabeçalho**
+- Número da OS, badge de status, dias do carro na oficina
+- Botão "Baixar recibo" (PDF via `GET /ordens/{id}/pdf`)
+- Botão de avanço de status (um passo por vez)
+
+**2. Faixa do veículo**
+- Placa em destaque, modelo, cor, combustível, proprietário com telefone
+
+**3. Queixa e diagnóstico**
+- Campos: quilometragem, previsão de entrega, reclamações do cliente, laudo técnico
+- Botão "Salvar alterações" aparece **apenas quando há mudança pendente** (detectado via `snapshotForm()`)
+- Salvo via `PUT /ordens/{id}`
+- Inclusões e remoções de itens preservam os campos ainda não salvos.
+- Status e recibo exigem salvar as alterações pendentes antes de continuar.
+- Há confirmação ao sair sem salvar e proteção ao fechar ou recarregar a página.
+- Quantidades, valores e quilometragem são validados antes do envio.
+
+**4. Peças**
+- Tabela com todas as peças da OS
+- Peças com `pagoPeloCliente = true` aparecem com valor riscado e tag "Pago pelo cliente"
+- Linha de inclusão no final (descrição, quantidade, valor, checkbox "Pago pelo cliente")
+- Adição via `POST /ordens/{osId}/pecas`
+- Remoção via `DELETE /ordens/{osId}/pecas/{itemId}` com confirmação
+
+**5. Serviços / Mão de obra**
+- Mesma estrutura da tabela de peças, sem coluna de quantidade
+- Adição via `POST /ordens/{osId}/servicos`
+- Remoção via `DELETE /ordens/{osId}/servicos/{itemId}`
+
+**6. Totais (lateral sticky)**
+- Total de peças, total de serviços, total geral
+- Nota sobre o valor excluído de peças pagas pelo cliente
+- O backend recalcula tudo via trigger do PostgreSQL — o frontend não soma nada
+
+#### Fluxo de status (botão único)
+
+```
+ABERTA         → [Iniciar serviço]      → EM_ANDAMENTO
+EM_ANDAMENTO   → [Concluir serviço]     → CONCLUIDA
+CONCLUIDA      → [Entregar ao cliente]  → ENTREGUE
+```
+
+Ao entregar, exige confirmação com `confirm()`. Via `PATCH /ordens/{id}/status?status=`.
+
+#### Modo somente leitura (OS ENTREGUE)
+
+- Todos os campos ficam `disabled`
+- Botões de remover e linhas de inclusão desaparecem
+- Aparece aviso dourado explicando que a OS é histórico imutável
+- O backend também recusa edição via `PUT` com `409 Conflict`
+
+#### Toast
+
+Todas as ações (salvar, adicionar, remover, erro) disparam toast no canto inferior direito.
+Desaparece em 3 s (sucesso) ou 6 s (erro).
+
+---
+
+### Lista de Clientes
+
+**Rota:** `/clientes` | **Arquivo:** `features/clientes/lista-clientes/lista-clientes.ts`
+
+- Busca por nome, CPF ou telefone via `GET /clientes?q=`
+- Cadastro de novo cliente via modal
+- Edição inline via modal
+- Última visita e filtros derivados das OS reais; contagem de veículos carregada ao selecionar o cliente
+- Sem identificação fictícia de frotas e sem datas ou contagens inventadas
+
+---
+
+### Busca de Veículo
+
+**Rota:** `/veiculos` | **Arquivo:** `features/veiculos/busca-veiculo/busca-veiculo.ts`
+
+- Campo de busca por placa → `GET /veiculos/placa/{placa}`
+- Exibe o proprietário aninhado na resposta de veículo e carrega o histórico real via `GET /ordens/veiculo/{veiculoId}`
+- Distingue placa não cadastrada de API indisponível; não utiliza dados fictícios
+- Atalhos para placas consultadas de verdade na sessão
+- Cadastro abre o formulário de veículo existente; nova OS pode receber a placa selecionada
+- Próxima revisão fica não informada, pois a API ainda não fornece esse campo
+
+---
+
+## Serviços Core
+
+Todos usam `inject(HttpClient)` e são `providedIn: 'root'`.
+
+### OrdemServicoService — `core/services/ordem-servico.ts`
+
+| Método | Verbo | Endpoint |
+|---|---|---|
+| `listar(status?, q?)` | GET | `/ordens` + filtro local por status |
+| `buscar(q?)` | GET | `/ordens?q=` |
+| `listarAbertas()` | GET | `/ordens/abertas` |
+| `listarPorPeriodo(inicio, fim)` | GET | `/ordens/periodo` |
+| `buscarPorId(id)` | GET | `/ordens/{id}` |
+| `listarPorVeiculo(veiculoId)` | GET | `/ordens/veiculo/{veiculoId}` |
+| `criar(veiculoId, os)` | POST | `/ordens/veiculo/{veiculoId}` |
+| `atualizar(id, dados)` | PUT | `/ordens/{id}` |
+| `alterarStatus(id, status)` | PATCH | `/ordens/{id}/status?status=` |
+| `adicionarPeca(osId, item)` | POST | `/ordens/{osId}/pecas` |
+| `removerPeca(osId, itemId)` | DELETE | `/ordens/{osId}/pecas/{itemId}` |
+| `adicionarServico(osId, item)` | POST | `/ordens/{osId}/servicos` |
+| `removerServico(osId, itemId)` | DELETE | `/ordens/{osId}/servicos/{itemId}` |
+| `gerarPdf(osId)` | GET | `/ordens/{osId}/pdf` (Blob) |
+
+> Métodos de itens devolvem a OS inteira já com totais recalculados pelo trigger do banco — sem GET extra.
+
+### ClienteService — `core/services/cliente.ts`
+
+| Método | Verbo | Endpoint |
+|---|---|---|
+| `listar(q?)` | GET | `/clientes?q=` |
+| `buscarPorId(id)` | GET | `/clientes/{id}` |
+| `listarVeiculos(id)` | GET | `/clientes/{id}/veiculos` |
+| `criar(cliente)` | POST | `/clientes` |
+| `atualizar(id, cliente)` | PUT | `/clientes/{id}` |
+| `inativar(id)` | DELETE | `/clientes/{id}` |
+
+### VeiculoService — `core/services/veiculo.ts`
+
+| Método | Verbo | Endpoint |
+|---|---|---|
+| `buscarPorPlaca(placa)` | GET | `/veiculos/placa/{placa}` |
+| `buscarPorId(id)` | GET | `/veiculos/{id}` |
+| `listarPorCliente(clienteId)` | GET | `/clientes/{clienteId}/veiculos` |
+| `criar(clienteId, veiculo)` | POST | `/veiculos/cliente/{clienteId}` |
+| `atualizar(id, veiculo)` | PUT | `/veiculos/{id}` |
+| `inativar(id)` | DELETE | `/veiculos/{id}` |
+
+---
+
+## Modelos Shared
+
+### `ordem-servico.model.ts`
+
+```typescript
+type StatusOs = 'ABERTA' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'ENTREGUE'
+
+interface ClienteResumo   { id, nome, cpf?, telefone1 }
+interface VeiculoResumo   { id, placa, marca, modelo, cor, combustivel, chassi?, anoFabricacao?, cliente? }
+interface ItemPeca        { id?, descricao, quantidade, valorUnitario, valorTotal?, pagoPeloCliente? }
+interface ItemServico     { id?, descricao, valor }
+interface OrdemServico    { id?, status, kmEntrada?, dataEntrada?, dataSaidaPrevista?,
+                            dataSaidaReal?, reclamacoes?, diagnostico?,
+                            totalPecas?, totalServicos?, totalGeral?,
+                            veiculo?, itensPeca?, itensServico? }
+interface AtualizarOsRequest { kmEntrada?, dataSaidaPrevista?, reclamacoes?, diagnostico? }
+
+const ROTULOS_STATUS: Record<StatusOs, string>
+const PROXIMO_STATUS: Partial<Record<StatusOs, { status: StatusOs; rotulo: string }>>
+```
+
+### `cliente.model.ts`
+
+```typescript
+interface Cliente { id?, nome, cpf?, telefone1, telefone2?, email?, ativo?, criadoEm? }
+```
+
+### `veiculo.model.ts`
+
+```typescript
+type Combustivel = 'GASOLINA' | 'ETANOL' | 'FLEX' | 'DIESEL' | 'ELETRICO' | 'GNV'
+interface Veiculo { id?, placa, marca, modelo, cor, combustivel, chassi?, anoFabricacao?, ativo?, criadoEm? }
+```
+
+---
+
+## Interceptor HTTP
+
+Arquivo: `src/app/core/interceptors/api.interceptor.ts`
+
+```typescript
+export const apiInterceptor: HttpInterceptorFn = (req, next) => {
+  if (req.url.startsWith('http')) return next(req);
+  return next(req.clone({ url: `${environment.apiUrl}${req.url}` }));
+};
+```
+
+Permite que os services usem caminhos relativos (`/ordens`, `/clientes`) sem conhecer o host da API. Em produção, basta trocar `apiUrl` no environment.
+
+---
+
+## Internacionalização
+
+`src/main.ts`:
+```typescript
+import { registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
+registerLocaleData(localePt, 'pt-BR');
+```
+
+`src/app/app.config.ts`:
+```typescript
+{ provide: LOCALE_ID, useValue: 'pt-BR' }
+```
+
+Habilita pipes nativos com formatação brasileira: valores `R$ 1.240,00`, datas `28/09/2026`.
+
+---
+
+## Build e testes
+
+```bash
+npm start        # Desenvolvimento com hot reload → http://localhost:4200
+npm run build    # Build de produção → dist/mecanica-dbo-front/
+npm run watch    # Build em modo watch
+npm test         # Testes unitários (Vitest + jsdom)
+```
+
+### Budget de CSS
+
+Angular configurado com budget de `4 kB` por arquivo CSS de componente. O `dashboard.css` excede em ~342 bytes — aviso, não erro. Ajustável em `angular.json`.
+
+---
+
+## Variáveis de ambiente
+
+`src/environments/environment.ts`:
 
 ```typescript
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:8080/api',
-  ocrUrl: 'http://localhost:5000'
+  ocrUrl: 'http://localhost:5000'   // microserviço Python de OCR (nota fiscal)
 };
 ```
 
-### `src/app/app.config.ts`
-
-```typescript
-import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { routes } from './app.routes';
-import { apiInterceptor } from './core/interceptors/api.interceptor';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideRouter(routes),
-    provideHttpClient(withInterceptors([apiInterceptor])),
-    provideAnimationsAsync()
-  ]
-};
-```
-
-### `src/main.ts`
-
-```typescript
-import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
-
-bootstrapApplication(App, appConfig)
-  .catch(err => console.error(err));
-```
-
-### Interceptor HTTP — `api.interceptor.ts`
-
-Prefixa a URL base da API. Requisições que já começam com `http` passam intactas
-(útil para chamar o serviço de OCR na porta 5000).
-
-```typescript
-import { HttpInterceptorFn } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
-
-export const apiInterceptor: HttpInterceptorFn = (req, next) => {
-  if (req.url.startsWith('http')) {
-    return next(req);
-  }
-  return next(req.clone({
-    url: `${environment.apiUrl}${req.url}`
-  }));
-};
-```
+Para produção, edite `environment.prod.ts` com as URLs reais.
 
 ---
 
-## Rotas
+## Decisões de arquitetura
 
-Todas usam lazy loading com `loadComponent`.
+### Standalone Components (sem NgModules)
+Todos os componentes usam `standalone: true`. Imports são declarados por componente.
 
-| Path | Componente | Descrição |
-|------|-----------|-----------|
-| `/` | — | redireciona para `/dashboard` |
-| `/dashboard` | `Dashboard` | OS abertas e atalhos |
-| `/clientes` | `ListaClientes` | listagem e busca de clientes |
-| `/veiculos` | `BuscaVeiculo` | busca de veículo por placa |
-| `/ordens` | `ListaOs` | listagem e busca de OS |
-| `/ordens/:id` | `DetalheOs` | detalhe da OS, itens e PDF |
+### Signals para estado local, RxJS para HTTP
+`DetalheOs` usa `signal` e `computed` para todo estado da tela. RxJS é usado apenas onde o `HttpClient` retorna observables — sem `Subject` ou `BehaviorSubject` manual.
 
----
+### Nenhum estado global
+Sem NgRx, Akita ou similar. Cada tela gerencia seu próprio estado. Dados compartilhados (contadores da sidebar) são carregados independentemente onde precisam.
 
-## Módulos e funcionalidades
+### OrdemServicoService é um superset do pacote detalhe-os
+O `ordem-servico.ts` tem o método `listar(status?, q?)` extra, usado pelo `lista-os.ts`. O arquivo do pacote `detalhe-os-mecanica-dbo` é um subconjunto — **não substituir**.
 
-### Dashboard
+### Dados reais nas telas de consulta
+`lista-os`, `busca-veiculo` e `lista-clientes` usam informações da API. Dados ausentes permanecem não informados; falhas de conexão são mostradas separadamente de listas vazias e cadastros não encontrados.
 
-- Lista OS com status ABERTA (`GET /ordens/abertas`)
-- Atalhos para nova OS, clientes e busca por placa
-- O backend não expõe endpoint de health check. Para monitorar disponibilidade, adicione o Spring Boot Actuator no `pom.xml` e exponha `/actuator/health`.
-
-### Clientes
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `lista-clientes.ts` | listagem com busca por nome, CPF ou telefone |
-| `lista-clientes.html` | tabela: nome, CPF, telefone, e-mail, ações |
-| `form-cliente.ts` | dialog de cadastro e edição |
-
-- Listar e buscar por termo livre (`?q=`)
-- Cadastrar e editar via dialog
-- Inativar com confirmação (exclusão lógica)
-- Ver veículos do cliente (`GET /clientes/{id}/veiculos`)
-
-> O backend rejeita CPF duplicado com `409 Conflict` e mensagem no corpo — trate esse status no formulário e exiba a mensagem retornada.
-
-### Veículos
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `busca-veiculo.ts` | busca por placa (campo principal) |
-| `busca-veiculo.html` | dados do veículo + histórico de OS |
-| `form-veiculo.ts` | dialog de cadastro e edição |
-
-- Buscar por placa (`GET /veiculos/placa/{placa}`)
-- Cadastrar vinculado a um cliente (`POST /veiculos/cliente/{clienteId}`)
-- Editar e inativar
-
-> **Combustíveis aceitos pelo banco:** `GASOLINA`, `ETANOL`, `FLEX`, `DIESEL`, `ELETRICO`, `GNV` — use exatamente esses valores no select.
-
-> Não existe endpoint de listagem geral de veículos. A navegação parte da placa ou do cliente.
-> Se precisar de uma listagem completa, adicione `GET /api/veiculos` no `VeiculoController`.
-
-### Ordens de serviço
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `lista-os.ts` | listagem com busca por cliente ou placa |
-| `lista-os.html` | tabela: nº OS, cliente, veículo, status, entrada, total |
-| `detalhe-os.ts` | detalhe completo, itens, status e PDF |
-
-- Buscar por cliente ou placa (`?q=`)
-- Filtrar OS abertas (`GET /ordens/abertas`)
-- Filtrar por período (`GET /ordens/periodo?inicio=&fim=`)
-- Badges coloridos por status
-- Adicionar e remover peças e serviços
-- Alterar status
-- Gerar PDF do recibo
-
-**Status válidos (enum `StatusOs` no backend):**
-
-```
-ABERTA → EM_ANDAMENTO → CONCLUIDA → ENTREGUE
-```
-
-> O backend impõe uma regra: `ENTREGUE` só é aceito se a OS estiver `CONCLUIDA`.
-> Qualquer outra transição retorna `409 Conflict`.
-> Ao marcar como entregue, o backend preenche `dataSaidaReal` automaticamente.
-
-> Os totais (`totalPecas`, `totalServicos`, `totalGeral`) são recalculados por trigger
-> no PostgreSQL a cada peça ou serviço inserido. O front **nunca** os envia — apenas
-> relê a OS após adicionar ou remover um item.
-
----
-
-## Serviços (core)
-
-### `ClienteService`
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `listar(q?)` | `GET /clientes?q=` | lista ou filtra por nome, CPF ou telefone |
-| `buscarPorId(id)` | `GET /clientes/{id}` | busca por ID |
-| `listarVeiculos(id)` | `GET /clientes/{id}/veiculos` | veículos do cliente |
-| `criar(c)` | `POST /clientes` | cadastra — 201 Created |
-| `atualizar(id, c)` | `PUT /clientes/{id}` | atualiza |
-| `inativar(id)` | `DELETE /clientes/{id}` | inativa — 204 No Content |
-
-### `VeiculoService`
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `buscarPorId(id)` | `GET /veiculos/{id}` | busca por ID |
-| `buscarPorPlaca(placa)` | `GET /veiculos/placa/{placa}` | busca por placa |
-| `criar(clienteId, v)` | `POST /veiculos/cliente/{clienteId}` | cadastra vinculado ao cliente |
-| `atualizar(id, v)` | `PUT /veiculos/{id}` | atualiza |
-| `inativar(id)` | `DELETE /veiculos/{id}` | inativa — 204 No Content |
-
-### `OrdemServicoService`
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `buscar(q?)` | `GET /ordens?q=` | busca por cliente ou placa |
-| `listarAbertas()` | `GET /ordens/abertas` | OS com status ABERTA |
-| `listarPorPeriodo(ini, fim)` | `GET /ordens/periodo?inicio=&fim=` | filtra por data (ISO yyyy-MM-dd) |
-| `buscarPorId(id)` | `GET /ordens/{id}` | detalhe da OS |
-| `criar(veiculoId, os)` | `POST /ordens/veiculo/{veiculoId}` | cria OS — 201 Created |
-| `alterarStatus(id, status)` | `PATCH /ordens/{id}/status?status=` | altera status (query param) |
-| `adicionarPeca(osId, item)` | `POST /ordens/{osId}/pecas` | adiciona peça — 201 |
-| `removerPeca(osId, itemId)` | `DELETE /ordens/{osId}/pecas/{itemId}` | remove peça — 204 |
-| `adicionarServico(osId, item)` | `POST /ordens/{osId}/servicos` | adiciona serviço — 201 |
-| `removerServico(osId, itemId)` | `DELETE /ordens/{osId}/servicos/{itemId}` | remove serviço — 204 |
-| `gerarPdf(osId)` | `GET /ordens/{osId}/pdf` | retorna Blob (application/pdf) |
-
-> O status em `alterarStatus` vai como **query param**, não no corpo:
-> ```typescript
-> alterarStatus(id: number, status: StatusOs): Observable<OrdemServico> {
->   return this.http.patch<OrdemServico>(`/ordens/${id}/status`, null, { params: { status } });
-> }
-> ```
-
-> Para o PDF, use `responseType: 'blob'`:
-> ```typescript
-> gerarPdf(osId: number): Observable<Blob> {
->   return this.http.get(`/ordens/${osId}/pdf`, { responseType: 'blob' });
-> }
-> ```
-
-### `OcrService` (opcional)
-
-Chama o microserviço Python diretamente na porta 5000.
-O interceptor ignora URLs absolutas, então passe a URL completa.
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `health()` | `GET {ocrUrl}/health` | status do serviço |
-| `processar(file)` | `POST {ocrUrl}/ocr/processar` | envia imagem (multipart, campo `file`) |
-
-Retorna `{ sucesso, metadados, itens, total_itens, texto_bruto }`.
-Os itens devem ser revisados pelo usuário antes de virarem peças da OS.
-
----
-
-## Modelos de dados
-
-### `cliente.model.ts`
-```typescript
-export interface Cliente {
-  id?: number;
-  nome: string;
-  cpf?: string;
-  telefone1: string;
-  telefone2?: string;
-  email?: string;
-  ativo?: boolean;
-  criadoEm?: string;
-}
-```
-
-### `veiculo.model.ts`
-```typescript
-export type Combustivel =
-  | 'GASOLINA'
-  | 'ETANOL'
-  | 'FLEX'
-  | 'DIESEL'
-  | 'ELETRICO'
-  | 'GNV';
-
-export interface Veiculo {
-  id?: number;
-  placa: string;
-  marca: string;
-  modelo: string;
-  cor: string;
-  combustivel: Combustivel;
-  chassi?: string;
-  anoFabricacao?: number;
-  ativo?: boolean;
-  criadoEm?: string;
-}
-```
-
-> O backend serializa `Veiculo` sem o objeto `cliente` (marcado com `@JsonIgnore`
-> para evitar referência circular). Para saber de quem é o veículo, navegue a partir
-> de `GET /clientes/{id}/veiculos`.
-
-### `ordem-servico.model.ts`
-```typescript
-export type StatusOs = 'ABERTA' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'ENTREGUE';
-
-export interface ItemPeca {
-  id?: number;
-  descricao: string;
-  quantidade: number;
-  valorUnitario: number;
-  valorTotal?: number;       // calculado pelo banco — somente leitura
-  pagoPeloCliente?: boolean;
-  criadoEm?: string;
-}
-
-export interface ItemServico {
-  id?: number;
-  descricao: string;
-  valor: number;
-  criadoEm?: string;
-}
-
-export interface OrdemServico {
-  id?: number;
-  status: StatusOs;
-  kmEntrada?: number;
-  dataEntrada?: string;        // ISO yyyy-MM-dd
-  dataSaidaPrevista?: string;
-  dataSaidaReal?: string;
-  reclamacoes?: string;        // queixas do cliente
-  diagnostico?: string;        // observações do mecânico
-  totalPecas?: number;         // recalculado por trigger
-  totalServicos?: number;
-  totalGeral?: number;
-  criadoEm?: string;
-}
-```
-
-> `OrdemServico` também é serializada sem `veiculo`, `itensPeca`, `itensServico` e
-> `notasFiscais` (todos `@JsonIgnore`). Para montar a tela de detalhe com o veículo e
-> os itens, ou você faz chamadas separadas, ou adiciona um DTO de resposta no backend —
-> **a segunda opção é a recomendada**.
-
----
-
-## Integração com o backend
-
-- API base: `http://localhost:8080/api`
-- OCR: `http://localhost:5000`
-- O interceptor aplica o prefixo apenas em URLs relativas
-
-### CORS
-
-O backend ainda não tem CORS configurado. Sem isso o navegador bloqueia toda requisição
-vinda do `localhost:4200`. Crie no backend:
-
-```java
-package com.mecanicadbo.config;
-
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.*;
-
-@Configuration
-public class WebConfig implements WebMvcConfigurer {
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:4200")
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE")
-                .allowedHeaders("*");
-    }
-}
-```
-
-### Formato de erro
-
-O `GlobalExceptionHandler` do backend retorna sempre o mesmo formato:
-
-```json
-{
-  "timestamp": "2026-08-27T15:19:40.044851400",
-  "status": 409,
-  "mensagem": "CPF já cadastrado para: João Mecânico",
-  "campos": {
-    "nome": "Nome é obrigatório"
-  }
-}
-```
-
-| Status | Quando ocorre |
-|--------|--------------|
-| `400` | validação falhou — o campo `campos` traz erro por atributo |
-| `404` | recurso não encontrado |
-| `409` | regra de negócio violada (CPF ou placa duplicada, transição de status inválida) |
-
-> Trate esses três casos no interceptor ou em cada serviço e exiba mensagem ao usuário via snackbar.
-
----
-
-## Testes
-
-```typescript
-// serviços
-providers: [
-  provideHttpClient(),
-  provideHttpClientTesting()
-]
-
-// componentes standalone
-imports: [NomeDoComponente],
-providers: [
-  provideHttpClient(),
-  provideHttpClientTesting(),
-  provideNoopAnimations()
-]
-```
-
-```bash
-npm test
-```
-
----
-
-## Como executar
-
-```bash
-npm install
-ng serve
-```
-
-Acesse `http://localhost:4200`.
-
-**Pré-requisitos rodando em paralelo:**
-
-| Serviço | Porta | Comando |
-|---------|-------|---------|
-| PostgreSQL | 5432 | serviço do Windows |
-| Spring Boot | 8080 | rodar `MecanicaDboApplication` no IntelliJ |
-| OCR (opcional) | 5000 | `python ocr_service.py` |
+### PDF gerado no backend
+O botão "Baixar recibo" chama `GET /ordens/{id}/pdf` e recebe um `Blob`. Python + ReportLab no backend montam o PDF — o frontend cria um link temporário e aciona o download.

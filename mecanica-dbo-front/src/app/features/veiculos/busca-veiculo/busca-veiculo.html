@@ -1,18 +1,149 @@
-﻿<div class="busca-container">
-  <h2>Busca por Placa</h2>
-  <mat-form-field appearance="outline">
-    <mat-label>Placa</mat-label>
-    <input matInput [(ngModel)]="placa" (keyup.enter)="buscar()" placeholder="ABC-1234" />
-    <mat-icon matSuffix>search</mat-icon>
-  </mat-form-field>
-  <button mat-raised-button color="primary" (click)="buscar()">Buscar</button>
-
-  <mat-spinner *ngIf="carregando" diameter="40" />
-  <p *ngIf="erro" class="erro">{{ erro }}</p>
-
-  <div *ngIf="veiculo" class="veiculo-card">
-    <h3>{{ veiculo.marca }} {{ veiculo.modelo }} — {{ veiculo.placa }}</h3>
-    <p>Cor: {{ veiculo.cor }} | Combustível: {{ veiculo.combustivel }}</p>
-    <p *ngIf="veiculo.anoFabricacao">Ano: {{ veiculo.anoFabricacao }}</p>
+<div class="view-header">
+  <div class="view-title-group">
+    <div class="kicker">CONSULTA</div>
+    <h1 class="title">Veículos</h1>
   </div>
+  <div class="actions">
+    <button type="button" class="btn btn-secondary" (click)="abrirCadastroVeiculo()">Cadastrar veículo</button>
+    <button type="button" class="btn btn-primary" (click)="abrirNovaOs()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+      Nova ordem
+    </button>
+  </div>
+</div>
+
+<div class="view-content">
+
+  <div class="veiculos-layout">
+
+    <!-- Coluna Esquerda: Busca por Placa -->
+    <section class="busca-side">
+      <h3 style="margin: 0 0 4px; font-size: 22px;">Busca por placa</h3>
+      <p class="busca-desc">
+        Digite a placa para ver o veículo, o proprietário e todo o histórico de serviços.
+      </p>
+
+      <div class="plate-input-row">
+        <input class="input plate-input" type="text" placeholder="ABC1D23"
+               [(ngModel)]="placa" (keyup.enter)="buscar()" maxlength="8" [disabled]="carregando || carregandoHistorico" aria-label="Placa do veículo">
+        <button type="button" class="btn btn-primary btn-search-plate" (click)="buscar()" [disabled]="carregando || carregandoHistorico">
+          Buscar
+        </button>
+      </div>
+
+      <div class="plate-hint">
+        Aceita placa antiga (ABC1234) e Mercosul (ABC1D23).
+      </div>
+
+      <hr class="hr">
+
+      <div class="recent-label">CONSULTAS RECENTES</div>
+      <div class="recent-chips">
+        @for (p of recentes; track p) {
+          <button type="button" class="recent-plate-btn" (click)="selecionarPlaca(p)">
+            {{ p }}
+          </button>
+        }
+        @if (recentes.length === 0) { <p class="text-faint">Nenhuma consulta recente.</p> }
+      </div>
+    </section>
+
+    <!-- Coluna Direita: Ficha do Veículo -->
+    <section class="card-side">
+      @if (carregando) {
+        <div class="spinner-wrap">Buscando veículo...</div>
+      } @else if (erro) {
+        <div class="not-found-box" role="alert">
+          <p>{{ erro }}</p>
+          <button type="button" class="btn btn-secondary" (click)="buscar()">Tentar novamente</button>
+        </div>
+      } @else if (veiculo) {
+        <div class="veiculo-card">
+          <div class="card-top-row">
+            <div>
+              <div class="vehicle-plate">{{ veiculo.placa }}</div>
+              <div class="vehicle-model">
+                {{ veiculo.marca }} {{ veiculo.modelo }}
+                @if (veiculo.anoFabricacao) { · {{ veiculo.anoFabricacao }} }
+                @if (veiculo.cor) { · {{ veiculo.cor }} }
+              </div>
+            </div>
+            <span class="tag" [ngClass]="obterTagClass(veiculo.status)">
+              {{ veiculo.status || 'Sem situação informada' }}
+            </span>
+          </div>
+
+          <hr class="hr">
+
+          <div class="vehicle-grid">
+            <div>
+              <div class="info-label">Proprietário</div>
+              <a href="#" class="owner-link" (click)="$event.preventDefault(); irParaCliente()">
+                {{ veiculo.dono || 'Não informado' }}
+              </a>
+            </div>
+            <div>
+              <div class="info-label">Telefone</div>
+              <span class="tabular">{{ veiculo.fone || 'Não informado' }}</span>
+            </div>
+            <div>
+              <div class="info-label">Quilometragem</div>
+              <span class="tabular">{{ veiculo.km || 'Não informada' }}</span>
+            </div>
+            <div>
+              <div class="info-label">Próxima revisão</div>
+              <span class="tabular">Não informada</span>
+            </div>
+          </div>
+
+          <hr class="hr">
+
+          <div class="history-section">
+            <div class="info-label" style="margin-bottom: 6px;">Histórico de serviços</div>
+
+            @if (carregandoHistorico) {
+              <p role="status">Carregando histórico…</p>
+            } @else if (historicoErro) {
+              <p class="field-error" role="alert">{{ historicoErro }}</p>
+            } @else if (veiculo.historico.length === 0) {
+              <p class="text-faint">Nenhuma ordem de serviço registrada para este veículo.</p>
+            }
+            @for (h of veiculo.historico; track h.id) {
+              <div class="history-item">
+                <div class="history-date tabular">{{ h.data }}</div>
+                <div class="history-details">
+                  <div class="history-service">{{ h.servico }}</div>
+                  <div class="history-km tabular">{{ h.km }}</div>
+                </div>
+                <div class="history-value tabular">{{ h.valor }}</div>
+              </div>
+            }
+          </div>
+
+          <div class="card-footer-actions">
+            <button type="button" class="btn btn-primary" (click)="abrirNovaOs()">
+              Abrir OS para este veículo
+            </button>
+            <button type="button" class="btn btn-ghost" (click)="imprimirHistorico()">
+              Imprimir histórico
+            </button>
+          </div>
+        </div>
+      } @else if (buscaRealizada) {
+        <div class="not-found-box">
+          <div class="not-found-title">Placa não encontrada</div>
+          <p class="not-found-text">Nenhum veículo cadastrado com “{{ placa }}”.</p>
+          <button type="button" class="btn btn-primary" (click)="abrirCadastroVeiculo()">
+            Cadastrar veículo
+          </button>
+        </div>
+      } @else {
+        <div class="not-found-box"><p>Busque uma placa para consultar os dados do veículo.</p></div>
+      }
+    </section>
+
+  </div>
+
 </div>

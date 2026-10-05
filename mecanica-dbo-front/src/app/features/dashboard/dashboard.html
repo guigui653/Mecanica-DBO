@@ -1,1 +1,251 @@
-<p>dashboard works!</p>
+<div class="dash-wrap">
+
+  <!-- ══════════════════════════════════════════════════════════
+       COLUNA PRINCIPAL (esquerda)
+  ══════════════════════════════════════════════════════════ -->
+  <div class="dash-main">
+
+    <!-- CABEÇALHO ─────────────────────────────────────────── -->
+    <div class="dash-head">
+      <div>
+        <div class="dash-eyebrow">OFICINA · {{ today | date:'EEEE, d \'de\' MMMM':'':'pt-BR' | uppercase }}</div>
+        <h1 class="dash-title">Painel do dia</h1>
+      </div>
+      <a routerLink="/ordens" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.6" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"></path>
+        </svg>
+        Nova ordem
+      </a>
+    </div>
+
+    <!-- ── ESTADO: CARREGANDO ──────────────────────────────── -->
+    @if (carregando()) {
+      <div class="spinner-wrap">Carregando dados da oficina…</div>
+    }
+
+    <!-- ── ESTADO: ERRO / API OFFLINE ─────────────────────── -->
+    @else if (erro()) {
+      <div class="offline-box">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c53030"
+             stroke-width="1.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <div>
+          <strong>API offline</strong>
+          <p class="text-soft" style="margin:4px 0 12px">
+            Verifique se o Spring Boot está rodando na porta 8080.
+          </p>
+          <button class="btn btn-secondary" (click)="carregar()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round">
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ── CONTEÚDO PRINCIPAL ─────────────────────────────── -->
+    @else {
+
+      <!-- FAIXA DE MÉTRICAS ──────────────────────────────── -->
+      <div class="metrics-strip">
+        <div class="metric-block">
+          <div class="metric-label">NO PÁTIO</div>
+          <div class="metric-num">{{ totalPatio() }}</div>
+          <div class="metric-sub">carros na oficina</div>
+        </div>
+        <div class="metric-sep"></div>
+        <div class="metric-block">
+          <div class="metric-label">OS ABERTAS</div>
+          <div class="metric-num">{{ noPatio().length }}</div>
+          <div class="metric-sub">aguardando atendimento</div>
+        </div>
+        <div class="metric-sep"></div>
+        <div class="metric-block">
+          <div class="metric-label">PRONTAS P/ ENTREGA</div>
+          <div class="metric-num">{{ prontas().length }}</div>
+          <div class="metric-sub">ligar para o cliente</div>
+        </div>
+        <div class="metric-sep"></div>
+        <div class="metric-block">
+          <div class="metric-label">FATURAMENTO · {{ today | date:'MMMM':'':'pt-BR' | uppercase }}</div>
+          <div class="metric-num metric-num--gold">
+            {{ faturamentoMes() | currency:'BRL':'symbol':'1.0-0':'pt-BR' }}
+          </div>
+          <div class="metric-sub">OS entregues no mês</div>
+        </div>
+      </div>
+
+      <!-- ORDENS EM ANDAMENTO ─────────────────────────────── -->
+      @if (patioOrdenado().length > 0) {
+        <div class="section-card">
+          <div class="section-head">
+            <h2 class="section-title">Ordens em andamento</h2>
+            <a routerLink="/ordens" class="link-ver-todas">Ver todas →</a>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>OS</th>
+                <th>DIAGNÓSTICO</th>
+                <th class="col-right">VALOR R$</th>
+                <th>SITUAÇÃO</th>
+                <th>PARADO HÁ</th>
+                <th class="col-actions"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (os of patioOrdenado(); track os.id) {
+                <tr class="clickable" [routerLink]="['/ordens', os.id]">
+                  <td class="os-num">#{{ os.id }}</td>
+                  <td class="os-diagnostico">
+                    {{ os.diagnostico || os.reclamacoes || '—' }}
+                  </td>
+                  <td class="col-right tabular">
+                    {{ os.totalGeral | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                  </td>
+                  <td>
+                    <span [class]="badgeClass(os)">{{ labelStatus(os) }}</span>
+                  </td>
+                  <td>
+                    <span [class]="diasParado(os) >= 5 ? 'dias-alert' : 'text-faint text-sm'">
+                      {{ labelDias(diasParado(os)) }}
+                    </span>
+                  </td>
+                  <td class="col-actions">
+                    <button class="btn btn-ghost">Abrir</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="section-card">
+          <div class="section-head">
+            <h2 class="section-title">Ordens em andamento</h2>
+          </div>
+          <div class="table-empty">Nenhuma OS aberta no momento.</div>
+        </div>
+      }
+
+      <!-- PRONTAS PARA ENTREGA ─────────────────────────────── -->
+      @if (prontas().length > 0) {
+        <div class="section-card">
+          <div class="section-head">
+            <h2 class="section-title">Prontas para entrega</h2>
+            <span class="badge badge-concluida">{{ prontas().length }} pendentes</span>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>OS</th>
+                <th>DIAGNÓSTICO</th>
+                <th class="col-right">TOTAL R$</th>
+                <th>ENTRADA</th>
+                <th class="col-actions"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (os of prontas(); track os.id) {
+                <tr class="clickable" [routerLink]="['/ordens', os.id]">
+                  <td class="os-num">#{{ os.id }}</td>
+                  <td class="os-diagnostico">{{ os.diagnostico || os.reclamacoes || '—' }}</td>
+                  <td class="col-right tabular">
+                    {{ os.totalGeral | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                  </td>
+                  <td class="text-faint text-sm">{{ os.dataEntrada | date:'dd/MM':'':'pt-BR' }}</td>
+                  <td class="col-actions">
+                    <button class="btn btn-ghost">Abrir</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+    } <!-- /else -->
+  </div><!-- /dash-main -->
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SIDEBAR (direita)
+  ══════════════════════════════════════════════════════════ -->
+  <aside class="dash-side">
+
+    @if (!carregando() && !erro()) {
+
+      <!-- CLIENTES NOVOS ──────────────────────────────────── -->
+      <div class="side-card">
+        <div class="side-card-head">
+          <span class="side-title">Clientes novos</span>
+          <span class="side-count">{{ clientesNovos() }} neste mês</span>
+        </div>
+
+        @if (clientesDoMes().length > 0) {
+          <ul class="clientes-list">
+            @for (c of clientesDoMes().slice(0, 6); track c.id) {
+              <li class="cliente-row">
+                <div class="cliente-avatar">{{ c.nome.charAt(0).toUpperCase() }}</div>
+                <div class="cliente-info">
+                  <span class="cliente-nome">{{ c.nome }}</span>
+                  <span class="cliente-tel text-faint text-sm">{{ c.telefone1 }}</span>
+                </div>
+                <span class="cliente-data text-faint text-sm">{{ mesDoCliente(c) }}</span>
+              </li>
+            }
+          </ul>
+          <a routerLink="/clientes" class="side-link">Ver todos os clientes →</a>
+        } @else {
+          <p class="text-faint text-sm" style="padding: 12px 0;">Nenhum cliente novo este mês.</p>
+        }
+      </div>
+
+      <!-- ATALHOS ─────────────────────────────────────────── -->
+      <div class="side-card">
+        <div class="side-card-head">
+          <span class="side-title">Atalhos</span>
+        </div>
+        <div class="atalhos-list">
+          <a routerLink="/ordens/nova" class="atalho-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 3.5a4.5 4.5 0 0 0 5.9 5.9L21 10l-7.6 7.6"/>
+              <path d="M13.4 17.6 8 23l-4-4 5.4-5.4"/>
+            </svg>
+            Abrir ordem de serviço
+          </a>
+          <a routerLink="/clientes" class="atalho-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linecap="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            </svg>
+            Cadastrar cliente
+          </a>
+          <a routerLink="/veiculos" class="atalho-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linecap="round">
+              <path d="M4 17v-4l2-5h12l2 5v4"/>
+              <path d="M4 13h16"/>
+              <circle cx="7" cy="17" r="1.6"/>
+              <circle cx="17" cy="17" r="1.6"/>
+            </svg>
+            Consultar placa
+          </a>
+        </div>
+      </div>
+
+    }
+  </aside>
+
+</div><!-- /dash-wrap -->

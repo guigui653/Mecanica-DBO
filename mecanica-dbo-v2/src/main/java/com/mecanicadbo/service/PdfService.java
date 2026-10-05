@@ -21,9 +21,21 @@ public class PdfService {
     private final ItemPecaRepository itemPecaRepo;
     private final ItemServicoRepository itemServicoRepo;
 
-    private static final String PYTHON =
-            "C:\\Users\\gbeze\\AppData\\Local\\Microsoft\\WindowsApps\\" +
-                    "PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\python3.12.exe";
+    private static final String PYTHON = detectarPython();
+
+    private static String detectarPython() {
+        for (String cmd : new String[]{"python", "python3"}) {
+            try {
+                Process p = new ProcessBuilder(cmd, "--version")
+                        .redirectErrorStream(true).start();
+                if (p.waitFor() == 0) return cmd;
+            } catch (Exception ignored) { }
+        }
+        throw new IllegalStateException(
+                "Python não encontrado no PATH do sistema. "
+                + "Instale o Python 3 e certifique-se de que 'python' ou 'python3' "
+                + "esteja acessível pelo terminal.");
+    }
 
     @Transactional(readOnly = true)
     public byte[] gerarRecibo(Long osId) throws Exception {

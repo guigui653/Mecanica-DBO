@@ -1,0 +1,18 @@
+<main class="login-page">
+  <section class="login-card" aria-labelledby="titulo-login">
+    <div class="marca">Mecânica DBO</div>
+    <p class="marca-subtitulo">OFICINA · DESDE 1998</p>
+    <div class="login-apresentacao">
+      <h1 id="titulo-login">Bem-vindo</h1>
+      <p>Entre para acessar os cadastros e as ordens de serviço.</p>
+    </div>
+    <form (ngSubmit)="entrar()" novalidate>
+      <label for="usuario">Usuário</label>
+      <input id="usuario" name="usuario" autocomplete="username" [(ngModel)]="usuario" [disabled]="carregando()" autofocus>
+      <label for="senha">Senha</label>
+      <input id="senha" name="senha" type="password" autocomplete="current-password" [(ngModel)]="senha" [disabled]="carregando()">
+      @if (erro()) { <p class="mensagem-erro" role="alert">{{ erro() }}</p> }
+      <button type="submit" [disabled]="carregando()">{{ carregando() ? 'Entrando…' : 'Entrar' }}</button>
+    </form>
+  </section>
+</main>

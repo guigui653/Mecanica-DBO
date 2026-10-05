@@ -1,12 +1,64 @@
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.filtros { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
-table { width: 100%; }
+/* ============================================================
+   Ordens de Serviço — Lista idêntica ao protótipo Mecânica DBO
+   Arquivo: src/app/features/ordens/lista-os/lista-os.css
+   ============================================================ */
 
-.badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  color: white;
-  font-size: 12px;
+.os-toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.os-search-input {
+  flex: 1;
+  min-width: 220px;
+  max-width: 320px;
+  min-height: 38px;
+}
+
+.os-num {
+  font-size: 13px;
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+}
+
+.os-placa {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.os-carro {
+  font-size: 11.5px;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  margin-top: 1px;
+}
+
+.os-cliente,
+.os-servico,
+.os-mec {
+  font-size: 13px;
+}
+
+.os-valor {
+  font-size: 13.5px;
   font-weight: 500;
 }
+
+.empty-state {
+  padding: 34px 0;
+  font-size: 13px;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.table-foot {
+  margin-top: 18px;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+}
+.table-scroll { overflow-x: auto; max-width: 100%; }
+.table-scroll .table { min-width: 780px; }

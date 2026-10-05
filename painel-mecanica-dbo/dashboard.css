@@ -1,0 +1,60 @@
+/* ============================================================
+   Painel do dia
+   Arquivo: src/app/features/dashboard/dashboard.css
+   ============================================================ */
+
+.painel-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* Linha clicável da lista lateral */
+.item-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  transition: background 0.14s, border-color 0.14s;
+}
+
+.item-linha:hover {
+  background: var(--color-hover);
+  border-color: color-mix(in srgb, var(--color-text) 20%, transparent);
+}
+
+/* Aviso de erro de conexão */
+.alert-erro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: color-mix(in srgb, #c53030 7%, transparent);
+  border: 1px solid color-mix(in srgb, #c53030 25%, transparent);
+  border-radius: var(--radius);
+  padding: 13px 16px;
+  font-size: 13px;
+  color: #9b2c2c;
+  margin-bottom: 20px;
+}
+
+/* Primeira letra do dia da semana em maiúscula */
+.page-subtitle::first-letter {
+  text-transform: uppercase;
+}
+
+@media (max-width: 1080px) {
+  .painel-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

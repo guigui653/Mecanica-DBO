@@ -1,43 +1,80 @@
-﻿export type StatusOs = 'ABERTA' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'ENTREGUE';
+export type StatusOs = 'ABERTA' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'ENTREGUE';
+
+/** Espelha o ClienteResumoDTO do backend — o que vem aninhado no veículo. */
+export interface ClienteResumo {
+  id: number;
+  nome: string;
+  cpf?: string;
+  telefone1: string;
+}
+
+export interface VeiculoResumo {
+  id: number;
+  placa: string;
+  marca: string;
+  modelo: string;
+  cor: string;
+  combustivel: string;
+  chassi?: string;
+  anoFabricacao?: number;
+  cliente?: ClienteResumo;
+}
 
 export interface ItemPeca {
   id?: number;
   descricao: string;
   quantidade: number;
   valorUnitario: number;
-  valorTotal?: number;       // calculado pelo banco — somente leitura
+  /** Coluna gerada pelo banco (quantidade x valorUnitario) — somente leitura. */
+  valorTotal?: number;
   pagoPeloCliente?: boolean;
-  criadoEm?: string;
 }
 
 export interface ItemServico {
   id?: number;
   descricao: string;
   valor: number;
-  criadoEm?: string;
 }
 
-/**
- * OrdemServico é serializada sem veiculo, itensPeca, itensServico e notasFiscais
- * (todos anotados com @JsonIgnore para evitar ciclo de serialização).
- * Para montar a tela de detalhe, use chamadas separadas ou um DTO de resposta
- * no backend — a segunda opção é a recomendada.
- *
- * Os totais (totalPecas, totalServicos, totalGeral) são recalculados por
- * trigger no PostgreSQL a cada peça ou serviço inserido. O front nunca os
- * envia — apenas relê a OS após adicionar ou remover um item.
- */
 export interface OrdemServico {
   id?: number;
   status: StatusOs;
   kmEntrada?: number;
-  dataEntrada?: string;        // ISO yyyy-MM-dd
+  dataEntrada?: string;
   dataSaidaPrevista?: string;
-  dataSaidaReal?: string;      // preenchida pelo backend ao marcar ENTREGUE
-  reclamacoes?: string;        // queixas do cliente
-  diagnostico?: string;        // observações do mecânico
-  totalPecas?: number;         // recalculado por trigger
+  dataSaidaReal?: string;
+  reclamacoes?: string;
+  diagnostico?: string;
+  /** Recalculados por trigger no PostgreSQL — o front nunca envia. */
+  totalPecas?: number;
   totalServicos?: number;
   totalGeral?: number;
-  criadoEm?: string;
+  veiculo?: VeiculoResumo;
+  itensPeca?: ItemPeca[];
+  itensServico?: ItemServico[];
 }
+
+/** Campos que o PUT /ordens/{id} aceita. */
+export interface AtualizarOsRequest {
+  kmEntrada?: number | null;
+  dataSaidaPrevista?: string | null;
+  reclamacoes?: string | null;
+  diagnostico?: string | null;
+}
+
+export const ROTULOS_STATUS: Record<StatusOs, string> = {
+  ABERTA: 'Aberta',
+  EM_ANDAMENTO: 'Em andamento',
+  CONCLUIDA: 'Concluída',
+  ENTREGUE: 'Entregue'
+};
+
+/**
+ * Próximo passo do fluxo. O backend só impõe uma regra — ENTREGUE exige
+ * CONCLUIDA — mas avançar um passo por vez é o que o mecânico faz na prática.
+ */
+export const PROXIMO_STATUS: Partial<Record<StatusOs, { status: StatusOs; rotulo: string }>> = {
+  ABERTA:       { status: 'EM_ANDAMENTO', rotulo: 'Iniciar serviço' },
+  EM_ANDAMENTO: { status: 'CONCLUIDA',    rotulo: 'Concluir serviço' },
+  CONCLUIDA:    { status: 'ENTREGUE',     rotulo: 'Entregar ao cliente' }
+};

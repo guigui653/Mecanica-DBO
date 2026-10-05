@@ -1,0 +1,340 @@
+/* ============================================================
+   Dashboard — layout e estilos específicos
+   O design system (styles.css) cobre: .table, .badge-*,
+   .btn, .spinner-wrap, .text-faint, .text-sm, .tabular
+   ============================================================ */
+
+/* ── LAYOUT DUAS COLUNAS ─────────────────────────────────── */
+
+.dash-wrap {
+  display: flex;
+  gap: 28px;
+  padding: 26px 30px;
+  min-height: calc(100vh - 0px);
+  align-items: flex-start;
+  max-width: 1280px;
+}
+
+.dash-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.dash-side {
+  flex: none;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── CABEÇALHO ───────────────────────────────────────────── */
+
+.dash-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.dash-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.dash-title {
+  font-family: var(--font-heading);
+  font-size: 34px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1;
+}
+
+/* ── ERRO ────────────────────────────────────────────────── */
+
+.offline-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, #c53030 25%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, #c53030 5%, transparent);
+  margin-bottom: 20px;
+}
+
+/* ── FAIXA DE MÉTRICAS ───────────────────────────────────── */
+
+.metrics-strip {
+  display: flex;
+  align-items: stretch;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius);
+  margin-bottom: 22px;
+  overflow: hidden;
+}
+
+.metric-block {
+  flex: 1;
+  padding: 18px 22px;
+}
+
+.metric-sep {
+  width: 1px;
+  background: var(--color-divider);
+  flex: none;
+  margin: 14px 0;
+}
+
+.metric-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  margin-bottom: 8px;
+}
+
+.metric-num {
+  font-family: var(--font-heading);
+  font-size: 36px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.metric-num--gold {
+  color: var(--color-accent);
+  font-size: 30px;
+}
+
+.metric-sub {
+  font-size: 11.5px;
+  color: var(--color-text-soft);
+  margin-top: 5px;
+}
+
+/* ── SEÇÕES (cards de tabela) ────────────────────────────── */
+
+.section-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.link-ver-todas {
+  font-size: 12px;
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.link-ver-todas:hover {
+  color: var(--color-accent-700);
+  text-decoration: underline;
+}
+
+/* ── Coluna de OS ─────────────────────────────────────────── */
+
+.os-num {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-soft);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.os-diagnostico {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dias-alert {
+  color: #c53030;
+  font-weight: 500;
+  font-size: 12.5px;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+
+.side-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+
+.side-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.side-title {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.side-count {
+  font-size: 11px;
+  color: var(--color-text-faint);
+}
+
+/* ── Lista de clientes novos ─────────────────────────────── */
+
+.clientes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cliente-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.cliente-row:last-child {
+  border-bottom: none;
+}
+
+.cliente-avatar {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cliente-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cliente-nome {
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cliente-tel {
+  display: block;
+}
+
+.cliente-data {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.side-link {
+  display: block;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.side-link:hover {
+  color: var(--color-accent-700);
+  text-decoration: underline;
+}
+
+/* ── Atalhos da sidebar ───────────────────────────────────── */
+
+.atalhos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.atalho-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--color-text);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: background 0.13s, border-color 0.13s;
+}
+
+.atalho-btn:hover {
+  background: var(--color-hover);
+  border-color: var(--color-accent);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.atalho-btn svg {
+  color: var(--color-accent);
+  flex: none;
+}
+
+/* ── RESPONSIVO ──────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .dash-wrap {
+    flex-direction: column;
+    padding: 16px;
+  }
+  .dash-side {
+    width: 100%;
+  }
+  .metrics-strip {
+    flex-wrap: wrap;
+  }
+  .metric-block {
+    flex: 1 1 45%;
+  }
+  .metric-sep {
+    display: none;
+  }
+}

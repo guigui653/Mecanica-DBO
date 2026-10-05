@@ -1,4 +1,4 @@
-﻿/** Valores aceitos pelo banco — use exatamente esses no select */
+/** Valores aceitos pelo banco — use exatamente esses no select */
 export type Combustivel =
   | 'GASOLINA'
   | 'ETANOL'
@@ -8,9 +8,8 @@ export type Combustivel =
   | 'GNV';
 
 /**
- * O backend serializa Veiculo sem o objeto cliente (marcado com @JsonIgnore
- * para evitar referência circular). Para saber de quem é o veículo,
- * navegue a partir de GET /clientes/{id}/veiculos.
+ * As consultas retornam VeiculoResumoDTO, incluindo o cliente aninhado.
+ * Os campos de cadastro são enviados sem esse relacionamento.
  */
 export interface Veiculo {
   id?: number;
@@ -23,4 +22,5 @@ export interface Veiculo {
   anoFabricacao?: number;
   ativo?: boolean;
   criadoEm?: string;
+  cliente?: { id: number; nome: string; telefone1: string; cpf?: string };
 }

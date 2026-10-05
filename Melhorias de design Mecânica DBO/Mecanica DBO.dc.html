@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/classical-0ec1e580-34e4-41cd-a7ef-7da32d79b83c/styles.css">
+<script src="_ds/classical-0ec1e580-34e4-41cd-a7ef-7da32d79b83c/_ds_bundle.js"></script>
+<style>
+body{margin:0}
+a{color:var(--color-accent);text-decoration:none}
+a:hover{color:var(--color-accent-700);text-decoration:underline}
+@keyframes dboIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes dboToast{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)">
+
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+  <div style="display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);min-height:100vh">
+    <div style="background:#1a1917;color:#f3f2f2;padding:56px 52px;display:flex;flex-direction:column;position:relative;overflow:hidden">
+      <div style="font-family:var(--font-heading);font-weight:600;font-size:24px;letter-spacing:-0.01em">Mecânica DBO</div>
+      <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b68235;margin-top:8px">Oficina · desde 1998</div>
+      <div style="margin-top:auto;max-width:420px;position:relative;z-index:1">
+        <div style="height:1px;background:rgba(243,242,242,0.22);margin-bottom:26px"></div>
+        <p style="font-family:var(--font-heading);font-weight:400;font-size:31px;line-height:1.2;margin:0 0 18px">Toda ordem de serviço, cada peça e cada cliente em um só lugar.</p>
+        <p style="font-size:13.5px;line-height:1.7;color:rgba(243,242,242,0.68);margin:0;max-width:360px">Sistema de gestão da oficina. Consulta por placa, histórico completo do veículo, orçamentos e faturamento.</p>
+      </div>
+      <div style="position:absolute;right:-40px;bottom:-70px;font-family:var(--font-heading);font-weight:400;font-size:300px;line-height:0.8;color:rgba(182,130,53,0.13);font-variant-numeric:tabular-nums;user-select:none">98</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;padding:48px 40px">
+      <div style="width:100%;max-width:340px">
+        <h2 style="margin:0 0 6px;font-size:30px;font-weight:400">Entrar</h2>
+        <p style="font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent);margin:0 0 26px">Use o usuário cadastrado na oficina.</p>
+        <div class="field" style="margin-bottom:14px">
+          <label>Usuário</label>
+          <input class="input" type="text" value="{{ user }}" onChange="{{ onUser }}" style="min-height:42px">
+        </div>
+        <div class="field" style="margin-bottom:8px">
+          <label>Senha</label>
+          <input class="input" type="password" value="{{ pass }}" onChange="{{ onPass }}" style="min-height:42px">
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 20px">
+          <label class="radio"><input type="checkbox"><span class="dot"></span>Manter conectado</label>
+          <a href="#" style="font-size:12px">Esqueci a senha</a>
+        </div>
+        <button type="button" class="btn btn-primary btn-block" style="min-height:44px;margin-top:0" onClick="{{ doLogin }}">Entrar no sistema</button>
+        <div style="margin-top:22px;font-size:11.5px;color:color-mix(in srgb, var(--color-text) 50%, transparent);text-align:center">Protótipo — qualquer senha entra.</div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ inApp }}">
+<div style="display:flex;min-height:100vh">
+
+  <aside style="flex:none;width:240px;border-right:1px solid var(--color-divider);padding:22px 0 0;display:flex;flex-direction:column">
+    <div style="padding:0 20px 20px;border-bottom:1px solid var(--color-divider);margin-bottom:14px">
+      <div style="font-family:var(--font-heading);font-weight:600;font-size:21px;line-height:1.1">Mecânica DBO</div>
+      <div style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent);margin-top:6px">Oficina · desde 1998</div>
+    </div>
+
+    <nav style="display:flex;flex-direction:column;gap:2px;padding:0 12px">
+      <button type="button" onClick="{{ goDash }}" style="{{ sDash }}" style-hover="background:color-mix(in srgb, var(--color-text) 6%, transparent)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>Painel</span>
+      </button>
+      <button type="button" onClick="{{ goCli }}" style="{{ sCli }}" style-hover="background:color-mix(in srgb, var(--color-text) 6%, transparent)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg>
+        <span>Clientes</span>
+        <span style="margin-left:auto;font-size:11px;font-variant-numeric:tabular-nums;color:color-mix(in srgb, var(--color-text) 45%, transparent)">218</span>
+      </button>
+      <button type="button" onClick="{{ goVei }}" style="{{ sVei }}" style-hover="background:color-mix(in srgb, var(--color-text) 6%, transparent)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 17v-4l2-5h12l2 5v4"></path><path d="M4 13h16"></path><circle cx="7" cy="17" r="1.6"></circle><circle cx="17" cy="17" r="1.6"></circle></svg>
+        <span>Veículos</span>
+      </button>
+      <button type="button" onClick="{{ goOS }}" style="{{ sOS }}" style-hover="background:color-mix(in srgb, var(--color-text) 6%, transparent)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5a4.5 4.5 0 0 0 5.9 5.9L21 10l-7.6 7.6"></path><path d="M13.4 17.6 8 23l-4-4 5.4-5.4"></path></svg>
+        <span>Ordens de Serviço</span>
+        <span style="margin-left:auto;font-size:11px;font-variant-numeric:tabular-nums;color:var(--color-accent)">{{ openCount }}</span>
+      </button>
+    </nav>
+
+    <div style="margin-top:auto;padding:16px 20px;border-top:1px solid var(--color-divider);font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent);line-height:1.6">
+      <div style="display:flex;align-items:center;gap:7px">
+        <span style="width:5px;height:5px;border-radius:50%;background:var(--color-accent);flex:none"></span>
+        <span style="font-variant-numeric:tabular-nums">Sincronizado 10:42</span>
+      </div>
+      <div style="color:var(--color-text);font-size:12.5px;margin-top:4px">Gustavo Barros · proprietário</div>
+      <button type="button" class="btn btn-ghost" style="font-size:11.5px;padding:2px 0;margin-top:2px" onClick="{{ doLogout }}">Sair</button>
+    </div>
+  </aside>
+
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+
+    <header style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;padding:24px 34px 18px;border-bottom:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent);margin-bottom:5px">{{ kicker }}</div>
+        <h1 style="font-size:34px;margin:0;font-weight:400">{{ title }}</h1>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <sc-if value="{{ hasBack }}">
+          <button type="button" class="btn btn-secondary" onClick="{{ goBack }}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M19 12H5m0 0 6-6m-6 6 6 6"></path></svg>
+            Voltar
+          </button>
+        </sc-if>
+        <button type="button" class="btn btn-primary" onClick="{{ openNew }}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+          Nova ordem
+        </button>
+      </div>
+    </header>
+
+    <div style="flex:1;padding:26px 34px 48px" key="{{ screen }}">
+
+      <sc-if value="{{ isDash }}">
+        <div style="animation:dboIn 0.28s ease both">
+          <sc-if value="{{ showKpis }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;background:var(--color-divider);border:1px solid var(--color-divider);border-radius:4px;overflow:hidden;margin-bottom:30px">
+              <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+                <div style="background:var(--color-bg);padding:16px 18px">
+                  <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent)">{{ k.label }}</div>
+                  <div style="font-family:var(--font-heading);font-weight:400;font-size:40px;line-height:1.05;font-variant-numeric:tabular-nums;margin-top:6px">{{ k.value }}</div>
+                  <div style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ k.note }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:36px;align-items:start">
+
+            <div style="min-width:0;display:flex;flex-direction:column;gap:32px">
+              <section style="min-width:0">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px">
+                  <h3 style="margin:0;font-size:22px">Ordens em andamento</h3>
+                  <a href="#" onClick="{{ goOS }}" style="font-size:12px">Ver todas</a>
+                </div>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th style="width:66px">OS</th>
+                      <th>Veículo</th>
+                      <th>Serviço</th>
+                      <th style="width:96px;text-align:right">Valor R$</th>
+                      <th style="width:152px">Situação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <sc-for list="{{ dashRows }}" as="r" hint-placeholder-count="5">
+                      <tr onClick="{{ r.open }}" style="cursor:pointer" style-hover="background:color-mix(in srgb, var(--color-text) 5%, transparent)">
+                        <td style="font-variant-numeric:tabular-nums;font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent)">{{ r.num }}</td>
+                        <td>
+                          <div style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:0.05em;font-variant-numeric:tabular-nums">{{ r.placa }}</div>
+                          <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ r.carro }}</div>
+                        </td>
+                        <td style="font-size:13px">{{ r.servico }}</td>
+                        <td style="text-align:right;font-variant-numeric:tabular-nums">{{ r.valor }}</td>
+                        <td><span class="tag {{ r.tag }}">{{ r.status }}</span></td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </section>
+
+              <section>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px">
+                  <h3 style="margin:0;font-size:22px">Veículos no pátio agora</h3>
+                  <span style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 50%, transparent);font-variant-numeric:tabular-nums">{{ patioCount }} de 9 vagas</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:10px">
+                  <sc-for list="{{ patio }}" as="p" hint-placeholder-count="7">
+                    <button type="button" onClick="{{ p.open }}" style="{{ p.cardStyle }}" style-hover="border-color:var(--color-accent)">
+                      <div style="font-family:var(--font-heading);font-weight:600;font-size:15px;letter-spacing:0.11em;font-variant-numeric:tabular-nums">{{ p.placa }}</div>
+                      <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 58%, transparent);margin-top:2px">{{ p.carro }}</div>
+                      <div style="display:flex;align-items:center;gap:6px;margin-top:9px">
+                        <span style="{{ p.dot }}"></span>
+                        <span style="font-size:11px;letter-spacing:0.02em">{{ p.status }}</span>
+                      </div>
+                    </button>
+                  </sc-for>
+                </div>
+              </section>
+
+              <section>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px">
+                  <h3 style="margin:0;font-size:22px">Orçamentos aguardando você</h3>
+                  <span style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-accent);font-variant-numeric:tabular-nums">{{ orcTotal }} parados</span>
+                </div>
+                <sc-if value="{{ hasOrc }}">
+                  <div>
+                    <sc-for list="{{ orcamentos }}" as="o" hint-placeholder-count="3">
+                      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:13px 0;border-top:1px solid var(--color-divider)">
+                        <div style="flex:none;font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:0.08em;width:78px;font-variant-numeric:tabular-nums">{{ o.placa }}</div>
+                        <div style="flex:1;min-width:140px">
+                          <div style="font-size:13px">{{ o.servico }}</div>
+                          <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ o.cliente }} · {{ o.dias }}</div>
+                        </div>
+                        <div style="flex:none;font-variant-numeric:tabular-nums;font-size:14px">{{ o.valor }}</div>
+                        <div style="flex:none;display:flex;gap:6px">
+                          <button type="button" class="btn btn-primary" style="font-size:12.5px;padding:5px 12px" onClick="{{ o.aprovar }}">Aprovar</button>
+                          <button type="button" class="btn btn-secondary" style="font-size:12.5px;padding:5px 12px" onClick="{{ o.recusar }}">Recusar</button>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ noOrc }}">
+                  <div style="border-top:1px solid var(--color-divider);padding:22px 0;font-size:13px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Nada pendente. Todos os orçamentos do dia foram respondidos.</div>
+                </sc-if>
+              </section>
+            </div>
+
+            <div style="min-width:0;display:flex;flex-direction:column;gap:32px">
+              <sc-if value="{{ showAgenda }}" hint-placeholder-val="{{ true }}">
+                <section>
+                  <h3 style="margin:0 0 3px;font-size:22px">Agenda de hoje</h3>
+                  <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:10px">Quarta, 9 de setembro</div>
+                  <div>
+                    <sc-for list="{{ agenda }}" as="a" hint-placeholder-count="5">
+                      <div style="display:flex;gap:13px;padding:11px 0;border-top:1px solid var(--color-divider)">
+                        <div style="flex:none;width:42px;font-family:var(--font-heading);font-weight:600;font-size:14px;font-variant-numeric:tabular-nums;color:var(--color-accent-700)">{{ a.hora }}</div>
+                        <div style="min-width:0">
+                          <div style="font-size:13px">{{ a.what }}</div>
+                          <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ a.who }}</div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </section>
+              </sc-if>
+
+              <section>
+                <h3 style="margin:0 0 10px;font-size:22px">Estoque baixo</h3>
+                <div>
+                  <sc-for list="{{ estoque }}" as="e" hint-placeholder-count="4">
+                    <div style="padding:11px 0;border-top:1px solid var(--color-divider)">
+                      <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+                        <span style="font-size:13px">{{ e.peca }}</span>
+                        <span style="font-size:12px;font-variant-numeric:tabular-nums;color:color-mix(in srgb, var(--color-text) 60%, transparent)">{{ e.qtd }}</span>
+                      </div>
+                      <div style="height:3px;background:color-mix(in srgb, var(--color-text) 10%, transparent);margin-top:7px;border-radius:2px;overflow:hidden">
+                        <div style="{{ e.bar }}"></div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+                <button type="button" class="btn btn-ghost" style="font-size:12px;margin-top:10px" onClick="{{ toastPedido }}">Gerar pedido de compra</button>
+              </section>
+
+              <section>
+                <h3 style="margin:0 0 10px;font-size:22px">Clientes novos</h3>
+                <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin:-6px 0 4px;font-variant-numeric:tabular-nums">7 em setembro · 4 vieram por indicação</div>
+                <div>
+                  <sc-for list="{{ novos }}" as="n" hint-placeholder-count="3">
+                    <div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--color-divider)">
+                      <div style="min-width:0">
+                        <div style="font-size:13px">{{ n.nome }}</div>
+                        <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ n.origem }}</div>
+                      </div>
+                      <div style="flex:none;font-size:11.5px;font-variant-numeric:tabular-nums;color:color-mix(in srgb, var(--color-text) 50%, transparent)">{{ n.data }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </section>
+
+              <section>
+                <h3 style="margin:0 0 10px;font-size:22px">Atalhos</h3>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <button type="button" class="btn btn-secondary btn-block" style="justify-content:flex-start;margin-top:0" onClick="{{ openNew }}">Abrir ordem de serviço</button>
+                  <button type="button" class="btn btn-secondary btn-block" style="justify-content:flex-start;margin-top:0" onClick="{{ goCli }}">Cadastrar cliente</button>
+                  <button type="button" class="btn btn-secondary btn-block" style="justify-content:flex-start;margin-top:0" onClick="{{ goVei }}">Consultar placa</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCli }}">
+        <div style="animation:dboIn 0.28s ease both">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;max-width:660px">
+            <input class="input" type="text" placeholder="Nome, CPF/CNPJ, telefone ou placa" value="{{ q }}" onChange="{{ onQ }}" style="flex:1;min-width:220px;min-height:42px;font-size:14px">
+            <button type="button" class="btn btn-primary" style="min-height:42px">Buscar</button>
+            <button type="button" class="btn btn-secondary" style="min-height:42px" onClick="{{ toastCliente }}">Novo cliente</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 22px">
+            <sc-for list="{{ cliFilters }}" as="f" hint-placeholder-count="4">
+              <button type="button" onClick="{{ f.pick }}" style="{{ f.style }}">{{ f.label }}</button>
+            </sc-for>
+          </div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th style="width:168px">Documento</th>
+                <th style="width:146px">Telefone</th>
+                <th style="width:84px;text-align:right">Veículos</th>
+                <th style="width:126px">Última visita</th>
+                <th style="width:52px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ clientes }}" as="c" hint-placeholder-count="6">
+                <tr onClick="{{ c.open }}" style="cursor:pointer" style-hover="background:color-mix(in srgb, var(--color-text) 5%, transparent)">
+                  <td>
+                    <div style="font-family:var(--font-heading);font-weight:600;font-size:15px">{{ c.nome }}</div>
+                    <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ c.nota }}</div>
+                  </td>
+                  <td style="font-variant-numeric:tabular-nums;font-size:13px">{{ c.doc }}</td>
+                  <td style="font-variant-numeric:tabular-nums;font-size:13px">{{ c.fone }}</td>
+                  <td style="text-align:right;font-variant-numeric:tabular-nums">{{ c.veiculos }}</td>
+                  <td style="font-variant-numeric:tabular-nums;font-size:13px">{{ c.visita }}</td>
+                  <td style="text-align:right;color:var(--color-accent);font-size:12px">Abrir</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <sc-if value="{{ cliEmpty }}">
+            <div style="padding:30px 0;font-size:13px;color:color-mix(in srgb, var(--color-text) 55%, transparent);border-bottom:1px solid var(--color-divider)">Nenhum cliente encontrado para “{{ q }}”.</div>
+          </sc-if>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:12px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">
+            <span style="font-variant-numeric:tabular-nums">{{ cliCount }} de 218 cadastros</span>
+            <div style="display:flex;gap:6px">
+              <button type="button" class="btn btn-secondary" disabled>Anterior</button>
+              <button type="button" class="btn btn-secondary">Próxima</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCliDet }}">
+        <div style="animation:dboIn 0.28s ease both;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:40px;align-items:start">
+          <section style="min-width:0">
+            <div style="border:1px solid var(--color-divider);border-radius:4px;padding:20px 22px">
+              <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-accent);margin-bottom:8px">{{ cd.tipo }}</div>
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:24px;line-height:1.15">{{ cd.nome }}</div>
+              <hr class="hr">
+              <div style="display:flex;flex-direction:column;gap:14px;font-size:13px">
+                <div>
+                  <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:2px">Documento</div>
+                  <span style="font-variant-numeric:tabular-nums">{{ cd.doc }}</span>
+                </div>
+                <div>
+                  <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:2px">Telefone</div>
+                  <span style="font-variant-numeric:tabular-nums">{{ cd.fone }}</span>
+                </div>
+                <div>
+                  <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:2px">E-mail</div>
+                  {{ cd.email }}
+                </div>
+                <div>
+                  <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:2px">Endereço</div>
+                  {{ cd.endereco }}
+                </div>
+              </div>
+              <hr class="hr">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div>
+                  <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Total gasto</div>
+                  <div style="font-family:var(--font-heading);font-weight:400;font-size:26px;font-variant-numeric:tabular-nums;line-height:1.2">{{ cd.total }}</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Cliente desde</div>
+                  <div style="font-family:var(--font-heading);font-weight:400;font-size:26px;font-variant-numeric:tabular-nums;line-height:1.2">{{ cd.desde }}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
+                <button type="button" class="btn btn-primary" onClick="{{ openNew }}">Nova OS</button>
+                <button type="button" class="btn btn-ghost" onClick="{{ toastWhats }}">Enviar mensagem</button>
+              </div>
+            </div>
+          </section>
+
+          <section style="min-width:0;display:flex;flex-direction:column;gap:30px">
+            <div>
+              <h3 style="margin:0 0 10px;font-size:22px">Veículos</h3>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px">
+                <sc-for list="{{ cd.veiculos }}" as="v" hint-placeholder-count="2">
+                  <button type="button" onClick="{{ v.open }}" style="text-align:left;border:1px solid var(--color-divider);border-radius:4px;background:transparent;cursor:pointer;padding:13px 15px;font-family:var(--font-body);color:var(--color-text)" style-hover="border-color:var(--color-accent)">
+                    <div style="font-family:var(--font-heading);font-weight:600;font-size:15px;letter-spacing:0.11em;font-variant-numeric:tabular-nums">{{ v.placa }}</div>
+                    <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 58%, transparent);margin-top:2px">{{ v.carro }}</div>
+                    <div style="font-size:11px;margin-top:8px;color:var(--color-accent-700);font-variant-numeric:tabular-nums">{{ v.km }}</div>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <div>
+              <h3 style="margin:0 0 8px;font-size:22px">Histórico de ordens</h3>
+              <table class="table">
+                <thead>
+                  <tr><th style="width:66px">OS</th><th style="width:104px">Data</th><th>Serviço</th><th style="width:96px;text-align:right">Valor R$</th></tr>
+                </thead>
+                <tbody>
+                  <sc-for list="{{ cd.ordens }}" as="o" hint-placeholder-count="4">
+                    <tr onClick="{{ o.open }}" style="cursor:pointer" style-hover="background:color-mix(in srgb, var(--color-text) 5%, transparent)">
+                      <td style="font-variant-numeric:tabular-nums;font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent)">{{ o.num }}</td>
+                      <td style="font-variant-numeric:tabular-nums;font-size:13px">{{ o.data }}</td>
+                      <td style="font-size:13px">{{ o.servico }}</td>
+                      <td style="text-align:right;font-variant-numeric:tabular-nums">{{ o.valor }}</td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <h3 style="margin:0 0 8px;font-size:22px">Observações</h3>
+              <p style="font-size:13.5px;line-height:1.75;text-align:justify;margin:0;max-width:62ch">{{ cd.obs }}</p>
+            </div>
+          </section>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isVei }}">
+        <div style="animation:dboIn 0.28s ease both;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:44px;align-items:start">
+          <section style="min-width:0">
+            <h3 style="margin:0 0 4px;font-size:22px">Busca por placa</h3>
+            <p style="font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent);margin:0 0 16px">Digite a placa para ver o veículo, o proprietário e todo o histórico de serviços.</p>
+            <div style="display:flex;gap:10px;align-items:center">
+              <input class="input" type="text" placeholder="ABC1D23" value="{{ plate }}" onChange="{{ onPlate }}" style="min-height:54px;font-family:var(--font-heading);font-weight:600;font-size:24px;letter-spacing:0.18em;text-align:center;font-variant-numeric:tabular-nums;text-transform:uppercase">
+              <button type="button" class="btn btn-primary" style="min-height:54px;padding-inline:22px" onClick="{{ doPlate }}">Buscar</button>
+            </div>
+            <div style="margin-top:12px;font-size:11.5px;color:color-mix(in srgb, var(--color-text) 50%, transparent)">Aceita placa antiga (ABC1234) e Mercosul (ABC1D23).</div>
+            <hr class="hr">
+            <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:10px">Consultas recentes</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ recentes }}" as="p" hint-placeholder-count="4">
+                <button type="button" onClick="{{ p.pick }}" style="font-family:var(--font-heading);font-weight:600;letter-spacing:0.1em;font-size:12px;padding:5px 11px;border:1px solid var(--color-accent);color:var(--color-accent);background:transparent;border-radius:3px;cursor:pointer;font-variant-numeric:tabular-nums" style-hover="background:color-mix(in srgb, var(--color-accent) 12%, transparent)">{{ p.placa }}</button>
+              </sc-for>
+            </div>
+          </section>
+
+          <section style="min-width:0">
+            <sc-if value="{{ hasVei }}">
+              <div style="border:1px solid var(--color-divider);border-radius:4px;padding:22px 24px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+                  <div>
+                    <div style="font-family:var(--font-heading);font-weight:600;font-size:27px;letter-spacing:0.14em;font-variant-numeric:tabular-nums">{{ vd.placa }}</div>
+                    <div style="font-size:14px;margin-top:3px">{{ vd.carro }}</div>
+                  </div>
+                  <span class="tag {{ vd.tag }}">{{ vd.status }}</span>
+                </div>
+                <hr class="hr">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:16px 20px;font-size:13px">
+                  <div>
+                    <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:3px">Proprietário</div>
+                    <a href="#" onClick="{{ vd.openCli }}">{{ vd.dono }}</a>
+                  </div>
+                  <div>
+                    <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:3px">Telefone</div>
+                    <span style="font-variant-numeric:tabular-nums">{{ vd.fone }}</span>
+                  </div>
+                  <div>
+                    <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:3px">Quilometragem</div>
+                    <span style="font-variant-numeric:tabular-nums">{{ vd.km }}</span>
+                  </div>
+                  <div>
+                    <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:3px">Próxima revisão</div>
+                    <span style="font-variant-numeric:tabular-nums">{{ vd.proxima }}</span>
+                  </div>
+                </div>
+                <hr class="hr">
+                <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:4px">Histórico de serviços</div>
+                <div>
+                  <sc-for list="{{ vd.historico }}" as="h" hint-placeholder-count="4">
+                    <div style="display:flex;gap:16px;padding:11px 0;border-top:1px solid var(--color-divider)">
+                      <div style="flex:none;width:76px;font-size:12px;font-variant-numeric:tabular-nums;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ h.data }}</div>
+                      <div style="min-width:0;flex:1">
+                        <div style="font-size:13px">{{ h.servico }}</div>
+                        <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent);font-variant-numeric:tabular-nums">{{ h.km }}</div>
+                      </div>
+                      <div style="flex:none;font-size:13px;font-variant-numeric:tabular-nums">{{ h.valor }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
+                  <button type="button" class="btn btn-primary" onClick="{{ openNew }}">Abrir OS para este veículo</button>
+                  <button type="button" class="btn btn-ghost" onClick="{{ toastPrint }}">Imprimir histórico</button>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ noVei }}">
+              <div style="border:1px dashed var(--color-divider);border-radius:4px;padding:44px 30px;text-align:center">
+                <div style="font-family:var(--font-heading);font-weight:400;font-size:22px;margin-bottom:6px">Placa não encontrada</div>
+                <p style="font-size:13px;color:color-mix(in srgb, var(--color-text) 58%, transparent);margin:0 0 16px">Nenhum veículo cadastrado com “{{ plate }}”.</p>
+                <button type="button" class="btn btn-primary" onClick="{{ toastVeiculo }}">Cadastrar veículo</button>
+              </div>
+            </sc-if>
+          </section>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isOS }}">
+        <div style="animation:dboIn 0.28s ease both">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:22px">
+            <div style="display:flex;border:1px solid var(--color-divider);border-radius:4px;overflow:hidden">
+              <sc-for list="{{ osFilters }}" as="f" hint-placeholder-count="4">
+                <button type="button" onClick="{{ f.pick }}" style="{{ f.style }}">{{ f.label }}</button>
+              </sc-for>
+            </div>
+            <input class="input" type="text" placeholder="Filtrar por placa, cliente ou nº" value="{{ osQ }}" onChange="{{ onOsQ }}" style="flex:1;min-width:190px;max-width:300px">
+          </div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width:78px">Nº</th>
+                <th>Veículo</th>
+                <th>Cliente</th>
+                <th>Serviço</th>
+                <th style="width:104px">Mecânico</th>
+                <th style="width:104px;text-align:right">Valor R$</th>
+                <th style="width:158px">Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ ordens }}" as="o" hint-placeholder-count="8">
+                <tr onClick="{{ o.open }}" style="cursor:pointer" style-hover="background:color-mix(in srgb, var(--color-text) 5%, transparent)">
+                  <td style="font-variant-numeric:tabular-nums;color:color-mix(in srgb, var(--color-text) 60%, transparent);font-size:13px">{{ o.num }}</td>
+                  <td>
+                    <div style="font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:0.06em;font-variant-numeric:tabular-nums">{{ o.placa }}</div>
+                    <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ o.carro }}</div>
+                  </td>
+                  <td style="font-size:13px">{{ o.cliente }}</td>
+                  <td style="font-size:13px">{{ o.servico }}</td>
+                  <td style="font-size:13px">{{ o.mec }}</td>
+                  <td style="text-align:right;font-variant-numeric:tabular-nums">{{ o.valor }}</td>
+                  <td><span class="tag {{ o.tag }}">{{ o.status }}</span></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <sc-if value="{{ osEmpty }}">
+            <div style="padding:30px 0;font-size:13px;color:color-mix(in srgb, var(--color-text) 55%, transparent);border-bottom:1px solid var(--color-divider)">Nenhuma ordem neste filtro.</div>
+          </sc-if>
+          <div style="margin-top:16px;font-size:12px;color:color-mix(in srgb, var(--color-text) 55%, transparent);font-variant-numeric:tabular-nums">{{ osSum }}</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isOSDet }}">
+        <div style="animation:dboIn 0.28s ease both;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:40px;align-items:start">
+          <section style="min-width:0">
+            <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid var(--color-divider)">
+              <div>
+                <div style="font-family:var(--font-heading);font-weight:600;font-size:24px;letter-spacing:0.13em;font-variant-numeric:tabular-nums">{{ od.placa }}</div>
+                <div style="font-size:14px;margin-top:2px">{{ od.carro }} · <a href="#" onClick="{{ od.openCli }}">{{ od.cliente }}</a></div>
+              </div>
+              <span class="tag {{ od.tag }}" style="font-size:12px;padding:5px 12px">{{ od.status }}</span>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:16px 20px;font-size:13px;padding:18px 0;border-bottom:1px solid var(--color-divider)">
+              <div>
+                <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:3px">Abertura</div>
+                <span style="font-variant-numeric:tabular-nums">{{ od.abertura }}</span>
+              </div>
+              <div>
+                <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:3px">Previsão</div>
+                <span style="font-variant-numeric:tabular-nums">{{ od.previsao }}</span>
+              </div>
+              <div>
+                <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:3px">Mecânico</div>
+                {{ od.mec }}
+              </div>
+              <div>
+                <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:3px">KM de entrada</div>
+                <span style="font-variant-numeric:tabular-nums">{{ od.km }}</span>
+              </div>
+            </div>
+
+            <div style="padding:18px 0;border-bottom:1px solid var(--color-divider)">
+              <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-bottom:6px">Relato do cliente</div>
+              <p style="font-size:13.5px;line-height:1.7;margin:0;text-align:justify;max-width:64ch">{{ od.relato }}</p>
+            </div>
+
+            <h3 style="margin:24px 0 6px;font-size:22px">Itens</h3>
+            <table class="table">
+              <thead>
+                <tr><th>Descrição</th><th style="width:86px">Tipo</th><th style="width:56px;text-align:right">Qtd</th><th style="width:100px;text-align:right">Unit. R$</th><th style="width:100px;text-align:right">Total R$</th></tr>
+              </thead>
+              <tbody>
+                <sc-for list="{{ od.itens }}" as="i" hint-placeholder-count="5">
+                  <tr>
+                    <td style="font-size:13px">{{ i.desc }}</td>
+                    <td><span class="tag {{ i.tag }}">{{ i.tipo }}</span></td>
+                    <td style="text-align:right;font-variant-numeric:tabular-nums">{{ i.qtd }}</td>
+                    <td style="text-align:right;font-variant-numeric:tabular-nums">{{ i.unit }}</td>
+                    <td style="text-align:right;font-variant-numeric:tabular-nums">{{ i.total }}</td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </section>
+
+          <aside style="min-width:0;display:flex;flex-direction:column;gap:28px">
+            <div style="border:1px solid var(--color-divider);border-radius:4px;padding:20px 22px">
+              <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-accent);margin-bottom:12px">Resumo financeiro</div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0"><span>Peças</span><span style="font-variant-numeric:tabular-nums">{{ od.pecas }}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0"><span>Mão de obra</span><span style="font-variant-numeric:tabular-nums">{{ od.mao }}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;color:var(--color-accent-700)"><span>Desconto</span><span style="font-variant-numeric:tabular-nums">{{ od.desconto }}</span></div>
+              <hr class="hr" style="margin:12px 0">
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <span style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent)">Total</span>
+                <span style="font-family:var(--font-heading);font-weight:400;font-size:30px;font-variant-numeric:tabular-nums">{{ od.total }}</span>
+              </div>
+            </div>
+
+            <div>
+              <h3 style="margin:0 0 10px;font-size:22px">Andamento</h3>
+              <div>
+                <sc-for list="{{ od.timeline }}" as="t" hint-placeholder-count="4">
+                  <div style="display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--color-divider)">
+                    <span style="{{ t.dot }}"></span>
+                    <div style="min-width:0">
+                      <div style="font-size:13px">{{ t.etapa }}</div>
+                      <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent);font-variant-numeric:tabular-nums">{{ t.quando }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button type="button" class="btn btn-primary btn-block" style="margin-top:0" onClick="{{ od.avancar }}">{{ od.acao }}</button>
+              <button type="button" class="btn btn-secondary btn-block" style="margin-top:0" onClick="{{ toastPrint }}">Imprimir ordem</button>
+              <button type="button" class="btn btn-ghost" style="font-size:12.5px" onClick="{{ toastWhats }}">Enviar por WhatsApp</button>
+            </div>
+          </aside>
+        </div>
+      </sc-if>
+
+    </div>
+  </main>
+</div>
+</sc-if>
+
+<sc-if value="{{ newOpen }}">
+  <div class="dialog-backdrop">
+    <div class="dialog" style="width:min(560px,100%)">
+      <div class="dialog-title">Nova ordem de serviço</div>
+      <div class="dialog-body" style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:grid;grid-template-columns:minmax(0,140px) minmax(0,1fr);gap:12px">
+          <div class="field">
+            <label>Placa</label>
+            <input class="input" type="text" placeholder="ABC1D23" value="{{ nPlaca }}" onChange="{{ onNPlaca }}" style="font-family:var(--font-heading);font-weight:600;letter-spacing:0.14em;text-transform:uppercase">
+          </div>
+          <div class="field">
+            <label>Cliente</label>
+            <input class="input" type="text" placeholder="Buscar cadastro" value="{{ nCliente }}" onChange="{{ onNCliente }}">
+          </div>
+        </div>
+        <div class="field">
+          <label>Serviço</label>
+          <input class="input" type="text" placeholder="Revisão de 40.000 km" value="{{ nServico }}" onChange="{{ onNServico }}">
+        </div>
+        <div class="field">
+          <label>Relato do cliente</label>
+          <textarea class="input" placeholder="Barulho na suspensão dianteira ao passar em lombada." style="min-height:74px"></textarea>
+        </div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap">
+          <label class="radio"><input type="radio" name="tipo" checked><span class="dot"></span>Orçamento</label>
+          <label class="radio"><input type="radio" name="tipo"><span class="dot"></span>Serviço autorizado</label>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" onClick="{{ closeNew }}">Cancelar</button>
+        <button type="button" class="btn btn-primary" onClick="{{ createOS }}">Criar ordem</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ hasToast }}">
+  <div style="position:fixed;right:26px;bottom:26px;z-index:50;background:#1a1917;color:#f3f2f2;border-radius:4px;padding:13px 18px;font-size:13px;box-shadow:var(--shadow-lg);animation:dboToast 0.24s ease both;display:flex;align-items:center;gap:10px;max-width:340px">
+    <span style="width:5px;height:5px;border-radius:50%;background:#b68235;flex:none"></span>
+    <span>{{ toast }}</span>
+  </div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;showKpis&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Painel&quot;},&quot;showAgenda&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Painel&quot;}}">
+const NAV_BASE = {
+  display: 'flex', alignItems: 'center', gap: '11px', padding: '9px 12px',
+  border: 0, borderRadius: '4px', background: 'transparent', cursor: 'pointer',
+  textAlign: 'left', fontFamily: 'var(--font-body)', fontSize: '14px',
+  width: '100%', color: 'var(--color-text)'
+};
+const NAV_ON = {
+  ...NAV_BASE, color: 'var(--color-accent-700)', fontFamily: 'var(--font-heading)',
+  fontWeight: 600, fontSize: '15px', boxShadow: 'inset 2px 0 0 var(--color-accent)',
+  background: 'color-mix(in srgb, var(--color-accent) 9%, transparent)'
+};
+const CHIP = {
+  fontFamily: 'var(--font-body)', fontSize: '11.5px', padding: '4px 11px',
+  borderRadius: '3px', cursor: 'pointer', background: 'transparent',
+  border: '1px solid var(--color-divider)', color: 'var(--color-text)'
+};
+const CHIP_ON = { ...CHIP, borderColor: 'var(--color-accent)', color: 'var(--color-accent-700)', background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' };
+const SEG = {
+  fontFamily: 'var(--font-body)', fontSize: '13px', padding: '7px 13px',
+  border: 0, borderRight: '1px solid var(--color-divider)', background: 'transparent',
+  cursor: 'pointer', color: 'var(--color-text)'
+};
+const SEG_ON = { ...SEG, color: 'var(--color-accent-700)', boxShadow: 'inset 0 -2px 0 var(--color-accent)', background: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' };
+const PATIO_CARD = {
+  textAlign: 'left', border: '1px solid var(--color-divider)', borderRadius: '4px',
+  background: 'transparent', cursor: 'pointer', padding: '13px 15px',
+  fontFamily: 'var(--font-body)', color: 'var(--color-text)'
+};
+
+const STATUS = {
+  'Em serviço': 'tag-accent',
+  'Aguardando peça': 'tag-neutral',
+  'Aguardando aprovação': 'tag-neutral',
+  'Orçamento': 'tag-outline',
+  'Pronto p/ entrega': 'tag-accent-2',
+  'Concluída': 'tag-neutral'
+};
+const dot = (color) => ({ width: '7px', height: '7px', borderRadius: '50%', flex: 'none', marginTop: '5px', background: color });
+
+const ORDENS = [
+  { num: '2481', placa: 'RKT4B21', carro: 'Fiat Argo 1.3 · 2021', cliente: 'Marcelo Tavares', cid: 'marcelo', servico: 'Revisão de 40.000 km', mec: 'Diego R.', valor: '1.240,00', status: 'Em serviço', patio: true },
+  { num: '2480', placa: 'QPD8734', carro: 'VW Gol 1.6 · 2016', cliente: 'Ana B. Correia', cid: 'ana', servico: 'Troca de embreagem', mec: 'Wilson A.', valor: '2.890,00', status: 'Aguardando peça', patio: true },
+  { num: '2479', placa: 'SBA2J09', carro: 'Hyundai HB20 · 2019', cliente: 'Juliana Prado', cid: 'juliana', servico: 'Suspensão dianteira', mec: 'Diego R.', valor: '1.615,00', status: 'Em serviço', patio: true },
+  { num: '2478', placa: 'LVK1002', carro: 'Renault Master · 2018', cliente: 'Transportes Vilaça', cid: 'vilaca', servico: 'Freios e sangria', mec: 'Wilson A.', valor: '3.420,00', status: 'Orçamento', patio: true },
+  { num: '2477', placa: 'FMR6C55', carro: 'Toyota Corolla · 2020', cliente: 'Rogério Sant’Anna', cid: 'rogerio', servico: 'Alinhamento e balanceamento', mec: 'Tiago M.', valor: '380,00', status: 'Pronto p/ entrega', patio: true },
+  { num: '2476', placa: 'GDT3311', carro: 'Chevrolet Onix · 2017', cliente: 'Fernanda L. Braga', cid: 'fernanda', servico: 'Ar-condicionado', mec: 'Tiago M.', valor: '940,00', status: 'Em serviço', patio: true },
+  { num: '2475', placa: 'HKQ9D18', carro: 'Ford Ka · 2015', cliente: 'Carlos Menezes', cid: 'carlos', servico: 'Motor — diagnóstico', mec: 'Wilson A.', valor: '620,00', status: 'Aguardando aprovação', patio: true },
+  { num: '2474', placa: 'JPS7710', carro: 'Honda Fit · 2018', cliente: 'Beatriz Nunes', cid: 'beatriz', servico: 'Óleo e filtros', mec: 'Tiago M.', valor: '295,00', status: 'Concluída', patio: false },
+  { num: '2473', placa: 'MTB5A44', carro: 'Jeep Renegade · 2019', cliente: 'Transportes Vilaça', cid: 'vilaca', servico: 'Correia dentada', mec: 'Diego R.', valor: '1.980,00', status: 'Concluída', patio: false },
+  { num: '2472', placa: 'PLE2277', carro: 'Fiat Strada · 2016', cliente: 'Rogério Sant’Anna', cid: 'rogerio', servico: 'Escapamento', mec: 'Wilson A.', valor: '760,00', status: 'Concluída', patio: false }
+];
+
+const CLIENTES = [
+  { id: 'ana', nome: 'Ana Beatriz Correia', tipo: 'Pessoa física', nota: 'Cliente desde 2019', doc: '328.114.902-55', fone: '(11) 98812-4470', email: 'ana.correia@email.com', endereco: 'R. Domingos de Morais, 1402 — Vila Mariana, SP', veiculos: '2', visita: '14/08/2026', total: 'R$ 9.412', desde: '2019', tags: ['Com OS aberta'], obs: 'Prefere ser avisada por WhatsApp antes de qualquer serviço extra. Autoriza troca de óleo e filtros sem novo orçamento. Já reclamou de atraso na entrega em março; combinar prazo com folga.' },
+  { id: 'marcelo', nome: 'Marcelo Tavares', tipo: 'Pessoa física', nota: 'OS 2481 em aberto', doc: '415.207.318-04', fone: '(11) 99604-2213', email: 'm.tavares@email.com', endereco: 'R. Vergueiro, 3388 — Saúde, SP', veiculos: '1', visita: '02/09/2026', total: 'R$ 4.180', desde: '2022', tags: ['Com OS aberta'], obs: 'Usa o carro para trabalho, precisa de entrega no mesmo dia sempre que possível. Paga em duas vezes no cartão.' },
+  { id: 'vilaca', nome: 'Transportes Vilaça ME', tipo: 'Frota · faturamento mensal', nota: 'Frota · 6 veículos', doc: '08.417.226/0001-91', fone: '(11) 3341-8890', email: 'financeiro@vilaca.com.br', endereco: 'Av. das Nações, 780 — Diadema, SP', veiculos: '6', visita: '05/09/2026', total: 'R$ 68.930', desde: '2016', tags: ['Frotas', 'Com OS aberta'], obs: 'Nota fiscal em nome da empresa, pagamento em 30 dias. Contato operacional é o Ivan; orçamentos acima de R$ 3.000 precisam de aprovação do escritório.' },
+  { id: 'juliana', nome: 'Juliana Prado', tipo: 'Pessoa física', nota: 'OS 2479 em aberto', doc: '190.556.744-12', fone: '(11) 98120-7765', email: 'ju.prado@email.com', endereco: 'R. Bartolomeu Zunega, 45 — Pinheiros, SP', veiculos: '1', visita: '21/07/2026', total: 'R$ 3.260', desde: '2023', tags: ['Com OS aberta'], obs: 'Primeira revisão feita na concessionária; trouxe o carro por indicação da Fernanda.' },
+  { id: 'rogerio', nome: 'Rogério Sant’Anna', tipo: 'Pessoa física', nota: 'Retirada agendada hoje', doc: '502.883.170-38', fone: '(11) 97744-1102', email: 'rogerio.sa@email.com', endereco: 'R. Groenlândia, 210 — Jardim Europa, SP', veiculos: '3', visita: '08/09/2026', total: 'R$ 21.744', desde: '2015', tags: [], obs: 'Cliente antigo, três veículos na família. Gosta de receber o histórico impresso junto com a nota.' },
+  { id: 'fernanda', nome: 'Fernanda Lopes Braga', tipo: 'Pessoa física', nota: '—', doc: '771.409.665-20', fone: '(11) 99215-6634', email: 'fe.braga@email.com', endereco: 'R. Aurora, 512 — Santa Cecília, SP', veiculos: '1', visita: '30/06/2026', total: 'R$ 2.905', desde: '2024', tags: ['Com OS aberta'], obs: 'Indicou dois clientes novos em 2026.' },
+  { id: 'carlos', nome: 'Carlos Menezes', tipo: 'Pessoa física', nota: 'Orçamento aguardando resposta', doc: '644.019.283-77', fone: '(11) 98450-3391', email: 'c.menezes@email.com', endereco: 'Av. Jabaquara, 1155 — Saúde, SP', veiculos: '1', visita: '04/09/2026', total: 'R$ 1.870', desde: '2021', tags: ['Com OS aberta'], obs: 'Sempre pede orçamento por escrito antes de autorizar.' },
+  { id: 'beatriz', nome: 'Beatriz Nunes', tipo: 'Pessoa física', nota: 'Inativa há 14 meses', doc: '235.660.401-19', fone: '(11) 97012-8844', email: 'bia.nunes@email.com', endereco: 'R. Cardeal Arcoverde, 90 — Pinheiros, SP', veiculos: '1', visita: '12/07/2025', total: 'R$ 1.120', desde: '2020', tags: ['Inativos há 1 ano'], obs: 'Mudou de bairro; vale uma ligação de retorno.' }
+];
+
+const VEICULOS = {
+  QPD8734: { placa: 'QPD8734', carro: 'Volkswagen Gol 1.6 MSI · 2016 · prata', dono: 'Ana Beatriz Correia', cid: 'ana', fone: '(11) 98812-4470', km: '148.902 km', proxima: '158.000 km', status: 'Aguardando peça',
+    historico: [
+      { data: '08/09/2026', servico: 'Troca de embreagem — em andamento', km: '148.902 km', valor: '2.890,00' },
+      { data: '14/08/2026', servico: 'Óleo, filtros e velas', km: '146.410 km', valor: '512,00' },
+      { data: '03/03/2026', servico: 'Pastilhas e discos dianteiros', km: '139.880 km', valor: '1.180,00' },
+      { data: '11/09/2025', servico: 'Revisão anual e ar-condicionado', km: '128.204 km', valor: '740,00' }
+    ] },
+  RKT4B21: { placa: 'RKT4B21', carro: 'Fiat Argo 1.3 Drive · 2021 · branco', dono: 'Marcelo Tavares', cid: 'marcelo', fone: '(11) 99604-2213', km: '41.320 km', proxima: '50.000 km', status: 'Em serviço',
+    historico: [
+      { data: '07/09/2026', servico: 'Revisão de 40.000 km — em andamento', km: '41.320 km', valor: '1.240,00' },
+      { data: '19/02/2026', servico: 'Revisão de 30.000 km', km: '30.940 km', valor: '880,00' },
+      { data: '05/06/2025', servico: 'Alinhamento e pneus', km: '22.110 km', valor: '1.460,00' }
+    ] },
+  FMR6C55: { placa: 'FMR6C55', carro: 'Toyota Corolla XEi · 2020 · prata', dono: 'Rogério Sant’Anna', cid: 'rogerio', fone: '(11) 97744-1102', km: '78.640 km', proxima: '80.000 km', status: 'Pronto p/ entrega',
+    historico: [
+      { data: '09/09/2026', servico: 'Alinhamento e balanceamento', km: '78.640 km', valor: '380,00' },
+      { data: '28/04/2026', servico: 'Revisão de 70.000 km', km: '70.180 km', valor: '1.620,00' },
+      { data: '02/10/2025', servico: 'Amortecedores traseiros', km: '61.900 km', valor: '2.240,00' }
+    ] },
+  LVK1002: { placa: 'LVK1002', carro: 'Renault Master 2.3 furgão · 2018 · branco', dono: 'Transportes Vilaça ME', cid: 'vilaca', fone: '(11) 3341-8890', km: '312.480 km', proxima: '320.000 km', status: 'Orçamento',
+    historico: [
+      { data: '05/09/2026', servico: 'Freios e sangria — orçamento enviado', km: '312.480 km', valor: '3.420,00' },
+      { data: '30/05/2026', servico: 'Embreagem e volante bimassa', km: '298.220 km', valor: '6.940,00' },
+      { data: '14/01/2026', servico: 'Revisão de 280.000 km', km: '281.050 km', valor: '2.180,00' }
+    ] },
+  GDT3311: { placa: 'GDT3311', carro: 'Chevrolet Onix LT · 2017 · preto', dono: 'Fernanda Lopes Braga', cid: 'fernanda', fone: '(11) 99215-6634', km: '96.220 km', proxima: '100.000 km', status: 'Em serviço',
+    historico: [
+      { data: '09/09/2026', servico: 'Ar-condicionado — em andamento', km: '96.220 km', valor: '940,00' },
+      { data: '30/06/2026', servico: 'Óleo e filtros', km: '92.660 km', valor: '395,00' }
+    ] },
+  SBA2J09: { placa: 'SBA2J09', carro: 'Hyundai HB20 Comfort · 2019 · vermelho', dono: 'Juliana Prado', cid: 'juliana', fone: '(11) 98120-7765', km: '62.100 km', proxima: '70.000 km', status: 'Em serviço',
+    historico: [
+      { data: '08/09/2026', servico: 'Suspensão dianteira — em andamento', km: '62.100 km', valor: '1.615,00' },
+      { data: '21/07/2026', servico: 'Óleo, filtros e revisão de 60.000 km', km: '60.480 km', valor: '1.045,00' }
+    ] },
+  HKQ9D18: { placa: 'HKQ9D18', carro: 'Ford Ka SE · 2015 · prata', dono: 'Carlos Menezes', cid: 'carlos', fone: '(11) 98450-3391', km: '171.900 km', proxima: '180.000 km', status: 'Aguardando aprovação',
+    historico: [
+      { data: '04/09/2026', servico: 'Diagnóstico de motor — aguardando aprovação', km: '171.900 km', valor: '620,00' },
+      { data: '17/12/2025', servico: 'Bomba de combustível', km: '164.330 km', valor: '1.250,00' }
+    ] }
+};
+
+const OS_DETALHE = {
+  2480: {
+    abertura: '08/09/2026 · 08:15', previsao: '11/09/2026', km: '148.902 km',
+    relato: 'Pedal de embreagem muito alto e patinando em subida. Cliente relata cheiro de queimado após uso urbano prolongado e dificuldade para engatar a primeira marcha a frio.',
+    itens: [
+      { desc: 'Kit de embreagem (platô, disco, atuador)', tipo: 'Peça', qtd: '1', unit: '1.180,00', total: '1.180,00' },
+      { desc: 'Rolamento de encosto', tipo: 'Peça', qtd: '1', unit: '145,00', total: '145,00' },
+      { desc: 'Fluido de embreagem DOT 4', tipo: 'Peça', qtd: '2', unit: '42,50', total: '85,00' },
+      { desc: 'Mão de obra — remoção e montagem do câmbio', tipo: 'Serviço', qtd: '6h', unit: '210,00', total: '1.260,00' },
+      { desc: 'Sangria e teste em rodagem', tipo: 'Serviço', qtd: '1h', unit: '220,00', total: '220,00' }
+    ],
+    pecas: '1.410,00', mao: '1.480,00', desconto: '− 0,00', total: '2.890,00',
+    timeline: [
+      { etapa: 'Ordem aberta no balcão', quando: '08/09 · 08:15', on: true },
+      { etapa: 'Orçamento aprovado pelo cliente', quando: '08/09 · 09:40', on: true },
+      { etapa: 'Peça pedida ao fornecedor', quando: '08/09 · 10:05', on: true },
+      { etapa: 'Aguardando chegada do kit', quando: 'previsto 10/09', on: false },
+      { etapa: 'Montagem e teste', quando: '—', on: false },
+      { etapa: 'Entrega ao cliente', quando: '—', on: false }
+    ],
+    acao: 'Marcar peça como recebida'
+  }
+};
+
+const OS_FALLBACK = {
+  abertura: '07/09/2026 · 09:00', previsao: '10/09/2026', km: '41.320 km',
+  relato: 'Revisão preventiva conforme plano do fabricante. Cliente pede verificação de ruído leve no painel em piso irregular.',
+  itens: [
+    { desc: 'Óleo sintético 5W30 (litro)', tipo: 'Peça', qtd: '4', unit: '62,00', total: '248,00' },
+    { desc: 'Filtro de óleo', tipo: 'Peça', qtd: '1', unit: '58,00', total: '58,00' },
+    { desc: 'Filtro de ar e de cabine', tipo: 'Peça', qtd: '2', unit: '96,00', total: '192,00' },
+    { desc: 'Mão de obra — revisão completa', tipo: 'Serviço', qtd: '3h', unit: '210,00', total: '630,00' },
+    { desc: 'Inspeção de freios e suspensão', tipo: 'Serviço', qtd: '1h', unit: '160,00', total: '160,00' }
+  ],
+  pecas: '498,00', mao: '790,00', desconto: '− 48,00', total: '1.240,00',
+  timeline: [
+    { etapa: 'Ordem aberta no balcão', quando: '07/09 · 09:00', on: true },
+    { etapa: 'Veículo em elevador', quando: '07/09 · 10:20', on: true },
+    { etapa: 'Serviço em execução', quando: 'desde 08/09 · 08:00', on: true },
+    { etapa: 'Revisão final e lavagem', quando: '—', on: false },
+    { etapa: 'Entrega ao cliente', quando: 'previsto 09/09 · 16:30', on: false }
+  ],
+  acao: 'Marcar como pronto'
+};
+
+const AGENDA = [
+  { hora: '08:30', what: 'Entrega · Corolla FMR6C55', who: 'Rogério Sant’Anna · pago' },
+  { hora: '09:00', what: 'Entrada · Onix GDT3311', who: 'Revisão preventiva' },
+  { hora: '11:00', what: 'Retorno · Ford Ka HKQ9D18', who: 'Aprovação do orçamento' },
+  { hora: '14:00', what: 'Entrada · Nissan Versa', who: 'Cliente novo, sem cadastro' },
+  { hora: '16:30', what: 'Entrega · Argo RKT4B21', who: 'Marcelo Tavares' }
+];
+
+const ESTOQUE = [
+  { peca: 'Óleo 5W30 sintético', qtd: '3 de 24 L', pct: 12 },
+  { peca: 'Filtro de óleo — linha VW', qtd: '2 de 15', pct: 13 },
+  { peca: 'Pastilha de freio dianteira', qtd: '4 de 20', pct: 20 },
+  { peca: 'Fluido de freio DOT 4', qtd: '5 de 18', pct: 28 },
+  { peca: 'Palheta 16"', qtd: '6 de 20', pct: 30 }
+];
+
+const NOVOS = [
+  { nome: 'Vinícius Aragão', origem: 'Indicação de Fernanda L. Braga', data: '08/09' },
+  { nome: 'Priscila Matos', origem: 'Google · busca por placa', data: '06/09' },
+  { nome: 'Auto Center Ipê (parceiro)', origem: 'Indicação de oficina parceira', data: '03/09' },
+  { nome: 'Henrique Sales', origem: 'Passou na porta', data: '02/09' }
+];
+
+const CLI_FILTERS = ['Todos', 'Com OS aberta', 'Frotas', 'Inativos há 1 ano'];
+const OS_FILTERS = ['Todas', 'Em serviço', 'Aguardando', 'Prontas', 'Concluídas'];
+
+class Component extends DCLogic {
+  state = {
+    screen: null, newOpen: false, user: 'gustavo', pass: '••••••••',
+    q: '', cliFilter: 'Todos', osFilter: 'Todas', osQ: '',
+    plate: 'QPD8734', plateQuery: 'QPD8734',
+    cliId: 'ana', osNum: '2480', back: 'dash',
+    approved: [], extra: [], toast: '',
+    nPlaca: '', nCliente: '', nServico: ''
+  };
+
+  get screen() { return this.state.screen || 'login'; }
+
+  say(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+
+  go(key, back) { return () => this.setState({ screen: key, back: back || this.screen }); }
+
+  allOrdens() { return [...this.state.extra, ...ORDENS]; }
+
+  openOS(num) { return () => this.setState({ screen: 'osdet', osNum: num, back: this.screen }); }
+  openCli(id) { return () => this.setState({ screen: 'clidet', cliId: id, back: this.screen }); }
+  openVei(placa) { return () => this.setState({ screen: 'vei', plate: placa, plateQuery: placa, back: this.screen }); }
+
+  renderVals() {
+    const sc = this.screen;
+    const heads = {
+      dash: ['Oficina · quarta, 9 de setembro', 'Painel do dia'],
+      cli: ['218 cadastros', 'Clientes'],
+      clidet: ['Cliente', 'Ficha do cliente'],
+      vei: ['Consulta', 'Veículos'],
+      os: ['Ordens de serviço', 'Ordens de Serviço'],
+      osdet: ['Ordem de serviço', 'OS ' + this.state.osNum]
+    };
+    const head = heads[sc] || heads.dash;
+
+    const orc = this.allOrdens()
+      .filter(o => (o.status === 'Orçamento' || o.status === 'Aguardando aprovação') && !this.state.approved.includes(o.num))
+      .map((o, i) => ({
+        placa: o.placa, servico: o.servico, cliente: o.cliente,
+        dias: ['há 1 dia', 'há 4 dias', 'há 5 dias'][i % 3],
+        valor: o.valor,
+        aprovar: () => { this.setState(s => ({ approved: [...s.approved, o.num] })); this.say('Orçamento da ' + o.placa + ' aprovado. Cliente avisado por WhatsApp.'); },
+        recusar: () => { this.setState(s => ({ approved: [...s.approved, o.num] })); this.say('Orçamento da ' + o.placa + ' recusado e arquivado.'); }
+      }));
+
+    const q = this.state.q.trim().toLowerCase();
+    const cliList = CLIENTES.filter(c => {
+      const f = this.state.cliFilter;
+      const okF = f === 'Todos' || (c.tags || []).includes(f);
+      const okQ = !q || [c.nome, c.doc, c.fone].join(' ').toLowerCase().includes(q);
+      return okF && okQ;
+    });
+
+    const osQ = this.state.osQ.trim().toLowerCase();
+    const osList = this.allOrdens().filter(o => {
+      const f = this.state.osFilter;
+      const okF = f === 'Todas'
+        || (f === 'Em serviço' && o.status === 'Em serviço')
+        || (f === 'Aguardando' && o.status.startsWith('Aguardando'))
+        || (f === 'Prontas' && o.status === 'Pronto p/ entrega')
+        || (f === 'Concluídas' && o.status === 'Concluída');
+      const okQ = !osQ || [o.num, o.placa, o.cliente, o.servico].join(' ').toLowerCase().includes(osQ);
+      return okF && okQ;
+    });
+
+    const cd = CLIENTES.find(c => c.id === this.state.cliId) || CLIENTES[0];
+    const cdVeiculos = Object.values(VEICULOS).filter(v => v.cid === cd.id)
+      .map(v => ({ placa: v.placa, carro: v.carro.split(' · ').slice(0, 2).join(' · '), km: v.km, open: this.openVei(v.placa) }));
+    const cdOrdens = ORDENS.filter(o => o.cid === cd.id).map(o => ({
+      num: o.num, data: ['02/09/2026', '14/08/2026', '03/03/2026', '11/09/2025'][ORDENS.indexOf(o) % 4],
+      servico: o.servico, valor: o.valor, open: this.openOS(o.num)
+    }));
+
+    const vd = VEICULOS[this.state.plateQuery.toUpperCase()];
+    const od = OS_DETALHE[this.state.osNum] || OS_FALLBACK;
+    const odRow = this.allOrdens().find(o => o.num === this.state.osNum) || ORDENS[0];
+
+    const totalAberto = this.allOrdens().filter(o => o.status !== 'Concluída').length;
+    const patioList = this.allOrdens().filter(o => o.patio);
+
+    return {
+      isLogin: sc === 'login', inApp: sc !== 'login',
+      isDash: sc === 'dash', isCli: sc === 'cli', isCliDet: sc === 'clidet',
+      isVei: sc === 'vei', isOS: sc === 'os', isOSDet: sc === 'osdet',
+      screen: sc, kicker: head[0], title: head[1],
+      hasBack: sc === 'clidet' || sc === 'osdet',
+      goBack: () => this.setState({ screen: this.state.back || 'dash' }),
+      openCount: totalAberto,
+
+      user: this.state.user, pass: this.state.pass,
+      onUser: (e) => this.setState({ user: e.target.value }),
+      onPass: (e) => this.setState({ pass: e.target.value }),
+      doLogin: () => this.setState({ screen: 'dash' }),
+      doLogout: () => this.setState({ screen: 'login' }),
+
+      sDash: sc === 'dash' ? NAV_ON : NAV_BASE,
+      sCli: (sc === 'cli' || sc === 'clidet') ? NAV_ON : NAV_BASE,
+      sVei: sc === 'vei' ? NAV_ON : NAV_BASE,
+      sOS: (sc === 'os' || sc === 'osdet') ? NAV_ON : NAV_BASE,
+      goDash: this.go('dash'), goCli: this.go('cli'), goVei: this.go('vei'), goOS: this.go('os'),
+
+      showKpis: this.props.showKpis !== false,
+      showAgenda: this.props.showAgenda !== false,
+
+      kpis: [
+        { label: 'No pátio', value: String(patioList.length), note: 'de 9 vagas ocupadas' },
+        { label: 'OS abertas', value: String(totalAberto), note: '4 com entrega hoje' },
+        { label: 'Aguardando aprovação', value: String(orc.length), note: 'R$ 4.040 parados' },
+        { label: 'Faturamento · setembro', value: '48.320', note: '+9% sobre agosto' }
+      ],
+
+      dashRows: this.allOrdens().filter(o => o.status !== 'Concluída').slice(0, 5).map(o => ({
+        num: o.num, placa: o.placa, carro: o.carro, servico: o.servico,
+        valor: o.valor, status: o.status, tag: STATUS[o.status] || 'tag-neutral',
+        open: this.openOS(o.num)
+      })),
+
+      patioCount: patioList.length,
+      patio: patioList.map(o => ({
+        placa: o.placa, carro: o.carro.split(' · ')[0], status: o.status,
+        cardStyle: PATIO_CARD,
+        dot: dot(o.status === 'Em serviço' ? 'var(--color-accent)' : o.status === 'Pronto p/ entrega' ? 'var(--color-accent-2-400)' : 'var(--color-neutral-400)'),
+        open: this.openVei(o.placa)
+      })),
+
+      orcamentos: orc, hasOrc: orc.length > 0, noOrc: orc.length === 0, orcTotal: 'R$ 4.040',
+      agenda: AGENDA,
+      estoque: ESTOQUE.map(e => ({ peca: e.peca, qtd: e.qtd, bar: { height: '100%', width: e.pct + '%', background: e.pct <= 15 ? 'var(--color-accent-600)' : 'var(--color-accent-400)' } })),
+      novos: NOVOS,
+      toastPedido: () => this.say('Pedido de compra gerado com 5 itens. Enviado ao fornecedor.'),
+      toastCliente: () => this.say('Formulário de cadastro de cliente abriria aqui.'),
+      toastVeiculo: () => this.say('Formulário de cadastro de veículo abriria aqui.'),
+      toastPrint: () => this.say('Documento enviado para a impressora do balcão.'),
+      toastWhats: () => this.say('Mensagem enviada por WhatsApp.'),
+
+      q: this.state.q,
+      onQ: (e) => this.setState({ q: e.target.value }),
+      cliFilters: CLI_FILTERS.map(f => ({
+        label: f, style: this.state.cliFilter === f ? CHIP_ON : CHIP,
+        pick: () => this.setState({ cliFilter: f })
+      })),
+      clientes: cliList.map(c => ({
+        nome: c.nome, nota: c.nota, doc: c.doc, fone: c.fone,
+        veiculos: c.veiculos, visita: c.visita, open: this.openCli(c.id)
+      })),
+      cliEmpty: cliList.length === 0, cliCount: cliList.length,
+
+      cd: {
+        nome: cd.nome, tipo: cd.tipo, doc: cd.doc, fone: cd.fone, email: cd.email,
+        endereco: cd.endereco, total: cd.total, desde: cd.desde, obs: cd.obs,
+        veiculos: cdVeiculos, ordens: cdOrdens
+      },
+
+      plate: this.state.plate,
+      onPlate: (e) => this.setState({ plate: e.target.value }),
+      doPlate: () => this.setState({ plateQuery: this.state.plate }),
+      recentes: ['RKT4B21', 'FMR6C55', 'LVK1002', 'GDT3311', 'SBA2J09'].map(p => ({
+        placa: p, pick: () => this.setState({ plate: p, plateQuery: p })
+      })),
+      hasVei: !!vd, noVei: !vd,
+      vd: vd ? {
+        placa: vd.placa, carro: vd.carro, dono: vd.dono, fone: vd.fone, km: vd.km,
+        proxima: vd.proxima, status: vd.status, tag: STATUS[vd.status] || 'tag-neutral',
+        historico: vd.historico, openCli: this.openCli(vd.cid)
+      } : {},
+
+      osFilters: OS_FILTERS.map(f => ({
+        label: f, style: this.state.osFilter === f ? SEG_ON : SEG,
+        pick: () => this.setState({ osFilter: f })
+      })),
+      osQ: this.state.osQ,
+      onOsQ: (e) => this.setState({ osQ: e.target.value }),
+      ordens: osList.map(o => ({
+        num: 'OS ' + o.num, placa: o.placa, carro: o.carro.split(' · ')[0],
+        cliente: o.cliente, servico: o.servico, mec: o.mec, valor: o.valor,
+        status: o.status, tag: STATUS[o.status] || 'tag-neutral', open: this.openOS(o.num)
+      })),
+      osEmpty: osList.length === 0,
+      osSum: osList.length + ' ordens listadas · total R$ ' + osList
+        .reduce((a, o) => a + parseFloat(o.valor.replace(/\./g, '').replace(',', '.')), 0)
+        .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+
+      od: {
+        placa: odRow.placa, carro: odRow.carro, cliente: odRow.cliente,
+        status: odRow.status, tag: STATUS[odRow.status] || 'tag-neutral',
+        mec: odRow.mec, abertura: od.abertura, previsao: od.previsao, km: od.km,
+        relato: od.relato, itens: od.itens.map(i => ({ ...i, tag: i.tipo === 'Peça' ? 'tag-neutral' : 'tag-outline' })),
+        pecas: od.pecas, mao: od.mao, desconto: od.desconto, total: od.total,
+        timeline: od.timeline.map(t => ({
+          etapa: t.etapa, quando: t.quando,
+          dot: t.on ? dot('var(--color-accent)') : { ...dot('transparent'), boxShadow: 'inset 0 0 0 1px var(--color-neutral-400)' }
+        })),
+        acao: od.acao,
+        avancar: () => this.say('Etapa concluída. Cliente notificado do novo status.'),
+        openCli: this.openCli(odRow.cid)
+      },
+
+      newOpen: this.state.newOpen,
+      openNew: () => this.setState({ newOpen: true }),
+      closeNew: () => this.setState({ newOpen: false }),
+      nPlaca: this.state.nPlaca, nCliente: this.state.nCliente, nServico: this.state.nServico,
+      onNPlaca: (e) => this.setState({ nPlaca: e.target.value }),
+      onNCliente: (e) => this.setState({ nCliente: e.target.value }),
+      onNServico: (e) => this.setState({ nServico: e.target.value }),
+      createOS: () => {
+        const num = String(2482 + this.state.extra.length);
+        const row = {
+          num, placa: (this.state.nPlaca || 'NOV0A00').toUpperCase(),
+          carro: 'Veículo novo · a confirmar',
+          cliente: this.state.nCliente || 'Cliente novo', cid: 'ana',
+          servico: this.state.nServico || 'A definir', mec: 'A definir',
+          valor: '0,00', status: 'Orçamento', patio: true
+        };
+        this.setState(s => ({ extra: [row, ...s.extra], newOpen: false, screen: 'os', nPlaca: '', nCliente: '', nServico: '' }));
+        this.say('OS ' + num + ' criada como orçamento.');
+      },
+
+      toast: this.state.toast, hasToast: !!this.state.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

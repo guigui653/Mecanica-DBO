@@ -1,65 +1,171 @@
-<div class="header">
-  <h2>Clientes</h2>
-  <button mat-flat-button color="primary" (click)="abrirForm()">
-    <mat-icon>add</mat-icon> Novo Cliente
-  </button>
+<div class="view-header">
+  <div class="view-title-group">
+    @if (clienteSelecionado) {
+      <div class="kicker">FICHA DO CLIENTE</div>
+      <h1 class="title">{{ clienteSelecionado.nome }}</h1>
+    } @else {
+      <div class="kicker">{{ clientesFiltrados.length }} CADASTROS</div>
+      <h1 class="title">Clientes</h1>
+    }
+  </div>
+  <div class="actions">
+    @if (clienteSelecionado) {
+      <button type="button" class="btn btn-secondary" (click)="voltarLista()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M19 12H5m0 0 6-6m-6 6 6 6"></path>
+        </svg>
+        Voltar
+      </button>
+    }
+    <button type="button" class="btn btn-primary" (click)="abrirNovaOs()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+      Nova ordem
+    </button>
+  </div>
 </div>
 
-<div class="busca">
-  <mat-form-field appearance="outline" style="width: 400px;">
-    <mat-label>Buscar por nome, CPF ou telefone</mat-label>
-    <input matInput [(ngModel)]="termoBusca" (keyup.enter)="carregar()">
-    <mat-icon matSuffix>search</mat-icon>
-  </mat-form-field>
-  <button mat-stroked-button (click)="carregar()">Buscar</button>
-</div>
+<div class="view-content">
 
-@if (erro) {
-  <p style="color: red;">{{ erro }}</p>
-}
+  @if (!clienteSelecionado) {
+    <!-- LISTA DE CLIENTES -->
+    <div class="search-bar">
+      <input class="input" type="text" placeholder="Nome, CPF, telefone ou e-mail"
+             [(ngModel)]="termoBusca" (keyup.enter)="aplicarBusca()">
+      <button type="button" class="btn btn-primary" (click)="aplicarBusca()">Buscar</button>
+      <button type="button" class="btn btn-secondary" (click)="abrirForm()">Novo cliente</button>
+    </div>
 
-@if (carregando) {
-  <mat-spinner diameter="40"></mat-spinner>
-} @else {
-  <table mat-table [dataSource]="clientes" class="mat-elevation-z2">
-
-    <ng-container matColumnDef="nome">
-      <th mat-header-cell *matHeaderCellDef>Nome</th>
-      <td mat-cell *matCellDef="let c">{{ c.nome }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="cpf">
-      <th mat-header-cell *matHeaderCellDef>CPF</th>
-      <td mat-cell *matCellDef="let c">{{ c.cpf || '—' }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="telefone1">
-      <th mat-header-cell *matHeaderCellDef>Telefone</th>
-      <td mat-cell *matCellDef="let c">{{ c.telefone1 }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="email">
-      <th mat-header-cell *matHeaderCellDef>E-mail</th>
-      <td mat-cell *matCellDef="let c">{{ c.email || '—' }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="acoes">
-      <th mat-header-cell *matHeaderCellDef>Ações</th>
-      <td mat-cell *matCellDef="let c">
-        <button mat-icon-button color="primary" (click)="abrirForm(c)">
-          <mat-icon>edit</mat-icon>
+    <div class="filters-row">
+      @for (f of filtros; track f) {
+        <button type="button" class="chip" [class.active]="filtroAtivo === f"
+                (click)="selecionarFiltro(f)">
+          {{ f }}
         </button>
-        <button mat-icon-button color="warn" (click)="inativar(c)">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </td>
-    </ng-container>
+      }
+    </div>
 
-    <tr mat-header-row *matHeaderRowDef="colunas"></tr>
-    <tr mat-row *matRowDef="let row; columns: colunas;"></tr>
-  </table>
+    @if (carregando) {
+      <div class="spinner-wrap">Carregando clientes...</div>
+    } @else if (erro) {
+      <div class="empty-state" role="alert"><p>{{ erro }}</p><button class="btn btn-secondary" (click)="carregar()">Tentar novamente</button></div>
+    } @else {
+      @if (aviso) { <p class="field-hint" role="status">{{ aviso }}</p> }
+      <div class="table-scroll"><table class="table">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th style="width: 168px">Documento</th>
+            <th style="width: 146px">Telefone</th>
+            <th style="width: 84px; text-align: right">Veículos</th>
+            <th style="width: 126px">Última visita</th>
+            <th style="width: 60px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of clientesFiltrados; track c.id) {
+            <tr (click)="selecionarCliente(c)" style="cursor: pointer;">
+              <td>
+                <div class="client-name">{{ c.nome }}</div>
+                <div class="client-sub">{{ obterSubtitulo(c) }}</div>
+              </td>
+              <td class="tabular">{{ c.cpf || '—' }}</td>
+              <td class="tabular">{{ c.telefone1 || '—' }}</td>
+              <td class="tabular" style="text-align: right">{{ c.totalVeiculos ?? '—' }}</td>
+              <td class="tabular">{{ c.ultimaVisita || '—' }}</td>
+              <td style="text-align: right">
+                <span class="link-abrir">Abrir</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table></div>
 
-  @if (clientes.length === 0) {
-    <p style="margin-top: 16px; color: #666;">Nenhum cliente encontrado.</p>
+      @if (clientesFiltrados.length === 0) {
+        <div class="empty-state">
+          Nenhum cliente encontrado{{ termoBusca ? ' para “' + termoBusca + '”' : '' }}.
+        </div>
+      }
+
+      <div class="table-foot">
+        <span class="tabular">{{ clientesFiltrados.length }} de {{ clientes.length }} cadastros</span>
+      </div>
+    }
+
+  } @else {
+
+    <!-- FICHA DO CLIENTE SELECIONADO -->
+    <div class="client-detail-layout">
+      <!-- Coluna esquerda: Card de informações -->
+      <section class="card-side">
+        <div class="detail-card">
+          <div class="card-kicker">PESSOA FÍSICA</div>
+          <div class="detail-client-name">{{ clienteSelecionado.nome }}</div>
+          <hr class="hr">
+
+          <div class="info-list">
+            <div>
+              <div class="info-label">Documento</div>
+              <span class="tabular">{{ clienteSelecionado.cpf || 'Não informado' }}</span>
+            </div>
+            <div>
+              <div class="info-label">Telefone</div>
+              <span class="tabular">{{ clienteSelecionado.telefone1 }}</span>
+            </div>
+            @if (clienteSelecionado.email) {
+              <div>
+                <div class="info-label">E-mail</div>
+                <span>{{ clienteSelecionado.email }}</span>
+              </div>
+            }
+          </div>
+
+          <hr class="hr">
+
+          <div class="stats-grid">
+            <div>
+              <div class="info-label">Cliente desde</div>
+              <div class="stat-value tabular">{{ (clienteSelecionado.criadoEm | date:'yyyy') || '—' }}</div>
+            </div>
+            <div>
+              <div class="info-label">Status</div>
+              <div class="stat-value" style="font-size: 16px; font-weight: 500;">
+                <span class="tag tag-accent">{{ clienteSelecionado.ativo === false ? 'Inativo' : 'Ativo' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button type="button" class="btn btn-primary" (click)="abrirNovaOs()">Nova OS</button>
+            <button type="button" class="btn btn-secondary" (click)="abrirForm(clienteSelecionado)">Editar cadastro</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Coluna direita: Observações e histórico -->
+      <section class="content-side">
+        <div>
+          <h3 style="margin: 0 0 10px; font-size: 22px;">Ações rápidas</h3>
+          <div class="quick-actions-row">
+            <button type="button" class="btn btn-secondary" (click)="abrirNovaOs()">
+              Abrir ordem para este cliente
+            </button>
+            <button type="button" class="btn btn-ghost" (click)="enviarWhatsApp(clienteSelecionado)">
+              Enviar WhatsApp
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px;">
+          <h3 style="margin: 0 0 12px; font-size: 22px;">Veículos cadastrados</h3>
+          <p class="client-notes">
+            {{ clienteSelecionado.totalVeiculos ?? 'Quantidade não disponível' }}
+          </p>
+        </div>
+      </section>
+    </div>
+
   }
-}
+
+</div>

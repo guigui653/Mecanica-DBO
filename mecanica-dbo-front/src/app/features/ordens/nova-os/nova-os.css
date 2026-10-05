@@ -1,0 +1,4 @@
+.nova-os-card { max-width: 760px; }
+.busca-placa { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.busca-placa .field { flex: 1 1 180px; margin-bottom: 0; }
+.veiculo-selecionado { padding: 12px; background: var(--color-bg); margin-bottom: 20px; }

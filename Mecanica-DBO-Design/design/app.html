@@ -1,0 +1,75 @@
+<div class="shell">
+
+  <aside class="sidebar">
+
+    <div class="sidebar-brand">
+      <div class="brand-name">Mecânica DBO</div>
+      <div class="brand-tag">Oficina · Recanto das Emas</div>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Painel</span>
+      </a>
+
+      <a routerLink="/clientes" routerLinkActive="active" class="nav-item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+        </svg>
+        <span>Clientes</span>
+        @if (totalClientes() !== null) {
+          <span class="nav-count">{{ totalClientes() }}</span>
+        }
+      </a>
+
+      <a routerLink="/veiculos" routerLinkActive="active" class="nav-item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round">
+          <path d="M4 17v-4l2-5h12l2 5v4"></path>
+          <path d="M4 13h16"></path>
+          <circle cx="7" cy="17" r="1.6"></circle>
+          <circle cx="17" cy="17" r="1.6"></circle>
+        </svg>
+        <span>Veículos</span>
+      </a>
+
+      <a routerLink="/ordens" routerLinkActive="active" class="nav-item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 3.5a4.5 4.5 0 0 0 5.9 5.9L21 10l-7.6 7.6"></path>
+          <path d="M13.4 17.6 8 23l-4-4 5.4-5.4"></path>
+        </svg>
+        <span>Ordens de Serviço</span>
+        @if (osAbertas() !== null) {
+          <span class="nav-count accent">{{ osAbertas() }}</span>
+        }
+      </a>
+
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="status-row">
+        <span class="status-dot" [class.offline]="!apiOnline()"></span>
+        <span>{{ apiOnline() ? 'API conectada' : 'API offline' }}</span>
+      </div>
+      <div class="user-name">Mecânica DBO · proprietário</div>
+    </div>
+
+  </aside>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+
+</div>

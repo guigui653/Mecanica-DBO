@@ -22,6 +22,7 @@ import numpy as np
 import pytesseract
 from PIL import Image
 from flask import Flask, request, jsonify
+from waitress import serve
 
 try:
     from pdf2image import convert_from_path
@@ -346,14 +347,17 @@ def processar_nf_url():
 
 
 if __name__ == '__main__':
+    from waitress import serve
+
     print("=" * 60)
     print("  Mecânica DBO — Microserviço OCR v2")
     print(f"  Tesseract: {pytesseract.get_tesseract_version()}")
     print(f"  Suporte PDF: {'Sim' if PDF_SUPORTADO else 'Não'}")
+    print("  Servidor: Waitress (produção)")
     print("  Porta: 5000")
     print("  Endpoints:")
     print("    GET  /health")
     print("    POST /ocr/processar       (base64 ou multipart)")
     print("    POST /ocr/processar-url   (caminho local — imagem ou PDF)")
     print("=" * 60)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    serve(app, host='0.0.0.0', port=5000)

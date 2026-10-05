@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/classical-0ec1e580-34e4-41cd-a7ef-7da32d79b83c/styles.css">
+<script src="_ds/classical-0ec1e580-34e4-41cd-a7ef-7da32d79b83c/_ds_bundle.js"></script>
+<style>
+body{margin:0;background:#e9e7e4}
+a{color:var(--color-accent);text-decoration:none}
+a:hover{color:var(--color-accent-700);text-decoration:underline}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1917;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font-family:var(--font-heading);font-weight:600;font-size:15px;color:#1a1917}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1917;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font-size:11.5px;color:rgba(0,0,0,.55);max-width:600px}
+.dv-card{max-width:100%;background:var(--color-bg);border:1px solid rgba(0,0,0,.1);border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.07);overflow:hidden}
+.dv-opt:target .dv-oid{background:var(--color-accent);color:#fff}
+.dv-next{margin:24px 0 0;font-size:12px;color:rgba(0,0,0,.5)}
+.kicker{font-size:9.5px;letter-spacing:0.13em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 58%, transparent)}
+.num{font-family:var(--font-heading);font-weight:400;font-variant-numeric:tabular-nums;line-height:1.02}
+.pl{font-family:var(--font-heading);font-weight:600;letter-spacing:0.1em;font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Quatro direções para o painel</span></div>
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Editorial — números em faixa, tabela de OS ao centro. É o que está no protótipo clicável.</div>
+      <div class="dv-card" style="width:600px;padding:26px 28px">
+        <div class="kicker" style="color:var(--color-accent)">Oficina · quarta, 9 de setembro</div>
+        <h2 style="margin:6px 0 20px;font-weight:400;font-size:29px">Painel do dia</h2>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--color-divider);border:1px solid var(--color-divider);border-radius:4px;overflow:hidden;margin-bottom:22px">
+          <div style="background:var(--color-bg);padding:12px 13px"><div class="kicker">No pátio</div><div class="num" style="font-size:32px;margin-top:4px">7</div></div>
+          <div style="background:var(--color-bg);padding:12px 13px"><div class="kicker">OS abertas</div><div class="num" style="font-size:32px;margin-top:4px">12</div></div>
+          <div style="background:var(--color-bg);padding:12px 13px"><div class="kicker">A aprovar</div><div class="num" style="font-size:32px;margin-top:4px">3</div></div>
+          <div style="background:var(--color-bg);padding:12px 13px"><div class="kicker">Setembro</div><div class="num" style="font-size:32px;margin-top:4px">48.320</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:24px">
+          <div>
+            <h4 style="margin:0 0 6px;font-size:17px">Ordens em andamento</h4>
+            <table class="table" style="font-size:12.5px">
+              <thead><tr><th>Veículo</th><th>Serviço</th><th style="text-align:right">R$</th></tr></thead>
+              <tbody>
+                <tr><td><span class="pl" style="font-size:12.5px">RKT4B21</span></td><td>Revisão 40.000</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.240</td></tr>
+                <tr><td><span class="pl" style="font-size:12.5px">QPD8734</span></td><td>Embreagem</td><td style="text-align:right;font-variant-numeric:tabular-nums">2.890</td></tr>
+                <tr><td><span class="pl" style="font-size:12.5px">SBA2J09</span></td><td>Suspensão</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.615</td></tr>
+                <tr><td><span class="pl" style="font-size:12.5px">LVK1002</span></td><td>Freios</td><td style="text-align:right;font-variant-numeric:tabular-nums">3.420</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h4 style="margin:0 0 4px;font-size:17px">Agenda</h4>
+            <div style="border-top:1px solid var(--color-divider);padding:8px 0;font-size:12px"><span style="font-family:var(--font-heading);font-weight:600;color:var(--color-accent-700);font-variant-numeric:tabular-nums">08:30</span> · Entrega Corolla</div>
+            <div style="border-top:1px solid var(--color-divider);padding:8px 0;font-size:12px"><span style="font-family:var(--font-heading);font-weight:600;color:var(--color-accent-700);font-variant-numeric:tabular-nums">09:00</span> · Entrada Onix</div>
+            <div style="border-top:1px solid var(--color-divider);padding:8px 0;font-size:12px"><span style="font-family:var(--font-heading);font-weight:600;color:var(--color-accent-700);font-variant-numeric:tabular-nums">11:00</span> · Retorno Ford Ka</div>
+            <div style="border-top:1px solid var(--color-divider);padding:8px 0;font-size:12px"><span style="font-family:var(--font-heading);font-weight:600;color:var(--color-accent-700);font-variant-numeric:tabular-nums">16:30</span> · Entrega Argo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Planta do pátio — as nove vagas como elas são no chão da oficina. Bate o olho e sabe o que tem lá dentro.</div>
+      <div class="dv-card" style="width:600px;padding:26px 28px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px">
+          <div>
+            <div class="kicker" style="color:var(--color-accent)">9 de setembro · 10:42</div>
+            <h2 style="margin:6px 0 0;font-weight:400;font-size:29px">Pátio</h2>
+          </div>
+          <div style="text-align:right"><div class="kicker">Ocupação</div><div class="num" style="font-size:30px">7<span style="font-size:16px;color:color-mix(in srgb, var(--color-text) 45%, transparent)">/9</span></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--color-divider);border:1px solid var(--color-divider);border-radius:4px;overflow:hidden">
+          <div style="background:var(--color-bg);padding:14px 14px;min-height:96px;border-left:3px solid var(--color-accent)"><div class="kicker">Elevador 1</div><div class="pl" style="font-size:16px;margin-top:6px">RKT4B21</div><div style="font-size:11px;color:color-mix(in srgb, var(--color-text) 58%, transparent)">Argo · revisão</div><div style="font-size:10.5px;margin-top:6px;color:var(--color-accent-700)">Diego · 2h restantes</div></div>
+          <div style="background:var(--color-bg);padding:14px 14px;min-height:96px;border-left:3px solid var(--color-neutral-400)"><div class="kicker">Elevador 2</div><div class="pl" style="font-size:16px;margin-top:6px">QPD8734</div><div style="font-size:11px;color:color-mix(in srgb, var(--color-text) 58%, transparent)">Gol · embreagem</div><div style="font-size:10.5px;margin-top:6px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Peça chega 10/09</div></div>
+          <div style="background:var(--color-bg);padding:14px 14px;min-height:96px;border-left:3px solid var(--color-accent)"><div class="kicker">Elevador 3</div><div class="pl" style="font-size:16px;margin-top:6px">SBA2J09</div><div style="font-size:11px;color:color-mix(in srgb, var(--color-text) 58%, transparent)">HB20 · suspensão</div><div style="font-size:10.5px;margin-top:6px;color:var(--color-accent-700)">Diego · em execução</div></div>
+          <div style="background:var(--color-bg);padding:14px 14px;min-height:96px;border-left:3px solid var(--color-accent-2-400)"><div class="kicker">Vaga 4 · pronto</div><div class="pl" style="font-size:16px;margin-top:6px">FMR6C55</div><div style="font-size:11px;color:color-mix(in srgb, var(--color-text) 58%, transparent)">Corolla · alinhamento</div><div style="font-size:10.5px;margin-top:6px;color:var(--color-accent-700)">Retirada 08:30</div></div>
+          <div style="background:var(--color-bg);padding:14px 14px;min-height:96px;border-left:3px solid var(--color-accent)"><div class="kicker">Vaga 5</div><div class="pl" style="font-size:16px;margin-top:6px">GDT3311</div><div style="font-size:11px;color:color-mix(in srgb, var(--color-text) 58%, transparent)">Onix · ar-condicionado</div><div style="font-size:10.5px;margin-top:6px;color:var(--color-accent-700)">Tiago · em execução</div></div>
+          <div style="background:var(--color-bg);padding:14px 14px;min-height:96px;border-left:3px solid var(--color-neutral-400)"><div class="kicker">Vaga 6</div><div class="pl" style="font-size:16px;margin-top:6px">HKQ9D18</div><div style="font-size:11px;color:color-mix(in srgb, var(--color-text) 58%, transparent)">Ford Ka · diagnóstico</div><div style="font-size:10.5px;margin-top:6px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Aguardando cliente</div></div>
+          <div style="background:var(--color-bg);padding:14px 14px;min-height:96px;border-left:3px solid var(--color-neutral-400)"><div class="kicker">Vaga 7</div><div class="pl" style="font-size:16px;margin-top:6px">LVK1002</div><div style="font-size:11px;color:color-mix(in srgb, var(--color-text) 58%, transparent)">Master · freios</div><div style="font-size:10.5px;margin-top:6px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Orçamento enviado</div></div>
+          <div style="background:var(--color-bg);padding:14px 14px;min-height:96px;display:flex;flex-direction:column;justify-content:center;align-items:center;color:color-mix(in srgb, var(--color-text) 38%, transparent)"><div style="font-family:var(--font-heading);font-size:26px;font-weight:400">8</div><div style="font-size:10.5px">livre</div></div>
+          <div style="background:var(--color-bg);padding:14px 14px;min-height:96px;display:flex;flex-direction:column;justify-content:center;align-items:center;color:color-mix(in srgb, var(--color-text) 38%, transparent)"><div style="font-family:var(--font-heading);font-size:26px;font-weight:400">9</div><div style="font-size:10.5px">reservada 14:00</div></div>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:14px;font-size:10.5px;color:color-mix(in srgb, var(--color-text) 58%, transparent);flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:3px;background:var(--color-accent)"></span>em execução</span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:3px;background:var(--color-neutral-400)"></span>parado, esperando algo</span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:3px;background:var(--color-accent-2-400)"></span>pronto para entrega</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dv-opt" id="1c">
+      <div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Colofão — faixa escura com os números do dia em corpo grande, conteúdo claro embaixo. Mais presença, menos cinza.</div>
+      <div class="dv-card" style="width:600px">
+        <div style="background:#1a1917;color:#f3f2f2;padding:24px 28px 22px;position:relative;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;position:relative;z-index:1">
+            <div>
+              <div class="kicker" style="color:#b68235">Quarta, 9 de setembro · 10:42</div>
+              <div style="font-family:var(--font-heading);font-weight:400;font-size:27px;margin-top:5px">Bom dia, Gustavo.</div>
+            </div>
+            <div style="text-align:right">
+              <div class="kicker" style="color:rgba(243,242,242,0.55)">Faturamento setembro</div>
+              <div class="num" style="font-size:34px;color:#fff">R$ 48.320</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:22px;padding-top:18px;border-top:1px solid rgba(243,242,242,0.18);position:relative;z-index:1">
+            <div><div class="num" style="font-size:38px;color:#fff">7</div><div style="font-size:11px;color:rgba(243,242,242,0.6)">veículos no pátio</div></div>
+            <div><div class="num" style="font-size:38px;color:#fff">12</div><div style="font-size:11px;color:rgba(243,242,242,0.6)">ordens abertas</div></div>
+            <div><div class="num" style="font-size:38px;color:#e1ad66">3</div><div style="font-size:11px;color:rgba(243,242,242,0.6)">esperando sua aprovação</div></div>
+          </div>
+          <div class="num" style="position:absolute;right:-18px;top:-56px;font-size:190px;color:rgba(182,130,53,0.12);user-select:none">09</div>
+        </div>
+        <div style="padding:22px 28px 26px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+            <h4 style="margin:0;font-size:18px">Orçamentos aguardando você</h4>
+            <span class="kicker" style="color:var(--color-accent)">R$ 4.040 parados</span>
+          </div>
+          <div style="display:flex;gap:14px;align-items:center;padding:11px 0;border-top:1px solid var(--color-divider)">
+            <span class="pl" style="font-size:13px;width:72px">LVK1002</span>
+            <span style="flex:1;font-size:12.5px">Freios e sangria · Transportes Vilaça</span>
+            <span style="font-variant-numeric:tabular-nums;font-size:13px">3.420,00</span>
+            <button type="button" class="btn btn-primary" style="font-size:12px;padding:4px 11px">Aprovar</button>
+          </div>
+          <div style="display:flex;gap:14px;align-items:center;padding:11px 0;border-top:1px solid var(--color-divider)">
+            <span class="pl" style="font-size:13px;width:72px">HKQ9D18</span>
+            <span style="flex:1;font-size:12.5px">Diagnóstico de motor · Carlos Menezes</span>
+            <span style="font-variant-numeric:tabular-nums;font-size:13px">620,00</span>
+            <button type="button" class="btn btn-primary" style="font-size:12px;padding:4px 11px">Aprovar</button>
+          </div>
+          <div style="display:flex;gap:20px;margin-top:20px">
+            <div style="flex:1">
+              <div class="kicker">Estoque baixo</div>
+              <div style="font-size:12.5px;margin-top:6px">Óleo 5W30 · <span style="font-variant-numeric:tabular-nums;color:var(--color-accent-700)">3 L</span></div>
+              <div style="font-size:12.5px">Filtro de óleo VW · <span style="font-variant-numeric:tabular-nums;color:var(--color-accent-700)">2 un</span></div>
+            </div>
+            <div style="flex:1">
+              <div class="kicker">Clientes novos em setembro</div>
+              <div class="num" style="font-size:26px;margin-top:2px">7</div>
+              <div style="font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">4 por indicação</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dv-opt" id="1d">
+      <div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Linha do dia — o painel é a régua das horas: entradas, entregas e quem está com cada carro. Para quem administra pelo relógio.</div>
+      <div class="dv-card" style="width:600px;padding:26px 28px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px">
+          <div>
+            <div class="kicker" style="color:var(--color-accent)">Quarta, 9 de setembro</div>
+            <h2 style="margin:6px 0 0;font-weight:400;font-size:29px">O dia da oficina</h2>
+          </div>
+          <div style="display:flex;gap:20px;text-align:right">
+            <div><div class="kicker">Entradas</div><div class="num" style="font-size:24px">2</div></div>
+            <div><div class="kicker">Entregas</div><div class="num" style="font-size:24px">2</div></div>
+            <div><div class="kicker">Em serviço</div><div class="num" style="font-size:24px">4</div></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--color-divider);padding-bottom:5px;margin-bottom:2px">
+          <div style="flex:none;width:82px"></div>
+          <div style="flex:1;display:grid;grid-template-columns:repeat(5,1fr);font-size:10px;letter-spacing:0.08em;color:color-mix(in srgb, var(--color-text) 50%, transparent);font-variant-numeric:tabular-nums">
+            <span>08h</span><span>10h</span><span>12h</span><span>14h</span><span>16h</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:0;padding:9px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="flex:none;width:82px"><div class="pl" style="font-size:12.5px">FMR6C55</div><div style="font-size:10px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Corolla</div></div>
+          <div style="flex:1;position:relative;height:18px">
+            <div style="position:absolute;left:2%;width:8%;top:6px;height:6px;background:var(--color-accent-2-400);border-radius:3px"></div>
+            <span style="position:absolute;left:12%;top:1px;font-size:10.5px;color:var(--color-accent-700)">entrega 08:30</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;padding:9px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="flex:none;width:82px"><div class="pl" style="font-size:12.5px">GDT3311</div><div style="font-size:10px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Onix</div></div>
+          <div style="flex:1;position:relative;height:18px">
+            <div style="position:absolute;left:8%;width:46%;top:6px;height:6px;background:var(--color-accent);border-radius:3px"></div>
+            <span style="position:absolute;left:56%;top:1px;font-size:10.5px;color:color-mix(in srgb, var(--color-text) 58%, transparent)">Tiago · ar-cond.</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;padding:9px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="flex:none;width:82px"><div class="pl" style="font-size:12.5px">SBA2J09</div><div style="font-size:10px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">HB20</div></div>
+          <div style="flex:1;position:relative;height:18px">
+            <div style="position:absolute;left:0%;width:70%;top:6px;height:6px;background:var(--color-accent);border-radius:3px"></div>
+            <span style="position:absolute;left:72%;top:1px;font-size:10.5px;color:color-mix(in srgb, var(--color-text) 58%, transparent)">Diego · suspensão</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;padding:9px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="flex:none;width:82px"><div class="pl" style="font-size:12.5px">HKQ9D18</div><div style="font-size:10px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Ford Ka</div></div>
+          <div style="flex:1;position:relative;height:18px">
+            <div style="position:absolute;left:36%;width:5%;top:5px;height:8px;border:1px solid var(--color-accent);border-radius:2px"></div>
+            <span style="position:absolute;left:43%;top:1px;font-size:10.5px;color:var(--color-accent-700)">retorno 11:00 · aprovar orçamento</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;padding:9px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="flex:none;width:82px"><div class="pl" style="font-size:12.5px">—</div><div style="font-size:10px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Versa</div></div>
+          <div style="flex:1;position:relative;height:18px">
+            <div style="position:absolute;left:64%;width:5%;top:5px;height:8px;border:1px dashed var(--color-neutral-500);border-radius:2px"></div>
+            <span style="position:absolute;left:71%;top:1px;font-size:10.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">entrada 14:00 · cliente novo</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;padding:9px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="flex:none;width:82px"><div class="pl" style="font-size:12.5px">RKT4B21</div><div style="font-size:10px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Argo</div></div>
+          <div style="flex:1;position:relative;height:18px">
+            <div style="position:absolute;left:0%;width:88%;top:6px;height:6px;background:var(--color-accent);border-radius:3px"></div>
+            <div style="position:absolute;left:88%;width:7%;top:6px;height:6px;background:var(--color-accent-2-400);border-radius:3px"></div>
+            <span style="position:absolute;left:96%;top:1px;font-size:10.5px;color:var(--color-accent-700);white-space:nowrap">16:30</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:18px;font-size:11.5px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">
+          <span>Faturamento do mês <span style="font-variant-numeric:tabular-nums;color:var(--color-text)">R$ 48.320</span></span>
+          <span>3 orçamentos a aprovar · 5 itens em falta</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Para continuar: “leva o pátio de <a class="dv-oid" href="#1b">1b</a> para dentro do protótipo” · “usa a faixa escura de <a class="dv-oid" href="#1c">1c</a> no topo do painel” · “quero a linha do dia de <a class="dv-oid" href="#1d">1d</a> como aba do painel”</p>
+</section>
+</x-dc>
+</body>
+</html>

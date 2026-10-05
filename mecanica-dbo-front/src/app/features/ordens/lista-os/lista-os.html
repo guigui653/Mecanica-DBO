@@ -1,89 +1,83 @@
-<div class="header">
-  <h2>Ordens de Serviço</h2>
-  <button mat-flat-button color="primary" (click)="novaOs()">
-    <mat-icon>add</mat-icon> Nova OS
-  </button>
+<div class="view-header">
+  <div class="view-title-group">
+    <div class="kicker">ORDENS DE SERVIÇO</div>
+    <h1 class="title">Ordens de Serviço</h1>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn btn-primary" (click)="novaOs()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+      Nova ordem
+    </button>
+  </div>
 </div>
 
-<div class="filtros">
-  <mat-form-field appearance="outline" style="width: 200px;">
-    <mat-label>Status</mat-label>
-    <mat-select [(ngModel)]="filtroStatus" (selectionChange)="carregar()">
-      @for (s of statusOptions; track s.valor) {
-        <mat-option [value]="s.valor">{{ s.label }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+<div class="view-content">
 
-  <mat-form-field appearance="outline" style="width: 340px;">
-    <mat-label>Buscar por placa, cliente ou número</mat-label>
-    <input matInput [(ngModel)]="termoBusca" (keyup.enter)="carregar()">
-    <mat-icon matSuffix>search</mat-icon>
-  </mat-form-field>
-
-  <button mat-stroked-button (click)="carregar()">Buscar</button>
-</div>
-
-@if (erro) { <p style="color:red">{{ erro }}</p> }
-
-@if (carregando) {
-  <mat-spinner diameter="40"></mat-spinner>
-} @else {
-  <table mat-table [dataSource]="ordens" class="mat-elevation-z2">
-
-    <ng-container matColumnDef="numero">
-      <th mat-header-cell *matHeaderCellDef>OS</th>
-      <td mat-cell *matCellDef="let o"><strong>#{{ o.numero || o.id }}</strong></td>
-    </ng-container>
-
-    <ng-container matColumnDef="cliente">
-      <th mat-header-cell *matHeaderCellDef>Cliente</th>
-      <td mat-cell *matCellDef="let o">{{ o.veiculo?.cliente?.nome || o.cliente?.nome || '—' }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="veiculo">
-      <th mat-header-cell *matHeaderCellDef>Veículo</th>
-      <td mat-cell *matCellDef="let o">
-        {{ o.veiculo?.placa }} — {{ o.veiculo?.modelo || '' }}
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef>Status</th>
-      <td mat-cell *matCellDef="let o">
-        <span class="badge" [style.background-color]="corStatus(o.status)">
-          {{ labelStatus(o.status) }}
-        </span>
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="dataEntrada">
-      <th mat-header-cell *matHeaderCellDef>Entrada</th>
-      <td mat-cell *matCellDef="let o">{{ o.dataEntrada | date:'dd/MM/yyyy' }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="valorTotal">
-      <th mat-header-cell *matHeaderCellDef>Total</th>
-      <td mat-cell *matCellDef="let o">
-        {{ (o.valorTotal ?? o.totalGeral ?? 0) | currency:'BRL':'symbol':'1.2-2' }}
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="acoes">
-      <th mat-header-cell *matHeaderCellDef>Ações</th>
-      <td mat-cell *matCellDef="let o">
-        <button mat-icon-button color="primary" (click)="$event.stopPropagation(); abrirDetalhe(o)">
-          <mat-icon>visibility</mat-icon>
+  <div class="os-toolbar">
+    <div class="seg">
+      @for (f of filtros; track f) {
+        <button type="button" [class.active]="filtroAtivo === f" (click)="selecionarFiltro(f)">
+          {{ f }}
         </button>
-      </td>
-    </ng-container>
+      }
+    </div>
 
-    <tr mat-header-row *matHeaderRowDef="colunas"></tr>
-    <tr mat-row *matRowDef="let row; columns: colunas;"
-        (click)="abrirDetalhe(row)" style="cursor: pointer;"></tr>
-  </table>
+    <input class="input os-search-input" type="text"
+           placeholder="Filtrar por placa, cliente ou nº"
+           [(ngModel)]="termoBusca" (input)="aplicarFiltros()">
+  </div>
 
-  @if (ordens.length === 0) {
-    <p style="margin-top:16px; color:#666;">Nenhuma ordem de serviço encontrada.</p>
+  @if (carregando) {
+    <div class="spinner-wrap">Carregando ordens de serviço...</div>
+  } @else if (erro) {
+    <div class="empty-state" role="alert">
+      <p>{{ erro }}</p>
+      <button type="button" class="btn btn-secondary" (click)="carregar()">Tentar novamente</button>
+    </div>
+  } @else {
+    <div class="table-scroll"><table class="table">
+      <thead>
+        <tr>
+          <th style="width: 78px">Nº</th>
+          <th>Veículo</th>
+          <th>Cliente</th>
+          <th>Serviço</th>
+          <th style="width: 104px">Mecânico</th>
+          <th style="width: 104px; text-align: right">Valor R$</th>
+          <th style="width: 158px">Situação</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (o of ordensFiltradas; track o.num) {
+          <tr (click)="abrirDetalhe(o)" (keydown.enter)="abrirDetalhe(o)" tabindex="0" [attr.aria-label]="'Abrir ' + o.num" style="cursor: pointer;">
+            <td class="os-num tabular">{{ o.num }}</td>
+            <td>
+              <div class="os-placa">{{ o.placa }}</div>
+              <div class="os-carro">{{ o.carro }}</div>
+            </td>
+            <td class="os-cliente">{{ o.cliente }}</td>
+            <td class="os-servico">{{ o.servico }}</td>
+            <td class="os-mec">{{ o.mec }}</td>
+            <td class="os-valor tabular" style="text-align: right">{{ o.valor }}</td>
+            <td>
+              <span class="tag" [ngClass]="o.tagClass">{{ o.statusLabel }}</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table></div>
+
+    @if (ordensFiltradas.length === 0) {
+      <div class="empty-state">
+        Nenhuma ordem neste filtro.
+      </div>
+    }
+
+    <div class="table-foot">
+      <span class="tabular">{{ resumoTexto }}</span>
+    </div>
   }
-}
+
+</div>

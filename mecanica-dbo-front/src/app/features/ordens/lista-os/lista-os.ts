@@ -1,81 +1,149 @@
-﻿import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { OrdemServicoService } from '../../../core/services/ordem-servico';
 import { OrdemServico, StatusOs } from '../../../shared/models/ordem-servico.model';
+
+export interface OsViewItem {
+  id?: number;
+  num: string;
+  placa: string;
+  carro: string;
+  cliente: string;
+  servico: string;
+  mec: string;
+  valor: string;
+  valorNum: number;
+  status: string;
+  statusLabel: string;
+  tagClass: string;
+}
 
 @Component({
   selector: 'app-lista-os',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatTableModule, MatFormFieldModule,
-            MatInputModule, MatSelectModule, MatButtonModule, MatIconModule,
-            MatChipsModule, MatProgressSpinnerModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './lista-os.html',
   styleUrl: './lista-os.css'
 })
 export class ListaOs implements OnInit {
   private service = inject(OrdemServicoService);
   private router  = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
-  ordens: OrdemServico[] = [];
-  colunas = ['numero', 'cliente', 'veiculo', 'status', 'dataEntrada', 'totalGeral', 'acoes'];
+  todasOrdens: OsViewItem[] = [];
+  ordensFiltradas: OsViewItem[] = [];
 
-  /** Apenas os 4 status reais do backend */
-  statusOptions: { valor: StatusOs | '', label: string }[] = [
-    { valor: '',             label: 'Todos'        },
-    { valor: 'ABERTA',       label: 'Aberta'       },
-    { valor: 'EM_ANDAMENTO', label: 'Em andamento' },
-    { valor: 'CONCLUIDA',    label: 'Concluída'    },
-    { valor: 'ENTREGUE',     label: 'Entregue'     },
-  ];
-
-  filtroStatus: StatusOs | '' = '';
+  filtros = ['Todas', 'Em serviço', 'Aguardando', 'Prontas', 'Entregues'];
+  filtroAtivo = 'Todas';
   termoBusca = '';
   carregando = false;
   erro = '';
 
-  ngOnInit() { this.carregar(); }
+  ngOnInit() {
+    this.carregar();
+  }
 
   carregar() {
     this.carregando = true;
     this.erro = '';
-    this.service.listar(this.filtroStatus || undefined, this.termoBusca || undefined)
-      .subscribe({
-        next: (d) => { this.ordens = d; this.carregando = false; },
-        error: () => { this.erro = 'Erro ao carregar ordens de serviço'; this.carregando = false; }
-      });
+
+    this.service.listar().subscribe({
+      next: (bancoOrdens) => {
+        const reais: OsViewItem[] = (bancoOrdens || []).map(o => {
+          const num = 'OS ' + (o.id ?? '—');
+          const valor = (o.totalGeral ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          return {
+            id: o.id,
+            num,
+            placa: o.veiculo?.placa ?? '—',
+            carro: [o.veiculo?.marca, o.veiculo?.modelo].filter(Boolean).join(' ') || '—',
+            cliente: o.veiculo?.cliente?.nome ?? '—',
+            servico: o.diagnostico || o.reclamacoes || 'Não informado',
+            mec: '—',
+            valor,
+            valorNum: o.totalGeral ?? 0,
+            status: o.status,
+            statusLabel: this.obterLabelStatus(o.status),
+            tagClass: this.obterTagClass(o.status)
+          };
+        });
+
+        // A lista representa somente ordens retornadas pela API.
+        this.todasOrdens = reais;
+        this.aplicarFiltros();
+        this.carregando = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.erro = 'Não foi possível carregar as ordens. Tente novamente.';
+        this.todasOrdens = [];
+        this.aplicarFiltros();
+        this.carregando = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
-  abrirDetalhe(os: OrdemServico) {
-    this.router.navigate(['/ordens', os.id]);
+  selecionarFiltro(f: string) {
+    this.filtroAtivo = f;
+    this.aplicarFiltros();
+  }
+
+  aplicarFiltros() {
+    const q = this.termoBusca.trim().toLowerCase();
+    this.ordensFiltradas = this.todasOrdens.filter(o => {
+      const matchQ = !q || [o.num, o.placa, o.carro, o.cliente, o.servico, o.mec].join(' ').toLowerCase().includes(q);
+
+      let matchF = true;
+      if (this.filtroAtivo === 'Em serviço') {
+        matchF = o.statusLabel === 'Em serviço' || o.status === 'EM_ANDAMENTO';
+      } else if (this.filtroAtivo === 'Aguardando') {
+        matchF = o.statusLabel.startsWith('Aguardando') || o.statusLabel === 'Orçamento' || o.status === 'ABERTA';
+      } else if (this.filtroAtivo === 'Prontas') {
+        matchF = o.statusLabel === 'Pronto p/ entrega' || o.status === 'CONCLUIDA';
+      } else if (this.filtroAtivo === 'Entregues') {
+        matchF = o.status === 'ENTREGUE';
+      }
+
+      return matchQ && matchF;
+    });
+  }
+
+  get resumoTexto(): string {
+    const total = this.ordensFiltradas.reduce((acc, o) => acc + o.valorNum, 0);
+    const totalFmt = total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${this.ordensFiltradas.length} ordens listadas · total R$ ${totalFmt}`;
+  }
+
+  abrirDetalhe(o: OsViewItem) {
+    if (o.id) {
+      this.router.navigate(['/ordens', o.id]);
+    }
   }
 
   novaOs() {
-    this.router.navigate(['/ordens', 'nova']);
+    this.router.navigate(['/ordens/nova']);
   }
 
-  corStatus(status: StatusOs): string {
-    const cores: Record<StatusOs, string> = {
-      ABERTA:       '#1976d2',
-      EM_ANDAMENTO: '#f57c00',
-      CONCLUIDA:    '#2e7d32',
-      ENTREGUE:     '#388e3c',
-    };
-    return cores[status] ?? '#757575';
+  private obterLabelStatus(status: StatusOs): string {
+    switch (status) {
+      case 'ABERTA': return 'Aberta';
+      case 'EM_ANDAMENTO': return 'Em serviço';
+      case 'CONCLUIDA': return 'Pronto p/ entrega';
+      case 'ENTREGUE': return 'Entregue';
+      default: return status;
+    }
   }
 
-  labelStatus(status: StatusOs): string {
-    return this.statusOptions.find(s => s.valor === status)?.label ?? status;
+  private obterTagClass(status: StatusOs): string {
+    switch (status) {
+      case 'ABERTA': return 'tag-outline';
+      case 'EM_ANDAMENTO': return 'tag-accent';
+      case 'CONCLUIDA': return 'tag-accent-2';
+      case 'ENTREGUE': return 'tag-neutral';
+      default: return 'tag-neutral';
+    }
   }
 }
-
-
