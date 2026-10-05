@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { NavigationEnd, Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, effect, inject, signal } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { catchError, filter, of } from 'rxjs';
+import { catchError, of } from 'rxjs';
+import { AuthService } from './core/services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -10,28 +11,27 @@ import { catchError, filter, of } from 'rxjs';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App implements OnInit {
-
+export class App {
+  protected auth = inject(AuthService);
   private http = inject(HttpClient);
-  private router = inject(Router);
 
   /** Contadores exibidos ao lado dos itens do menu. */
   totalClientes = signal<number | null>(null);
   osAbertas     = signal<number | null>(null);
   apiOnline     = signal(false);
   horaSync      = signal<string>('');
-  naTelaLogin   = signal(this.router.url.startsWith('/login'));
 
-  ngOnInit(): void {
-    this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(event => {
-      const naTelaLogin = event.urlAfterRedirects.startsWith('/login');
-      this.naTelaLogin.set(naTelaLogin);
-      if (!naTelaLogin) this.carregarContadores();
+  constructor() {
+    effect(() => {
+      if (this.auth.logado()) {
+        this.atualizarHora();
+        this.carregarContadores();
+      } else {
+        this.totalClientes.set(null);
+        this.osAbertas.set(null);
+        this.apiOnline.set(false);
+      }
     });
-    if (!this.naTelaLogin()) {
-      this.atualizarHora();
-      this.carregarContadores();
-    }
   }
 
   private atualizarHora(): void {

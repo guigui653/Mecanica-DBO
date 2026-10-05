@@ -1,0 +1,11 @@
+# --- Login (acrescente ao application.properties) ---
+app.admin.username=${APP_USERNAME:admin}
+app.admin.password=${APP_PASSWORD:mecanica2024}
+
+# Origens do frontend liberadas no CORS (separe por vírgula). Em produção, o endereço real.
+app.cors.allowed-origins=${APP_CORS_ORIGINS:http://localhost:4200,http://127.0.0.1:4200}
+
+# Cookie de sessão
+server.servlet.session.cookie.http-only=true
+server.servlet.session.cookie.same-site=lax
+server.servlet.session.timeout=8h

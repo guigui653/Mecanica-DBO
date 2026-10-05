@@ -7,6 +7,7 @@ Uso: python3 gerar_recibo.py '<json_da_os>' '<caminho_saida.pdf>'
 import sys
 import json
 from datetime import datetime
+from xml.sax.saxutils import escape
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import cm
@@ -42,6 +43,13 @@ def fmt_data(data_str):
         return d.strftime("%d/%m/%Y")
     except:
         return str(data_str)[:10]
+
+def txt(valor, vazio="—"):
+    """Texto seguro para Paragraph: None ou vazio vira traço,
+    & < > são escapados e quebra de linha vira <br/>."""
+    if valor is None or str(valor).strip() == "":
+        return vazio
+    return escape(str(valor)).replace("\n", "<br/>")
 
 def gerar_pdf(os_data: dict, caminho_saida: str):
     doc = SimpleDocTemplate(
@@ -89,28 +97,28 @@ def gerar_pdf(os_data: dict, caminho_saida: str):
         textColor=CINZA_MEDIO, alignment=TA_CENTER)
 
     # ── Dados da OS ──────────────────────────────────────────────────────────
-    veiculo  = os_data.get("veiculo", {})
-    cliente  = veiculo.get("cliente", {}) if veiculo else {}
-    pecas    = os_data.get("itensPeca", [])
-    servicos = os_data.get("itensServico", [])
+    veiculo  = os_data.get("veiculo") or {}
+    cliente  = veiculo.get("cliente") or {}
+    pecas    = os_data.get("itensPeca") or []
+    servicos = os_data.get("itensServico") or []
 
-    nome_cliente  = cliente.get("nome", "—")
-    cpf_cliente   = cliente.get("cpf", "—")
-    tel_cliente   = cliente.get("telefone1", "—")
-    placa         = veiculo.get("placa", "—")
-    marca         = veiculo.get("marca", "—")
-    modelo        = veiculo.get("modelo", "—")
-    cor           = veiculo.get("cor", "—")
-    combustivel   = veiculo.get("combustivel", "—")
-    km = os_data.get("kmEntrada") or "—"
+    nome_cliente  = txt(cliente.get("nome"))
+    cpf_cliente   = txt(cliente.get("cpf"))
+    tel_cliente   = txt(cliente.get("telefone1"))
+    placa         = txt(veiculo.get("placa"))
+    marca         = txt(veiculo.get("marca"))
+    modelo        = txt(veiculo.get("modelo"))
+    cor           = txt(veiculo.get("cor"))
+    combustivel   = txt(veiculo.get("combustivel"))
+    km            = txt(os_data.get("kmEntrada"))
     data_entrada  = fmt_data(os_data.get("dataEntrada"))
     data_saida    = fmt_data(os_data.get("dataSaidaReal") or os_data.get("dataSaidaPrevista"))
-    reclamacoes   = os_data.get("reclamacoes", "—")
-    diagnostico   = os_data.get("diagnostico", "—")
+    reclamacoes   = txt(os_data.get("reclamacoes"))
+    diagnostico   = txt(os_data.get("diagnostico"))
     total_pecas   = fmt_brl(os_data.get("totalPecas", 0))
     total_servicos= fmt_brl(os_data.get("totalServicos", 0))
     total_geral   = fmt_brl(os_data.get("totalGeral", 0))
-    os_id         = os_data.get("id", "—")
+    os_id         = txt(os_data.get("id"))
 
     elementos = []
 
@@ -275,7 +283,7 @@ def gerar_pdf(os_data: dict, caminho_saida: str):
             pago = " *" if p.get("pagoPeloCliente") else ""
             rows.append([
                 Paragraph(str(i), s_td),
-                Paragraph(str(p.get("descricao","")) + pago, s_td),
+                Paragraph(txt(p.get("descricao"), "") + pago, s_td),
                 Paragraph(fmt_brl(p.get("valorTotal", p.get("valorUnitario",0))), s_td_r),
             ])
         # Preenche até 10 linhas mínimas
@@ -301,7 +309,7 @@ def gerar_pdf(os_data: dict, caminho_saida: str):
         for i, s in enumerate(servicos, 1):
             rows.append([
                 Paragraph(str(i), s_td),
-                Paragraph(str(s.get("descricao","")), s_td),
+                Paragraph(txt(s.get("descricao"), ""), s_td),
                 Paragraph(fmt_brl(s.get("valor",0)), s_td_r),
             ])
         while len(rows) < 11:

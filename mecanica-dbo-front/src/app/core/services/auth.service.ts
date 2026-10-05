@@ -1,37 +1,59 @@
-import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, of, tap } from 'rxjs';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { Observable, catchError, finalize, map, of, switchMap, tap } from 'rxjs';
 
-export interface AuthState {
-  authenticated: boolean;
-  username: string | null;
+interface EstadoSessao {
+  autenticado: boolean;
+  usuario?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
-  readonly sessao = signal<AuthState>({ authenticated: false, username: null });
+  private router = inject(Router);
 
-  verificarSessao(): Observable<AuthState> {
-    return this.http.get<AuthState>('/auth/me').pipe(
-      catchError(() => of({ authenticated: false, username: null })),
-      tap(sessao => this.sessao.set(sessao))
+  readonly usuario = signal<string | null>(null);
+  readonly logado = computed(() => this.usuario() !== null);
+
+  /** Pergunta ao backend se há sessão ativa (cookie JSESSIONID). */
+  verificarSessao(): Observable<boolean> {
+    return this.http.get<EstadoSessao>('/auth/me').pipe(
+      tap((r) => this.usuario.set(r.autenticado ? (r.usuario ?? null) : null)),
+      map((r) => r.autenticado),
+      catchError(() => {
+        this.usuario.set(null);
+        return of(false);
+      }),
     );
   }
 
-  login(username: string, password: string): Observable<AuthState> {
-    return this.http.post<AuthState>('/auth/login', { username, password }).pipe(
-      tap(sessao => this.sessao.set(sessao))
+  /**
+   * O GET /auth/me antes do POST garante que o cookie XSRF-TOKEN já existe
+   * (o backend o grava em qualquer resposta), senão o login seria barrado pelo CSRF.
+   */
+  login(username: string, password: string): Observable<EstadoSessao> {
+    return this.http.get<EstadoSessao>('/auth/me').pipe(
+      switchMap(() => this.http.post<EstadoSessao>('/auth/login', { username, password })),
+      tap((r) => this.usuario.set(r.usuario ?? null)),
     );
   }
 
-  logout(): Observable<void> {
-    return this.http.post<void>('/auth/logout', {}).pipe(
-      tap(() => this.sessao.set({ authenticated: false, username: null }))
-    );
+  logout(): void {
+    this.http
+      .post<void>('/auth/logout', {})
+      .pipe(
+        catchError(() => of(null)),
+        finalize(() => {
+          this.limparSessao();
+          this.router.navigate(['/login']);
+        }),
+      )
+      .subscribe();
   }
 
+  /** Usado pelo interceptor quando a API responde 401. */
   limparSessao(): void {
-    this.sessao.set({ authenticated: false, username: null });
+    this.usuario.set(null);
   }
 }

@@ -145,6 +145,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Falha ao gerar o recibo em PDF. O detalhe (saída do Python, traceback)
+     * já foi gravado no log pelo PdfService; aqui só vai a mensagem amigável.
+     */
+    @ExceptionHandler(GeracaoPdfException.class)
+    public ResponseEntity<Map<String, Object>> handleGeracaoPdf(GeracaoPdfException ex) {
+        log.error("Falha na geração do PDF: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(erro(500,
+                "Não foi possível gerar o recibo em PDF. O detalhe foi gravado no log do servidor."));
+    }
+
+    /**
      * Rede de segurança. Qualquer coisa não prevista acima vira 500 com uma
      * mensagem curta na tela e o stack trace COMPLETO no log do Spring.
      *

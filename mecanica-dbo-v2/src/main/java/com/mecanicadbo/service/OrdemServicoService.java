@@ -7,6 +7,8 @@ import com.mecanicadbo.dto.ItemServicoRequest;
 import com.mecanicadbo.exception.*;
 import com.mecanicadbo.model.*;
 import com.mecanicadbo.repository.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class OrdemServicoService {
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private final OrdemServicoRepository osRepo;
     private final VeiculoRepository veiculoRepo;
@@ -155,7 +160,10 @@ public class OrdemServicoService {
         item.setValorUnitario(dados.valorUnitario());
         item.setPagoPeloCliente(Boolean.TRUE.equals(dados.pagoPeloCliente()));
 
-        return itemPecaRepo.save(item);
+        ItemPeca salvo = itemPecaRepo.save(item);
+        entityManager.flush();
+        entityManager.refresh(os);
+        return salvo;
     }
 
     @Transactional
@@ -168,7 +176,10 @@ public class OrdemServicoService {
         item.setDescricao(dados.descricao().trim());
         item.setValor(dados.valor());
 
-        return itemServicoRepo.save(item);
+        ItemServico salvo = itemServicoRepo.save(item);
+        entityManager.flush();
+        entityManager.refresh(os);
+        return salvo;
     }
 
     @Transactional
@@ -180,9 +191,12 @@ public class OrdemServicoService {
         if (!item.getOrdemServico().getId().equals(osId)) {
             throw new RegraDeNegocioException("Item não pertence a esta OS");
         }
-        garantirEditavel(item.getOrdemServico());
+        OrdemServico os = item.getOrdemServico();
+        garantirEditavel(os);
 
         itemPecaRepo.delete(item);
+        entityManager.flush();
+        entityManager.refresh(os);
     }
 
     @Transactional
@@ -194,9 +208,12 @@ public class OrdemServicoService {
         if (!item.getOrdemServico().getId().equals(osId)) {
             throw new RegraDeNegocioException("Item não pertence a esta OS");
         }
-        garantirEditavel(item.getOrdemServico());
+        OrdemServico os = item.getOrdemServico();
+        garantirEditavel(os);
 
         itemServicoRepo.delete(item);
+        entityManager.flush();
+        entityManager.refresh(os);
     }
 
     // ------------------------------------------------------------------

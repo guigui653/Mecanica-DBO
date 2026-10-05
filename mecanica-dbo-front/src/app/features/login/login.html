@@ -1,18 +1,30 @@
-<main class="login-page">
-  <section class="login-card" aria-labelledby="titulo-login">
-    <div class="marca">Mecânica DBO</div>
-    <p class="marca-subtitulo">OFICINA · DESDE 1998</p>
-    <div class="login-apresentacao">
-      <h1 id="titulo-login">Bem-vindo</h1>
-      <p>Entre para acessar os cadastros e as ordens de serviço.</p>
+<main class="login-wrap">
+  <form class="login-card" (ngSubmit)="entrar()" autocomplete="on">
+    <div class="login-brand">
+      <span class="login-mark">DBO</span>
+      <h1>Mecânica DBO</h1>
+      <p>Acesse o sistema da oficina</p>
     </div>
-    <form (ngSubmit)="entrar()" novalidate>
+
+    <div class="field">
       <label for="usuario">Usuário</label>
-      <input id="usuario" name="usuario" autocomplete="username" [(ngModel)]="usuario" [disabled]="carregando()" autofocus>
+      <input id="usuario" name="usuario" class="input" type="text"
+             [(ngModel)]="usuario" autocomplete="username" required autofocus />
+    </div>
+
+    <div class="field">
       <label for="senha">Senha</label>
-      <input id="senha" name="senha" type="password" autocomplete="current-password" [(ngModel)]="senha" [disabled]="carregando()">
-      @if (erro()) { <p class="mensagem-erro" role="alert">{{ erro() }}</p> }
-      <button type="submit" [disabled]="carregando()">{{ carregando() ? 'Entrando…' : 'Entrar' }}</button>
-    </form>
-  </section>
+      <input id="senha" name="senha" class="input" type="password"
+             [(ngModel)]="senha" autocomplete="current-password" required />
+    </div>
+
+    @if (erro()) {
+      <p class="login-erro" role="alert">{{ erro() }}</p>
+    }
+
+    <button class="btn btn-primary login-btn" type="submit"
+            [disabled]="carregando() || !usuario || !senha">
+      {{ carregando() ? 'Entrando…' : 'Entrar' }}
+    </button>
+  </form>
 </main>

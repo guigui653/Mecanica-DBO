@@ -1,0 +1,28 @@
+// ===== app.ts =====
+// 1) injete o AuthService:
+//      protected auth = inject(AuthService);
+// 2) os contadores da sidebar hoje carregam no ngOnInit (antes do login => 401).
+//    Troque por um effect que dispara quando a pessoa entra:
+//
+//      constructor() {
+//        effect(() => {
+//          if (this.auth.logado()) this.carregarContadores();   // <- seu método atual do ngOnInit
+//        });
+//      }
+//    (e remova a chamada do ngOnInit)
+
+// ===== app.html =====
+// Mostre a sidebar só logado. Esqueleto:
+//
+//   @if (auth.logado()) {
+//     <div class="shell">
+//       <aside class="sidebar"> ... sidebar atual ...
+//         <button class="btn btn-ghost" type="button" (click)="auth.logout()">Sair</button>
+//       </aside>
+//       <main> <router-outlet /> </main>
+//     </div>
+//   } @else {
+//     <router-outlet />      <!-- tela de login ocupa a página toda -->
+//   }
+//
+// (use as classes/estrutura que seu app.html já tem no lugar de .shell/.sidebar)

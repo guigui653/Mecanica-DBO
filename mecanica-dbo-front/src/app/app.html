@@ -1,4 +1,4 @@
-@if (!naTelaLogin()) {
+@if (auth.logado()) {
 <div class="shell">
 
   <aside class="sidebar">
@@ -63,6 +63,7 @@
         <span class="sync-dot" [class.offline]="!apiOnline()"></span>
         <span>{{ apiOnline() ? 'Sincronizado ' + (horaSync() || 'agora') : 'API offline' }}</span>
       </div>
+      <button class="btn btn-ghost" type="button" (click)="auth.logout()" style="margin-top: 10px; width: 100%;">Sair</button>
     </div>
 
   </aside>

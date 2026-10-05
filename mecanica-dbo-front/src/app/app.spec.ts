@@ -4,10 +4,26 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter } from '@angular/router';
 import { App } from './app';
 
+import { AuthService } from './core/services/auth.service';
+
 describe('Shell da oficina', () => {
   let http: HttpTestingController;
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [App], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] }).compileComponents();
+    const fakeAuth = {
+      usuario: () => 'admin',
+      logado: () => true,
+      logout: () => {},
+      limparSessao: () => {}
+    };
+    await TestBed.configureTestingModule({
+      imports: [App],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: fakeAuth }
+      ]
+    }).compileComponents();
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => http.verify());

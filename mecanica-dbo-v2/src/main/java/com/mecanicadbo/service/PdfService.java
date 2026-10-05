@@ -2,9 +2,12 @@ package com.mecanicadbo.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.mecanicadbo.exception.GeracaoPdfException;
 import com.mecanicadbo.model.*;
 import com.mecanicadbo.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,30 +15,26 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PdfService {
+
+    /** Tempo máximo que o script Python pode levar para gerar o recibo. */
+    private static final long TEMPO_LIMITE_SEGUNDOS = 30;
 
     private final OrdemServicoService osService;
     private final ItemPecaRepository itemPecaRepo;
     private final ItemServicoRepository itemServicoRepo;
 
-    private static final String PYTHON = detectarPython();
-
-    private static String detectarPython() {
-        for (String cmd : new String[]{"python", "python3"}) {
-            try {
-                Process p = new ProcessBuilder(cmd, "--version")
-                        .redirectErrorStream(true).start();
-                if (p.waitFor() == 0) return cmd;
-            } catch (Exception ignored) { }
-        }
-        throw new IllegalStateException(
-                "Python não encontrado no PATH do sistema. "
-                + "Instale o Python 3 e certifique-se de que 'python' ou 'python3' "
-                + "esteja acessível pelo terminal.");
-    }
+    /**
+     * Executável do Python que tem o reportlab instalado.
+     * Configure em application.properties (app.pdf.python=...). Padrão: "python" do PATH.
+     */
+    @Value("${app.pdf.python:python}")
+    private String python;
 
     @Transactional(readOnly = true)
     public byte[] gerarRecibo(Long osId) throws Exception {
@@ -109,31 +108,70 @@ public class PdfService {
 
         String scriptPath = resolverCaminhoScript();
         Path pdfTemp = Files.createTempFile("recibo_os_" + osId + "_", ".pdf");
+        // A saída do Python vai para um arquivo, e não para um pipe lido em
+        // laço: assim o waitFor com tempo limite funciona mesmo se o script travar.
+        Path saidaTemp = Files.createTempFile("recibo_saida_" + osId + "_", ".txt");
 
         try {
             ProcessBuilder pb = new ProcessBuilder(
-                    PYTHON, scriptPath,
+                    python, scriptPath,
                     jsonTemp.toString(),
                     pdfTemp.toString()
             );
+            pb.environment().put("PYTHONIOENCODING", "utf-8");
             pb.redirectErrorStream(true);
-            Process processo = pb.start();
+            pb.redirectOutput(saidaTemp.toFile());
 
-            try (BufferedReader br = new BufferedReader(
-                    new InputStreamReader(processo.getInputStream()))) {
-                br.lines().forEach(System.out::println);
+            Process processo;
+            try {
+                processo = pb.start();
+            } catch (IOException e) {
+                throw new GeracaoPdfException("Não foi possível executar o Python '" + python
+                        + "'. Verifique a propriedade app.pdf.python. Causa: " + e.getMessage(), e);
             }
 
-            int exitCode = processo.waitFor();
+            boolean terminou;
+            try {
+                terminou = processo.waitFor(TEMPO_LIMITE_SEGUNDOS, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                processo.destroyForcibly();
+                Thread.currentThread().interrupt();
+                throw new GeracaoPdfException("Geração do PDF da OS " + osId + " foi interrompida.", e);
+            }
+
+            String saida = lerSaida(saidaTemp);
+
+            if (!terminou) {
+                processo.destroyForcibly();
+                log.error("Python excedeu {}s ao gerar o PDF da OS {}. Saída:\n{}",
+                        TEMPO_LIMITE_SEGUNDOS, osId, saida);
+                throw new GeracaoPdfException("Tempo limite de " + TEMPO_LIMITE_SEGUNDOS
+                        + "s excedido ao gerar o PDF da OS " + osId + ".");
+            }
+
+            int exitCode = processo.exitValue();
             if (exitCode != 0) {
-                throw new RuntimeException("Erro ao gerar PDF (exit code: " + exitCode + ")");
+                log.error("Python terminou com código {} ao gerar o PDF da OS {}. Saída:\n{}",
+                        exitCode, osId, saida);
+                throw new GeracaoPdfException("Erro ao gerar PDF da OS " + osId
+                        + " (código de saída " + exitCode + ").");
             }
 
+            log.debug("Saída do gerador de PDF da OS {}: {}", osId, saida);
             return Files.readAllBytes(pdfTemp);
 
         } finally {
             Files.deleteIfExists(pdfTemp);
             Files.deleteIfExists(jsonTemp);
+            Files.deleteIfExists(saidaTemp);
+        }
+    }
+
+    private String lerSaida(Path arquivo) {
+        try {
+            return Files.readString(arquivo, StandardCharsets.UTF_8).strip();
+        } catch (IOException e) {
+            return "(não foi possível ler a saída do Python: " + e.getMessage() + ")";
         }
     }
 

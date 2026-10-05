@@ -1,0 +1,20 @@
+// app.routes.ts — adicione o import e envolva as rotas existentes
+import { authGuard } from './core/guards/auth.guard';
+
+export const routes: Routes = [
+  { path: 'login', loadComponent: () => import('./features/login/login').then(m => m.Login) },
+  {
+    path: '',
+    canActivate: [authGuard],
+    children: [
+      // >>> mova para cá TODAS as rotas que já existem, na mesma ordem:
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      // { path: 'dashboard', loadComponent: ... },
+      // { path: 'clientes', ... },
+      // { path: 'veiculos', ... },
+      // { path: 'ordens', ... },
+      // { path: 'ordens/:id', ... },   // continua DEPOIS de 'ordens'
+    ],
+  },
+  { path: '**', redirectTo: '' },
+];

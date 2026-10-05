@@ -8,49 +8,175 @@
   </div>
 
   <div class="card nova-os-card">
+    <!-- Etapa 1: Busca por placa -->
     <form (ngSubmit)="buscarVeiculo()" class="busca-placa">
       <div class="field">
         <label for="nova-placa">Placa do veículo</label>
-        <input id="nova-placa" name="placa" class="input" maxlength="8" placeholder="ABC1D23"
+        <input id="nova-placa" name="placa" class="input" maxlength="10" placeholder="ABC1D23 ou ABC-1234"
                [ngModel]="placa()" (ngModelChange)="alterarPlaca($event)" [disabled]="buscando() || salvando()">
       </div>
-      <button type="submit" class="btn btn-secondary" [disabled]="buscando() || salvando()">
+      <button type="submit" class="btn btn-secondary" [disabled]="buscando() || salvando() || !placa().trim()">
         {{ buscando() ? 'Buscando…' : 'Buscar veículo' }}
       </button>
     </form>
 
+    <!-- Placa encontrada -->
     @if (veiculo(); as v) {
-      <p class="veiculo-selecionado" role="status">
-        <strong>{{ v.placa }}</strong> · {{ v.marca }} {{ v.modelo }}
-        <br>Proprietário: {{ v.cliente?.nome ?? 'Não informado' }}
-      </p>
+      <div class="veiculo-selecionado" role="status">
+        <p><strong>{{ v.placa }}</strong> · {{ v.marca }} {{ v.modelo }} ({{ v.cor }})</p>
+        <p>Proprietário: <strong>{{ v.cliente?.nome ?? 'Não informado' }}</strong> · {{ v.cliente?.telefone1 }}</p>
+      </div>
     }
 
-    <form (ngSubmit)="criar()">
-      <div class="grid-2">
-        <div class="field">
-          <label for="nova-km">Quilometragem na entrada</label>
-          <input id="nova-km" name="km" class="input" type="number" min="0" max="2147483647" step="1"
-                 [ngModel]="km()" (ngModelChange)="km.set($event)" [disabled]="salvando()">
+    <!-- Placa NÃO cadastrada: Guia inline de cadastro de cliente e veículo -->
+    @if (placaNaoCadastrada()) {
+      <div class="aviso-nao-encontrado">
+        <p class="aviso-titulo">Placa não cadastrada, vamos cadastrar agora.</p>
+        <p class="aviso-sub">Vincule o veículo a um cliente existente ou cadastre um novo proprietário abaixo:</p>
+      </div>
+
+      <div class="card-etapa">
+        <h3 class="etapa-titulo">1. Proprietário do Veículo</h3>
+
+        <div class="abas-modo">
+          <button type="button" class="btn btn-ghost" [class.btn-ativo]="modoCliente() === 'buscar'"
+                  (click)="modoCliente.set('buscar')">Buscar Cliente Existente</button>
+          <button type="button" class="btn btn-ghost" [class.btn-ativo]="modoCliente() === 'novo'"
+                  (click)="modoCliente.set('novo')">+ Novo Cliente</button>
         </div>
-        <div class="field">
-          <label for="nova-previsao">Previsão de entrega</label>
-          <input id="nova-previsao" name="previsao" class="input" type="date"
-                 [ngModel]="previsao()" (ngModelChange)="previsao.set($event)" [disabled]="salvando()">
+
+        @if (modoCliente() === 'buscar') {
+          <div class="busca-cliente-box">
+            <div class="field">
+              <label for="busca-cliente-termo">Buscar por nome, CPF ou telefone</label>
+              <div class="row-busca">
+                <input id="busca-cliente-termo" name="termoCliente" class="input" placeholder="Digite parte do nome ou telefone"
+                       [ngModel]="termoCliente()" (ngModelChange)="termoCliente.set($event)" [disabled]="salvando() || buscandoCliente()">
+                <button type="button" class="btn btn-secondary" (click)="buscarClientes()" [disabled]="buscandoCliente() || salvando()">
+                  {{ buscandoCliente() ? 'Buscando…' : 'Buscar' }}
+                </button>
+              </div>
+            </div>
+
+            @if (clientesEncontrados().length > 0) {
+              <div class="lista-clientes-resultado">
+                @for (c of clientesEncontrados(); track c.id) {
+                  <div class="cliente-item" [class.cliente-selecionado]="clienteSelecionado()?.id === c.id"
+                       (click)="selecionarCliente(c)">
+                    <div>
+                      <strong>{{ c.nome }}</strong>
+                      <span class="cliente-info"> · Tel: {{ c.telefone1 }} {{ c.cpf ? ' · CPF: ' + c.cpf : '' }}</span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-ghost">
+                      {{ clienteSelecionado()?.id === c.id ? 'Selecionado ✓' : 'Selecionar' }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (clienteSelecionado(); as cs) {
+              <div class="selecionado-banner">
+                Cliente selecionado: <strong>{{ cs.nome }}</strong> ({{ cs.telefone1 }})
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="grid-2">
+            <div class="field">
+              <label for="novo-nome">Nome completo *</label>
+              <input id="novo-nome" name="novoNome" class="input" placeholder="Nome do proprietário"
+                     [ngModel]="novoNomeCliente()" (ngModelChange)="novoNomeCliente.set($event)" [disabled]="salvando()">
+            </div>
+            <div class="field">
+              <label for="novo-telefone">Telefone / WhatsApp *</label>
+              <input id="novo-telefone" name="novoTelefone" class="input" placeholder="(61) 98888-8888"
+                     [ngModel]="novoTelefoneCliente()" (ngModelChange)="novoTelefoneCliente.set($event)" [disabled]="salvando()">
+            </div>
+            <div class="field">
+              <label for="novo-cpf">CPF (opcional)</label>
+              <input id="novo-cpf" name="novoCpf" class="input" placeholder="000.000.000-00"
+                     [ngModel]="novoCpfCliente()" (ngModelChange)="novoCpfCliente.set($event)" [disabled]="salvando()">
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="card-etapa">
+        <h3 class="etapa-titulo">2. Dados do Veículo</h3>
+        <div class="grid-2">
+          <div class="field">
+            <label for="veic-marca">Marca *</label>
+            <input id="veic-marca" name="marca" class="input" placeholder="Ex: Chevrolet, Fiat, Renault"
+                   [ngModel]="marca()" (ngModelChange)="marca.set($event)" [disabled]="salvando()">
+          </div>
+          <div class="field">
+            <label for="veic-modelo">Modelo *</label>
+            <input id="veic-modelo" name="modelo" class="input" placeholder="Ex: Onix 1.0, Uno, Sandero"
+                   [ngModel]="modelo()" (ngModelChange)="modelo.set($event)" [disabled]="salvando()">
+          </div>
+          <div class="field">
+            <label for="veic-cor">Cor *</label>
+            <input id="veic-cor" name="cor" class="input" placeholder="Ex: Prata, Preto, Branco"
+                   [ngModel]="cor()" (ngModelChange)="cor.set($event)" [disabled]="salvando()">
+          </div>
+          <div class="field">
+            <label for="veic-combustivel">Combustível *</label>
+            <select id="veic-combustivel" name="combustivel" class="input"
+                    [ngModel]="combustivel()" (ngModelChange)="combustivel.set($event)" [disabled]="salvando()">
+              @for (comb of combustiveis; track comb) {
+                <option [value]="comb">{{ comb }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="veic-ano">Ano de fabricação (opcional)</label>
+            <input id="veic-ano" name="ano" class="input" type="number" placeholder="Ex: 2018"
+                   [ngModel]="anoFabricacao()" (ngModelChange)="anoFabricacao.set($event)" [disabled]="salvando()">
+          </div>
         </div>
       </div>
-      <div class="field">
-        <label for="nova-reclamacoes">Reclamações do cliente</label>
-        <textarea id="nova-reclamacoes" name="reclamacoes" class="textarea" placeholder="Descreva o que o cliente relatou"
-                  [ngModel]="reclamacoes()" (ngModelChange)="reclamacoes.set($event)" [disabled]="salvando()"></textarea>
+    }
+
+    <!-- Formulário Final: Dados da Ordem de Serviço -->
+    @if (veiculo() || placaNaoCadastrada()) {
+      <div class="card-etapa">
+        <h3 class="etapa-titulo">{{ placaNaoCadastrada() ? '3. Dados da Ordem de Serviço' : 'Dados da Ordem de Serviço' }}</h3>
+        <form (ngSubmit)="criar()">
+          <div class="grid-2">
+            <div class="field">
+              <label for="nova-km">Quilometragem na entrada (opcional)</label>
+              <input id="nova-km" name="km" class="input" type="number" min="0" max="2147483647" step="1"
+                     placeholder="Ex: 85000" [ngModel]="km()" (ngModelChange)="km.set($event)" [disabled]="salvando()">
+            </div>
+            <div class="field">
+              <label for="nova-previsao">Previsão de entrega (opcional)</label>
+              <input id="nova-previsao" name="previsao" class="input" type="date"
+                     [ngModel]="previsao()" (ngModelChange)="previsao.set($event)" [disabled]="salvando()">
+            </div>
+          </div>
+          <div class="field">
+            <label for="nova-reclamacoes">Reclamações do cliente / Defeito relatado *</label>
+            <textarea id="nova-reclamacoes" name="reclamacoes" class="textarea" rows="3"
+                      placeholder="Descreva o que o cliente relatou (obrigatório)"
+                      [ngModel]="reclamacoes()" (ngModelChange)="reclamacoes.set($event)" [disabled]="salvando()"></textarea>
+          </div>
+
+          @if (erro()) {
+            <p class="field-error" role="alert">{{ erro() }}</p>
+          }
+
+          <div class="row">
+            <button type="submit" class="btn btn-primary" [disabled]="buscando() || salvando() || !reclamacoes().trim()">
+              {{ salvando() ? 'Processando…' : 'Criar ordem de serviço' }}
+            </button>
+          </div>
+        </form>
       </div>
-      @if (erro()) { <p class="field-error" role="alert">{{ erro() }}</p> }
-      <div class="row">
-        <button type="submit" class="btn btn-primary" [disabled]="!veiculo() || buscando() || salvando()">
-          {{ salvando() ? 'Criando…' : 'Criar ordem de serviço' }}
-        </button>
-        <a routerLink="/veiculos" class="btn btn-ghost">Cadastrar veículo</a>
-      </div>
-    </form>
+    } @else {
+      @if (erro()) {
+        <p class="field-error" role="alert">{{ erro() }}</p>
+      }
+    }
   </div>
 </div>
