@@ -1,0 +1,33 @@
+.importar { margin-top: 14px; }
+
+.importar-corpo {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px dashed var(--border, #d0d5dd);
+  border-radius: 10px;
+}
+
+.btn-arquivo { display: inline-flex; cursor: pointer; }
+
+.lendo { padding: 18px 0; color: var(--text-soft, #667085); }
+
+.nota-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 10px; }
+
+.tabela-revisao .input { width: 100%; min-width: 0; }
+.tabela-revisao .input-num { max-width: 96px; text-align: right; }
+.tabela-revisao .col-centro { text-align: center; }
+.linha-off { opacity: .45; }
+
+.resumo-importar {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  margin: 10px 0; font-size: 14px;
+}
+.aviso-dif { color: #b54708; }
+
+.acoes-importar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+
+.texto-bruto { margin-top: 12px; }
+.texto-bruto pre {
+  margin: 8px 0 0; padding: 10px; max-height: 220px; overflow: auto;
+  background: rgba(0, 0, 0, .05); border-radius: 8px; font-size: 12px; white-space: pre-wrap;
+}

@@ -1,0 +1,135 @@
+<div class="importar">
+
+  <button type="button" class="btn btn-secondary"
+          [disabled]="ocupado()"
+          (click)="alternar()">
+    {{ aberto() ? 'Fechar importação' : 'Importar peças de uma nota (foto)' }}
+  </button>
+
+  @if (aberto()) {
+    <div class="importar-corpo">
+
+      @if (erro()) {
+        <div class="field-error" style="margin-bottom:10px">{{ erro() }}</div>
+      }
+
+      <!-- ── Escolher a foto ── -->
+      @if (fase() === 'inicio') {
+        <p class="text-sm text-soft" style="margin:0 0 10px">
+          Fotografe a nota de frente, bem iluminada e sem dobras. O sistema sugere os itens;
+          <strong>você confere antes de lançar</strong>.
+        </p>
+        <label class="btn btn-primary btn-arquivo">
+          Escolher foto da nota
+          <input type="file" accept="image/jpeg,image/png,image/webp,image/bmp"
+                 (change)="aoEscolherArquivo($event)" hidden>
+        </label>
+      }
+
+      @if (fase() === 'lendo') {
+        <div class="lendo">Lendo {{ nomeArquivo() }}… pode levar alguns segundos.</div>
+      }
+
+      <!-- ── Revisar ── -->
+      @if (fase() === 'revisao') {
+
+        @if (metadados(); as m) {
+          <div class="nota-meta text-sm text-soft">
+            @if (m.fornecedor) { <span><strong>{{ m.fornecedor }}</strong></span> }
+            @if (m.numeroNf) { <span>NF {{ m.numeroNf }}</span> }
+            @if (m.dataEmissao) { <span>{{ m.dataEmissao | date:'dd/MM/yyyy' }}</span> }
+            @if (m.valorTotalNf != null) {
+              <span>Total da nota: {{ m.valorTotalNf | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+            }
+          </div>
+        }
+
+        @if (linhas().length === 0) {
+          <div class="table-empty">
+            Não consegui identificar itens nessa foto. Tente de novo com mais luz e a nota esticada,
+            ou lance as peças à mão.
+          </div>
+        } @else {
+          <table class="table tabela-revisao">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Descrição</th>
+                <th class="col-right">Qtd</th>
+                <th class="col-right">Unitário</th>
+                <th title="Peça trazida ou paga pelo cliente">Cliente pagou</th>
+                <th class="col-actions"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (l of linhas(); track l.uid) {
+                <tr [class.linha-off]="!l.selecionada">
+                  <td>
+                    <input type="checkbox" [ngModel]="l.selecionada"
+                           (ngModelChange)="editar(l, { selecionada: $event })"
+                           aria-label="Lançar este item">
+                  </td>
+                  <td>
+                    <input class="input" [ngModel]="l.descricao"
+                           [class.is-invalid]="l.selecionada && !l.descricao.trim()"
+                           (ngModelChange)="editar(l, { descricao: $event })">
+                  </td>
+                  <td class="col-right">
+                    <input class="input input-num" type="number" min="1" step="1"
+                           [ngModel]="l.quantidade"
+                           (ngModelChange)="editar(l, { quantidade: $event })">
+                  </td>
+                  <td class="col-right">
+                    <input class="input input-num" type="number" step="0.01"
+                           [class.is-invalid]="l.selecionada && l.valorUnitario === null"
+                           [ngModel]="l.valorUnitario"
+                           (ngModelChange)="editar(l, { valorUnitario: $event })">
+                  </td>
+                  <td class="col-centro">
+                    <input type="checkbox" [ngModel]="l.pagoPeloCliente"
+                           (ngModelChange)="editar(l, { pagoPeloCliente: $event })"
+                           aria-label="Pago pelo cliente">
+                  </td>
+                  <td class="col-actions">
+                    <button type="button" class="btn btn-ghost" (click)="descartar(l)">Descartar</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <div class="resumo-importar">
+            <span>{{ selecionadas().length }} item(ns) •
+              <strong>{{ totalSelecionado() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong></span>
+            @if (diferencaComNota() !== null) {
+              <span class="aviso-dif">
+                Difere do total da nota em
+                {{ diferencaComNota()! | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                — confira se algum item foi perdido ou lido errado.
+              </span>
+            }
+          </div>
+        }
+
+        <div class="acoes-importar">
+          <button type="button" class="btn btn-primary"
+                  [disabled]="ocupado() || selecionadas().length === 0"
+                  (click)="lancar()">
+            {{ ocupado() ? 'Lançando…' : 'Lançar ' + selecionadas().length + ' peça(s) na OS' }}
+          </button>
+          <button type="button" class="btn btn-ghost" [disabled]="ocupado()"
+                  (click)="adicionarLinhaVazia()">+ Linha</button>
+          <button type="button" class="btn btn-ghost" [disabled]="ocupado()"
+                  (click)="reiniciar()">Outra foto</button>
+        </div>
+
+        @if (textoBruto()) {
+          <details class="texto-bruto">
+            <summary class="text-sm text-faint">Ver texto lido da foto</summary>
+            <pre>{{ textoBruto() }}</pre>
+          </details>
+        }
+      }
+    </div>
+  }
+</div>

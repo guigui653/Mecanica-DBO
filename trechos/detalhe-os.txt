@@ -1,0 +1,29 @@
+=== detalhe-os.ts (3 edições) ===
+
+1) Junto dos outros imports do topo:
+
+   import { ImportarNota } from './importar-nota/importar-nota';
+
+2) No @Component, acrescente à lista imports:
+
+   imports: [CommonModule, FormsModule, RouterLink, ImportarNota],
+
+3) Um método novo, junto de adicionarPeca():
+
+   /** Chamado pelo <app-importar-nota> depois que as peças foram lançadas. */
+   aoImportarPecas(r: { os: OrdemServico; quantidade: number }): void {
+     this.aplicar(r.os);
+     this.notificar(`${r.quantidade} peça(s) importada(s) da nota`);
+   }
+
+
+=== detalhe-os.html (1 edição) ===
+
+Dentro do card "Peças", logo DEPOIS da tabela/"Nenhuma peça lançada" e ANTES do
+bloco `@if (!somenteLeitura()) { <div class="linha-nova"> ...`, insira:
+
+   @if (!somenteLeitura() && os()?.id) {
+     <app-importar-nota [osId]="os()!.id!" (importado)="aoImportarPecas($event)" />
+   }
+
+OS entregue fica somente leitura: o botão não aparece (e o backend recusaria de qualquer jeito).

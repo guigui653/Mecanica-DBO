@@ -1,11 +1,8 @@
-# --- Login (acrescente ao application.properties) ---
-app.admin.username=${APP_USERNAME:admin}
-app.admin.password=${APP_PASSWORD:mecanica2024}
+# --- OCR de notas fiscais (acrescente ao application.properties) ---
+# Endereço do microserviço Python (ocr_service.py). Mesmo PC: deixe o padrão.
+app.ocr.url=${OCR_URL:http://127.0.0.1:5000}
 
-# Origens do frontend liberadas no CORS (separe por vírgula). Em produção, o endereço real.
-app.cors.allowed-origins=${APP_CORS_ORIGINS:http://localhost:4200,http://127.0.0.1:4200}
-
-# Cookie de sessão
-server.servlet.session.cookie.http-only=true
-server.servlet.session.cookie.same-site=lax
-server.servlet.session.timeout=8h
+# Fotos de celular passam de 1 MB (o padrão do Spring). Sem estas duas linhas
+# o upload falha antes de chegar ao controller.
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB

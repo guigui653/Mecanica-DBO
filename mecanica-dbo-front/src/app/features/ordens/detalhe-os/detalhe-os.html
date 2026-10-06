@@ -187,6 +187,10 @@
             </table></div>
           }
 
+          @if (!somenteLeitura() && os()?.id) {
+            <app-importar-nota [osId]="os()!.id!" (importado)="aoImportarPecas($event)" />
+          }
+
           @if (!somenteLeitura()) {
             <div class="linha-nova">
               <div class="field campo-desc">
