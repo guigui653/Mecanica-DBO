@@ -11,13 +11,25 @@
         <div class="dash-eyebrow">OFICINA · {{ today | date:'EEEE, d \'de\' MMMM':'':'pt-BR' | uppercase }}</div>
         <h1 class="dash-title">Painel do dia</h1>
       </div>
-      <a routerLink="/ordens" class="btn btn-primary">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.6" stroke-linecap="round">
-          <path d="M12 5v14M5 12h14"></path>
-        </svg>
-        Nova ordem
-      </a>
+      <div class="dash-head-actions">
+        <button type="button" class="btn btn-secondary" (click)="abrirModalNovoCliente()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+          + Novo cliente
+        </button>
+        <a routerLink="/ordens/nova" class="btn btn-primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.6" stroke-linecap="round">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+          Nova ordem
+        </a>
+      </div>
     </div>
 
     <!-- ── ESTADO: CARREGANDO ──────────────────────────────── -->
@@ -187,7 +199,12 @@
       <div class="side-card">
         <div class="side-card-head">
           <span class="side-title">Clientes novos</span>
-          <span class="side-count">{{ clientesNovos() }} neste mês</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="side-count">{{ clientesNovos() }} neste mês</span>
+            <button type="button" class="btn-side-add" (click)="abrirModalNovoCliente()" title="Cadastrar novo cliente com veículo">
+              + Novo
+            </button>
+          </div>
         </div>
 
         @if (clientesDoMes().length > 0) {
@@ -223,15 +240,16 @@
             </svg>
             Abrir ordem de serviço
           </a>
-          <a routerLink="/clientes" class="atalho-btn">
+          <button type="button" class="atalho-btn" (click)="abrirModalNovoCliente()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.5" stroke-linecap="round">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <line x1="19" y1="8" x2="19" y2="14"/>
+              <line x1="22" y1="11" x2="16" y2="11"/>
             </svg>
             Cadastrar cliente
-          </a>
+          </button>
           <a routerLink="/veiculos" class="atalho-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.5" stroke-linecap="round">
@@ -249,3 +267,7 @@
   </aside>
 
 </div><!-- /dash-wrap -->
+
+@if (modalNovoClienteAberto()) {
+  <app-modal-novo-cliente (fechado)="aoFecharModalNovoCliente($event)" />
+}

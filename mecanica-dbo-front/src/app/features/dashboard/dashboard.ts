@@ -6,11 +6,12 @@ import { OrdemServicoService } from '../../core/services/ordem-servico';
 import { ClienteService } from '../../core/services/cliente';
 import { OrdemServico } from '../../shared/models/ordem-servico.model';
 import { Cliente } from '../../shared/models/cliente.model';
+import { ModalNovoCliente } from '../clientes/modal-novo-cliente/modal-novo-cliente';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, CurrencyPipe, DatePipe],
+  imports: [CommonModule, RouterLink, CurrencyPipe, DatePipe, ModalNovoCliente],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
@@ -25,6 +26,7 @@ export class Dashboard implements OnInit {
   erro       = signal(false);
   todasOrdens = signal<OrdemServico[]>([]);
   clientes    = signal<Cliente[]>([]);
+  modalNovoClienteAberto = signal(false);
 
   /* ── métricas computadas ─────────────────────────────────── */
 
@@ -101,6 +103,17 @@ export class Dashboard implements OnInit {
       this.clientes.set(clientes ?? []);
       this.carregando.set(false);
     });
+  }
+
+  abrirModalNovoCliente(): void {
+    this.modalNovoClienteAberto.set(true);
+  }
+
+  aoFecharModalNovoCliente(recarregar: boolean): void {
+    this.modalNovoClienteAberto.set(false);
+    if (recarregar) {
+      this.carregar();
+    }
   }
 
   /* ── helpers ─────────────────────────────────────────────── */
