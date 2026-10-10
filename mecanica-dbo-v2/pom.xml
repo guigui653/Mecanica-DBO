@@ -83,6 +83,20 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
+        <!-- Template do recibo em PDF. A versão vem do Spring Boot (não escreva <version>).
+             É o Thymeleaf "puro", sem o starter: não liga nenhuma tela HTML do Spring. -->
+        <dependency>
+            <groupId>org.thymeleaf</groupId>
+            <artifactId>thymeleaf</artifactId>
+        </dependency>
+
+        <!-- Converte o XHTML do recibo em PDF. Traz o OpenPDF junto. -->
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-pdf-openpdf</artifactId>
+            <version>9.1.22</version>
+        </dependency>
+
         <!-- Testes -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

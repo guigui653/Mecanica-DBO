@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  RECIBO DA ORDEM DE SERVIÇO
+  ==========================
+  Este arquivo é o desenho do PDF. Para mudar cor, fonte, tamanho ou espaço,
+  edite o CSS aqui embaixo e reinicie o Spring. Não precisa mexer em Java.
+
+  REGRAS DO FLYING SAUCER (o conversor de HTML para PDF):
+   1. O arquivo precisa ser XML válido: toda tag fecha (<br/>, <img ... />),
+      e atributos sempre entre aspas.
+   2. Não escreva &nbsp; (use &#160;) nem outras entidades com nome.
+   3. O CSS é o 2.1. NÃO funciona: flexbox, grid, border-radius, sombras,
+      variáveis CSS, calc(). Funciona: tabelas, margin, padding, border,
+      background, float, font-size em pt, page-break-inside.
+   4. Medidas em pt (ponto) ou mm dão resultado mais previsível que px.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <title>Ordem de Serviço</title>
+  <style type="text/css">
+    @page {
+      size: A4;
+      margin: 16mm 16mm 20mm 16mm;
+      @bottom-center {
+        content: "Página " counter(page) " de " counter(pages);
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 8pt;
+        color: #8a93a0;
+      }
+    }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.4;
+      color: #1d2633;
+      margin: 0;
+      padding: 0;
+    }
+
+    table { border-collapse: collapse; width: 100%; }
+    td, th { vertical-align: top; }
+    p { margin: 0 0 4pt 0; }
+
+    /* ── Cabeçalho ───────────────────────────────── */
+    .topo { border-bottom: 2.5pt solid #1f3a5f; padding-bottom: 10pt; margin-bottom: 18pt; }
+    .oficina-nome { font-size: 22pt; font-weight: bold; color: #1f3a5f; line-height: 1.1; }
+    .oficina-info { font-size: 8.5pt; color: #5b6573; margin-top: 3pt; }
+    .doc-rotulo { font-size: 8pt; color: #5b6573; text-align: right; letter-spacing: 1pt; }
+    .doc-numero { font-size: 22pt; font-weight: bold; color: #1d2633; text-align: right; line-height: 1.1; }
+    .doc-status { text-align: right; margin-top: 4pt; }
+    .selo { background-color: #e8eef6; color: #1f3a5f; font-size: 8.5pt; font-weight: bold; padding: 2pt 8pt; }
+
+    /* ── Datas e km ──────────────────────────────── */
+    .faixa { background-color: #f3f5f8; margin-bottom: 18pt; }
+    .faixa td { padding: 8pt 10pt; width: 25%; }
+
+    /* ── Rótulo pequeno + valor ──────────────────── */
+    .rotulo { font-size: 7pt; color: #7a8493; letter-spacing: 0.8pt; margin-bottom: 1pt; }
+    .valor { font-size: 10.5pt; color: #1d2633; }
+    .valor-forte { font-size: 11.5pt; font-weight: bold; color: #1d2633; }
+
+    /* ── Cliente e veículo lado a lado ───────────── */
+    .duas-colunas { border-collapse: separate; border-spacing: 0; margin-bottom: 18pt; }
+    .duas-colunas td.col { width: 48%; padding: 0; }
+    .duas-colunas td.espaco { width: 4%; padding: 0; }
+    .caixa { border: 0.75pt solid #d5dae1; padding: 10pt 12pt; }
+    .caixa-titulo { font-size: 8pt; font-weight: bold; color: #1f3a5f; letter-spacing: 1pt;
+                    border-bottom: 0.75pt solid #d5dae1; padding-bottom: 4pt; margin-bottom: 8pt; }
+    .campo { margin-bottom: 7pt; }
+
+    /* ── Títulos de seção ────────────────────────── */
+    h2 { font-size: 9pt; font-weight: bold; color: #1f3a5f; letter-spacing: 1pt;
+         margin: 0 0 6pt 0; padding-bottom: 3pt; border-bottom: 0.75pt solid #d5dae1; }
+    .secao { margin-bottom: 18pt; }
+
+    /* ── Texto livre (reclamações, diagnóstico) ──── */
+    .texto-livre { background-color: #fafbfc; border: 0.75pt solid #e3e7ec; padding: 9pt 12pt; }
+
+    /* ── Tabelas de itens ────────────────────────── */
+    table.itens { margin-bottom: 4pt; }
+    table.itens th { background-color: #1f3a5f; color: #ffffff; font-size: 8pt; font-weight: bold;
+                     letter-spacing: 0.6pt; padding: 6pt 8pt; text-align: left; }
+    table.itens td { padding: 7pt 8pt; border-bottom: 0.5pt solid #e3e7ec; font-size: 10pt; }
+    table.itens tr { page-break-inside: avoid; }
+    table.itens tr.alt td { background-color: #f7f8fa; }
+    table.itens th.dir, table.itens td.dir { text-align: right; }
+    table.itens th.cen, table.itens td.cen { text-align: center; }
+    .vazio { color: #8a93a0; text-align: center; padding: 12pt 8pt; font-size: 9.5pt; }
+    .paga { font-size: 7.5pt; color: #8a5a00; margin-top: 1pt; }
+
+    /* ── Totais ──────────────────────────────────── */
+    .bloco-totais { margin-top: 6pt; margin-bottom: 26pt; page-break-inside: avoid; }
+    .bloco-totais td.vazio-esq { width: 52%; }
+    table.totais td { padding: 5pt 8pt; font-size: 10pt; border-bottom: 0.5pt solid #e3e7ec; }
+    table.totais td.v { text-align: right; }
+    table.totais tr.geral td { background-color: #1f3a5f; color: #ffffff; font-size: 13pt;
+                               font-weight: bold; padding: 9pt 10pt; border-bottom: 0; }
+    .nota-paga { font-size: 8pt; color: #8a5a00; padding-top: 6pt; }
+
+    /* ── Assinaturas ─────────────────────────────── */
+    .assinaturas { margin-top: 34pt; page-break-inside: avoid; }
+    .assinaturas td { width: 44%; text-align: center; padding-top: 5pt; font-size: 8.5pt; color: #5b6573;
+                      border-top: 0.75pt solid #1d2633; }
+    .assinaturas td.meio { width: 12%; border-top: 0; }
+
+    .rodape { margin-top: 22pt; text-align: center; font-size: 7.5pt; color: #8a93a0; }
+  </style>
+</head>
+<body>
+
+  <!-- ═════════ Cabeçalho ═════════ -->
+  <div class="topo">
+    <table>
+      <tr>
+        <td>
+          <div class="oficina-nome" th:text="${r.oficina.nome}">Mecânica DBO</div>
+          <div class="oficina-info" th:if="${r.oficina.endereco}" th:text="${r.oficina.endereco}">Endereço da oficina</div>
+          <div class="oficina-info" th:if="${r.oficina.telefone}" th:text="${r.oficina.telefone}">(61) 0000-0000</div>
+        </td>
+        <td style="width: 38%;">
+          <div class="doc-rotulo">ORDEM DE SERVIÇO</div>
+          <div class="doc-numero" th:text="${r.numero}">#1</div>
+          <div class="doc-status"><span class="selo" th:text="${r.status}">Aberta</span></div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ═════════ Datas e quilometragem ═════════ -->
+  <table class="faixa">
+    <tr>
+      <td><div class="rotulo">ENTRADA</div><div class="valor" th:text="${r.dataEntrada}">01/01/2026</div></td>
+      <td><div class="rotulo">PREVISÃO DE SAÍDA</div><div class="valor" th:text="${r.dataSaidaPrevista}">02/01/2026</div></td>
+      <td><div class="rotulo">SAÍDA</div><div class="valor" th:text="${r.dataSaidaReal}">—</div></td>
+      <td><div class="rotulo">KM NA ENTRADA</div><div class="valor" th:text="${r.km}">45.000 km</div></td>
+    </tr>
+  </table>
+
+  <!-- ═════════ Cliente e veículo ═════════ -->
+  <table class="duas-colunas">
+    <tr>
+      <td class="col"><div class="caixa">
+        <div class="caixa-titulo">CLIENTE</div>
+        <div class="campo"><div class="rotulo">NOME</div><div class="valor-forte" th:text="${r.cliente.nome}">Nome do cliente</div></div>
+        <div class="campo"><div class="rotulo">CPF</div><div class="valor" th:text="${r.cliente.cpf}">000.000.000-00</div></div>
+        <div class="campo"><div class="rotulo">TELEFONE</div><div class="valor" th:text="${r.cliente.telefone}">(61) 90000-0000</div></div>
+      </div></td>
+      <td class="espaco">&#160;</td>
+      <td class="col"><div class="caixa">
+        <div class="caixa-titulo">VEÍCULO</div>
+        <div class="campo"><div class="rotulo">PLACA</div><div class="valor-forte" th:text="${r.veiculo.placa}">ABC1D23</div></div>
+        <div class="campo"><div class="rotulo">MARCA / MODELO</div><div class="valor" th:text="${r.veiculo.marcaModelo}">Fiat Uno</div></div>
+        <div class="campo">
+          <table>
+            <tr>
+              <td><div class="rotulo">COR</div><div class="valor" th:text="${r.veiculo.cor}">Prata</div></td>
+              <td><div class="rotulo">COMBUSTÍVEL</div><div class="valor" th:text="${r.veiculo.combustivel}">Flex</div></td>
+              <td><div class="rotulo">ANO</div><div class="valor" th:text="${r.veiculo.ano}">2015</div></td>
+            </tr>
+          </table>
+        </div>
+      </div></td>
+    </tr>
+  </table>
+
+  <!-- ═════════ Reclamações ═════════ -->
+  <div class="secao">
+    <h2>RELATO DO CLIENTE</h2>
+    <div class="texto-livre">
+      <p th:each="linha : ${r.reclamacoes}" th:text="${linha}">Barulho ao frear.</p>
+    </div>
+  </div>
+
+  <!-- ═════════ Diagnóstico ═════════ -->
+  <div class="secao">
+    <h2>DIAGNÓSTICO</h2>
+    <div class="texto-livre">
+      <p th:each="linha : ${r.diagnostico}" th:text="${linha}">Pastilhas desgastadas.</p>
+    </div>
+  </div>
+
+  <!-- ═════════ Peças ═════════ -->
+  <div class="secao">
+    <h2>PEÇAS</h2>
+    <table class="itens">
+      <thead>
+        <tr>
+          <th>DESCRIÇÃO</th>
+          <th class="cen" style="width: 11%;">QTD</th>
+          <th class="dir" style="width: 19%;">VALOR UNIT.</th>
+          <th class="dir" style="width: 19%;">TOTAL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="p : ${r.pecas}" th:class="${p.classe}">
+          <td>
+            <div th:text="${p.descricao}">Descrição da peça</div>
+            <div class="paga" th:if="${p.paga}">Pago diretamente pelo cliente (não entra no total)</div>
+          </td>
+          <td class="cen" th:text="${p.quantidade}">1</td>
+          <td class="dir" th:text="${p.valorUnitario}">R$ 10,00</td>
+          <td class="dir" th:text="${p.valorTotal}">R$ 10,00</td>
+        </tr>
+        <tr th:if="${r.semPecas}">
+          <td colspan="4" class="vazio">Nenhuma peça lançada nesta ordem de serviço.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═════════ Serviços ═════════ -->
+  <div class="secao">
+    <h2>MÃO DE OBRA / SERVIÇOS</h2>
+    <table class="itens">
+      <thead>
+        <tr>
+          <th>DESCRIÇÃO</th>
+          <th class="dir" style="width: 19%;">VALOR</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="s : ${r.servicos}" th:class="${s.classe}">
+          <td th:text="${s.descricao}">Descrição do serviço</td>
+          <td class="dir" th:text="${s.valor}">R$ 100,00</td>
+        </tr>
+        <tr th:if="${r.semServicos}">
+          <td colspan="2" class="vazio">Nenhum serviço lançado nesta ordem de serviço.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═════════ Totais ═════════ -->
+  <table class="bloco-totais">
+    <tr>
+      <td class="vazio-esq">&#160;</td>
+      <td>
+        <table class="totais">
+          <tr><td>Peças</td><td class="v" th:text="${r.totalPecas}">R$ 0,00</td></tr>
+          <tr><td>Serviços</td><td class="v" th:text="${r.totalServicos}">R$ 0,00</td></tr>
+          <tr class="geral"><td>TOTAL</td><td class="v" th:text="${r.totalGeral}">R$ 0,00</td></tr>
+        </table>
+        <div class="nota-paga" th:if="${r.temPagasPeloCliente}">
+          Peças pagas pelo cliente, fora do total: <span th:text="${r.totalPagoPeloCliente}">R$ 0,00</span>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- ═════════ Assinaturas ═════════ -->
+  <table class="assinaturas">
+    <tr>
+      <td>Assinatura do cliente</td>
+      <td class="meio">&#160;</td>
+      <td th:text="${r.oficina.nome}">Mecânica DBO</td>
+    </tr>
+  </table>
+
+  <div class="rodape">Documento emitido em <span th:text="${r.emitidoEm}">01/01/2026 às 10:00</span></div>
+
+</body>
+</html>

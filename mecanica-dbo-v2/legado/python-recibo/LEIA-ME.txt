@@ -1,0 +1,1 @@
+﻿O recibo em PDF agora e gerado em Java (PdfService + templates/pdf/recibo.html); este script Python foi guardado apenas para reversao.

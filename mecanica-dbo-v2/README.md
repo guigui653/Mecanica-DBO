@@ -1,4 +1,4 @@
-﻿# Mecânica DBO — Backend
+# Mecânica DBO — Backend
 
 API REST do sistema de gestão da **Mecânica DBO**, construída em **Spring Boot 3.3** com Java 21 e banco de dados PostgreSQL.
 
@@ -526,12 +526,12 @@ Mesma separação escrita/leitura:
 
 ### `PdfService`
 
-Delega a geração do PDF para um script Python (`gerar_recibo.py` com ReportLab):
-1. Carrega a OS em `@Transactional(readOnly = true)`
-2. Serializa dados para JSON (montando o mapa manualmente, sem `@JsonIgnore`)
-3. Escreve JSON em arquivo temporário
-4. Invoca o processo Python passando o JSON
-5. Lê o PDF gerado e retorna como `byte[]`
+Gera o recibo em PDF só com Java (sem Python, sem processo externo, sem arquivo temporário):
+1. `OrdemServicoConsultaService.buscarCompleta(id)` carrega a OS (404 se não existir)
+2. O `OrdemServicoDTO` vira `Map` pelo `ObjectMapper` (o mesmo JSON que o Angular recebe)
+3. `service/pdf/ReciboMontador` formata dinheiro, datas e troca campo vazio por "—"
+4. Thymeleaf (modo XML, engine próprio) aplica os dados em `templates/pdf/recibo.html`
+5. Flying Saucer (`flying-saucer-pdf-openpdf`) converte o XHTML em PDF e devolve `byte[]`
 
 ---
 
@@ -602,18 +602,22 @@ Todos os endpoints têm `@Operation(summary = "...")` e os controllers têm `@Ta
 ### Geração de recibo
 
 O endpoint `GET /api/ordens/{id}/pdf` aciona o `PdfService` que:
-1. Busca a OS no banco
-2. Monta o JSON manualmente (evitando `@JsonIgnore`)
-3. Chama o processo Python `gerar_recibo.py`
+1. Busca a OS completa no banco (`OrdemServicoConsultaService.buscarCompleta`)
+2. Formata os textos com o `ReciboMontador`
+3. Aplica o template `src/main/resources/templates/pdf/recibo.html` (Thymeleaf) e converte em PDF (Flying Saucer)
 4. Retorna `Content-Type: application/pdf` + `Content-Disposition: attachment`
 
-**Requisito:** Python 3.12 + ReportLab instalados.
+**Não precisa de Python.** Para mudar o visual, edite `recibo.html` e reinicie o Spring. O conversor só entende XML bem formado e CSS 2.1 (sem `&nbsp;`, flexbox, grid ou border-radius).
 
-```bash
-pip install reportlab
+Dados da oficina no cabeçalho (`application.properties`):
+
+```properties
+app.oficina.nome=Mec\u00e2nica DBO
+app.oficina.endereco=
+app.oficina.telefone=
 ```
 
-O caminho do Python está hardcoded em `PdfService.java`. Se precisar mudar de máquina, ajuste a constante `PYTHON` ou use `python3` se estiver no `PATH`.
+O script Python antigo (`gerar_recibo.py`) foi congelado em `legado/python-recibo/` só para reversão.
 
 ### Microserviço OCR
 

@@ -535,4 +535,4 @@ O `ordem-servico.ts` tem o método `listar(status?, q?)` extra, usado pelo `list
 `lista-os`, `busca-veiculo` e `lista-clientes` usam informações da API. Dados ausentes permanecem não informados; falhas de conexão são mostradas separadamente de listas vazias e cadastros não encontrados.
 
 ### PDF gerado no backend
-O botão "Baixar recibo" chama `GET /ordens/{id}/pdf` e recebe um `Blob`. Python + ReportLab no backend montam o PDF — o frontend cria um link temporário e aciona o download.
+O botão "Baixar recibo" chama `GET /ordens/{id}/pdf` e recebe um `Blob`. O backend monta o PDF só com Java (Thymeleaf + Flying Saucer) — o frontend cria um link temporário e aciona o download.
