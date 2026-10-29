@@ -5,6 +5,7 @@ export type Combustivel =
   | 'FLEX'
   | 'DIESEL'
   | 'ELETRICO'
+  | 'HIBRIDO'
   | 'GNV';
 
 /**

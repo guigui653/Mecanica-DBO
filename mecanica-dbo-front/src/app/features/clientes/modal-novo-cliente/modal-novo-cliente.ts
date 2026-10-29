@@ -50,6 +50,7 @@ export class ModalNovoCliente {
     'ETANOL',
     'DIESEL',
     'ELETRICO',
+    'HIBRIDO',
     'GNV'
   ];
 

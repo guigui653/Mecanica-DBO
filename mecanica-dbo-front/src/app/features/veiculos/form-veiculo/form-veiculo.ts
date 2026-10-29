@@ -65,6 +65,7 @@ import { Cliente } from '../../../shared/models/cliente.model';
             <mat-option value="DIESEL">Diesel</mat-option>
             <mat-option value="GNV">GNV</mat-option>
             <mat-option value="ELETRICO">Elétrico</mat-option>
+            <mat-option value="HIBRIDO">Híbrido</mat-option>
           </mat-select>
         </mat-form-field>
 

@@ -63,6 +63,7 @@ export class NovaOs implements OnInit {
     'FLEX',
     'DIESEL',
     'ELETRICO',
+    'HIBRIDO',
     'GNV'
   ];
 

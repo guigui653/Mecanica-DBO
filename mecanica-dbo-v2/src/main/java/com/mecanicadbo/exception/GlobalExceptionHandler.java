@@ -109,7 +109,7 @@ public class GlobalExceptionHandler {
             case "Long", "Integer", "Short" -> "um número inteiro";
             case "LocalDate"                -> "uma data no formato AAAA-MM-DD";
             case "BigDecimal", "Double"     -> "um número";
-            case "StatusOs"                 -> "ABERTA, EM_ANDAMENTO, AGUARDANDO_PECA, CONCLUIDA, ENTREGUE ou CANCELADA";
+            case "StatusOs"                 -> "ABERTA, EM_ANDAMENTO, CONCLUIDA ou ENTREGUE";
             default                         -> ex.getRequiredType().getSimpleName();
         };
         return ResponseEntity.badRequest().body(erro(400,

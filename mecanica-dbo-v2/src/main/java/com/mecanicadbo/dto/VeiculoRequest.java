@@ -46,8 +46,8 @@ public record VeiculoRequest(
          */
         @NotBlank(message = "Combustível é obrigatório")
         @Pattern(
-                regexp = "(?i)GASOLINA|ETANOL|FLEX|DIESEL|ELETRICO|GNV",
-                message = "Combustível inválido. Use: GASOLINA, ETANOL, FLEX, DIESEL, ELETRICO ou GNV"
+                regexp = "(?i)GASOLINA|ETANOL|FLEX|DIESEL|ELETRICO|HIBRIDO|GNV",
+                message = "Combustível inválido. Use: GASOLINA, ETANOL, FLEX, DIESEL, ELETRICO, HIBRIDO ou GNV"
         )
         String combustivel,
 
