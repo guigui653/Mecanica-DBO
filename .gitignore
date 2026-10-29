@@ -5,4 +5,8 @@ mecanica-dbo-front/dist/
 mecanica-dbo-front/.angular/
 mecanica-dbo-ocr/__pycache__/
 *.pyc
+
+# Backups do banco têm dados reais de clientes: nunca vão para o GitHub.
+*.backup
+pgpass.conf
 .idea/
