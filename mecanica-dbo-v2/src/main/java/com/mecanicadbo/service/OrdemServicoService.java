@@ -162,6 +162,8 @@ public class OrdemServicoService {
 
         ItemPeca salvo = itemPecaRepo.save(item);
         entityManager.flush();
+        // valor_total é gerado pelo banco; sem o refresh, a resposta traz a peça nova com total vazio.
+        entityManager.refresh(salvo);
         entityManager.refresh(os);
         return salvo;
     }
