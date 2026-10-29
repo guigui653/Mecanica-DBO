@@ -1,0 +1,25 @@
+<div class="vdc-header">
+  <h3 class="vdc-titulo">Veículos cadastrados</h3>
+  <button type="button" class="btn btn-ghost" (click)="novoVeiculo()">+ Carro novo</button>
+</div>
+
+@if (carregando()) {
+  <p class="vdc-aviso">Carregando veículos…</p>
+} @else if (erro()) {
+  <p class="vdc-aviso">Não foi possível carregar os veículos deste cliente.</p>
+} @else if (veiculos().length === 0) {
+  <p class="vdc-aviso">Nenhum veículo cadastrado. Use <strong>+ Carro novo</strong> para cadastrar e já abrir a OS.</p>
+} @else {
+  <div class="vdc-lista">
+    @for (v of veiculos(); track v.id) {
+      <div class="vdc-item">
+        <span class="placa">{{ v.placa }}</span>
+        <div class="vdc-desc">
+          <div>{{ v.marca }} {{ v.modelo }}</div>
+          <div class="vdc-sub">{{ v.cor }}{{ v.anoFabricacao ? ' · ' + v.anoFabricacao : '' }}</div>
+        </div>
+        <button type="button" class="btn btn-secondary" (click)="abrirOs(v)">Abrir OS</button>
+      </div>
+    }
+  </div>
+}

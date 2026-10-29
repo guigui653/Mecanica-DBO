@@ -8,6 +8,7 @@ import { ClienteService } from '../../../core/services/cliente';
 import { OrdemServicoService } from '../../../core/services/ordem-servico';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { FormCliente } from '../form-cliente/form-cliente';
+import { VeiculosDoCliente } from '../veiculos-do-cliente/veiculos-do-cliente';
 
 export interface ClienteExt extends Cliente {
   totalVeiculos?: number;
@@ -19,7 +20,7 @@ export interface ClienteExt extends Cliente {
 @Component({
   selector: 'app-lista-clientes',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule],
+  imports: [CommonModule, FormsModule, MatDialogModule, VeiculosDoCliente],
   templateUrl: './lista-clientes.html',
   styleUrl: './lista-clientes.css'
 })
@@ -119,8 +120,10 @@ export class ListaClientes implements OnInit {
     return c.criadoEm ? `Cliente desde ${new Date(c.criadoEm).getFullYear()}` : 'Cliente cadastrado';
   }
 
+  /** Na ficha, a Nova OS já abre com os carros deste cliente. */
   abrirNovaOs() {
-    this.router.navigate(['/ordens/nova']);
+    const id = this.clienteSelecionado?.id;
+    this.router.navigate(['/ordens/nova'], id ? { queryParams: { clienteId: id } } : {});
   }
 
   abrirForm(cliente?: ClienteExt) {

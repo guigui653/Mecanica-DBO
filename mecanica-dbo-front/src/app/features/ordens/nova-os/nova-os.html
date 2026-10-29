@@ -20,6 +20,31 @@
       </button>
     </form>
 
+    <!-- Vindo da ficha do cliente (?clienteId=): escolher um dos carros dele -->
+    @if (clienteDaFicha(); as cf) {
+      @if (!veiculo() && !placaNaoCadastrada()) {
+        <div class="card-etapa">
+          <h3 class="etapa-titulo">Veículos de {{ cf.nome }}</h3>
+          @if (veiculosDoCliente().length > 0) {
+            <div class="lista-clientes-resultado">
+              @for (v of veiculosDoCliente(); track v.id) {
+                <div class="cliente-item" (click)="selecionarVeiculo(v)">
+                  <div>
+                    <strong>{{ v.placa }}</strong>
+                    <span class="cliente-info"> · {{ v.marca }} {{ v.modelo }} ({{ v.cor }})</span>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-ghost">Abrir OS</button>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="aviso-sub">{{ cf.nome }} ainda não tem veículo cadastrado.</p>
+          }
+          <p class="aviso-sub">Carro novo? Digite a placa acima e clique em <strong>Buscar veículo</strong>.</p>
+        </div>
+      }
+    }
+
     <!-- Placa encontrada -->
     @if (veiculo(); as v) {
       <div class="veiculo-selecionado" role="status">
@@ -32,7 +57,8 @@
     @if (placaNaoCadastrada()) {
       <div class="aviso-nao-encontrado">
         <p class="aviso-titulo">Placa não cadastrada, vamos cadastrar agora.</p>
-        <p class="aviso-sub">Vincule o veículo a um cliente existente ou cadastre um novo proprietário abaixo:</p>
+        <p class="aviso-sub">Vincule o veículo a um cliente existente ou cadastre um novo proprietário abaixo.
+          Nada é gravado até você clicar em <strong>Criar ordem de serviço</strong>.</p>
       </div>
 
       <div class="card-etapa">

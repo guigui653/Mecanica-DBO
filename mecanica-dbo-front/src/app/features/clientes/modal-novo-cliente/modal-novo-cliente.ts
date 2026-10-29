@@ -2,10 +2,10 @@ import { Component, HostListener, inject, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ClienteService } from '../../../core/services/cliente';
-import { VeiculoService } from '../../../core/services/veiculo';
+import { AtendimentoService } from '../../../core/services/atendimento';
 import { Cliente } from '../../../shared/models/cliente.model';
-import { Combustivel, Veiculo } from '../../../shared/models/veiculo.model';
+import { Combustivel } from '../../../shared/models/veiculo.model';
+import { VeiculoResumo } from '../../../shared/models/ordem-servico.model';
 
 @Component({
   selector: 'app-modal-novo-cliente',
@@ -15,8 +15,7 @@ import { Combustivel, Veiculo } from '../../../shared/models/veiculo.model';
   styleUrl: './modal-novo-cliente.css'
 })
 export class ModalNovoCliente {
-  private clienteService = inject(ClienteService);
-  private veiculoService = inject(VeiculoService);
+  private atendimentoService = inject(AtendimentoService);
   private router = inject(Router);
 
   /** Emite true se algo foi salvo com sucesso (para o pai recarregar dados) */
@@ -42,7 +41,7 @@ export class ModalNovoCliente {
   sucesso = signal(false);
 
   clienteCadastrado = signal<Cliente | null>(null);
-  veiculoCadastrado = signal<Veiculo | null>(null);
+  veiculoCadastrado = signal<VeiculoResumo | null>(null);
 
   readonly combustiveis: Combustivel[] = [
     'FLEX',
@@ -75,6 +74,7 @@ export class ModalNovoCliente {
   private tratarErro(e: any): string {
     if (!e) return 'Erro inesperado.';
     if (e.status === 0) return 'Não foi possível conectar ao servidor (API offline).';
+    if (e.error?.campos) return Object.values(e.error.campos).join(' · ');
     if (e.error?.mensagem) return e.error.mensagem;
     if (e.error?.message) return e.error.message;
     if (e.message) return e.message;
@@ -128,49 +128,34 @@ export class ModalNovoCliente {
     this.salvando.set(true);
     this.erro.set('');
 
-    // Passo 1: Cadastrar o cliente
-    const clientePayload: Cliente = {
-      nome,
-      telefone1: telefone,
-      cpf: this.cpf().trim() || undefined,
-      email: this.email().trim() || undefined
-    };
-
-    this.clienteService.criar(clientePayload).subscribe({
-      next: clienteCriado => {
-        if (!clienteCriado.id) {
-          this.salvando.set(false);
-          this.erro.set('Falha ao obter identificador do cliente salvo.');
-          return;
-        }
-
-        this.clienteCadastrado.set(clienteCriado);
-
-        // Passo 2: Cadastrar o veículo vinculado a esse cliente
-        const veiculoPayload: Veiculo = {
-          placa,
-          marca,
-          modelo,
-          cor,
-          combustivel: this.combustivel(),
-          anoFabricacao: this.anoFabricacao() ? Number(this.anoFabricacao()) : undefined
-        };
-
-        this.veiculoService.criar(clienteCriado.id, veiculoPayload).subscribe({
-          next: veiculoCriado => {
-            this.veiculoCadastrado.set(veiculoCriado);
-            this.salvando.set(false);
-            this.sucesso.set(true);
-          },
-          error: errVeiculo => {
-            this.salvando.set(false);
-            this.erro.set('Cliente cadastrado com sucesso, mas ocorreu um erro no veículo: ' + this.tratarErro(errVeiculo));
-          }
-        });
+    // Uma chamada só: o backend grava cliente e veículo na mesma transação.
+    // Se a placa já existir, o cliente também não é gravado — e um novo
+    // clique não cria cliente repetido.
+    this.atendimentoService.registrar({
+      novoCliente: {
+        nome,
+        telefone1: telefone,
+        cpf: this.cpf().trim() || undefined,
+        email: this.email().trim() || undefined
       },
-      error: errCliente => {
+      novoVeiculo: {
+        placa,
+        marca,
+        modelo,
+        cor,
+        combustivel: this.combustivel(),
+        anoFabricacao: this.anoFabricacao() ? Number(this.anoFabricacao()) : undefined
+      }
+    }).subscribe({
+      next: r => {
+        this.veiculoCadastrado.set(r.veiculo);
+        this.clienteCadastrado.set(r.veiculo.cliente ?? null);
         this.salvando.set(false);
-        this.erro.set(this.tratarErro(errCliente));
+        this.sucesso.set(true);
+      },
+      error: e => {
+        this.salvando.set(false);
+        this.erro.set(this.tratarErro(e));
       }
     });
   }

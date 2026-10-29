@@ -5,11 +5,24 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { VeiculoService } from '../../../core/services/veiculo';
-import { OrdemServicoService } from '../../../core/services/ordem-servico';
 import { ClienteService } from '../../../core/services/cliente';
+import { AtendimentoRequest, AtendimentoService, DadosAbertura } from '../../../core/services/atendimento';
 import { Veiculo, Combustivel } from '../../../shared/models/veiculo.model';
 import { Cliente } from '../../../shared/models/cliente.model';
 
+/**
+ * Abertura de OS.
+ *
+ * Cliente e veículo novos NÃO são gravados no meio do caminho: a tela só junta
+ * os dados, e o botão final faz uma única chamada (POST /atendimentos), que o
+ * backend grava numa transação. Se a placa já existir, nada fica gravado —
+ * antes, o cliente ficava salvo e um novo clique criava um cliente repetido.
+ *
+ * Aceita na URL:
+ *   ?placa=ABC1234  → já busca a placa
+ *   ?veiculoId=3    → já seleciona o veículo (vindo da ficha do cliente)
+ *   ?clienteId=7    → mostra os veículos do cliente; carro novo já sai com ele como dono
+ */
 @Component({
   selector: 'app-nova-os',
   standalone: true,
@@ -19,8 +32,8 @@ import { Cliente } from '../../../shared/models/cliente.model';
 })
 export class NovaOs implements OnInit {
   private veiculoService = inject(VeiculoService);
-  private osService = inject(OrdemServicoService);
   private clienteService = inject(ClienteService);
+  private atendimentoService = inject(AtendimentoService);
   private rota = inject(ActivatedRoute);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
@@ -32,6 +45,10 @@ export class NovaOs implements OnInit {
   salvando = signal(false);
   erro = signal('');
   placaNaoCadastrada = signal(false);
+
+  // Veículos do cliente, quando a tela é aberta pela ficha (?clienteId=)
+  clienteDaFicha = signal<Cliente | null>(null);
+  veiculosDoCliente = signal<Veiculo[]>([]);
 
   // Etapa 2: Seleção ou cadastro de Proprietário (se veículo não cadastrado)
   modoCliente = signal<'buscar' | 'novo'>('buscar');
@@ -68,11 +85,62 @@ export class NovaOs implements OnInit {
   ];
 
   ngOnInit(): void {
-    const placa = this.rota.snapshot.queryParamMap.get('placa');
-    if (placa) {
+    const params = this.rota.snapshot.queryParamMap;
+    const veiculoId = Number(params.get('veiculoId'));
+    const clienteId = Number(params.get('clienteId'));
+    const placa = params.get('placa');
+
+    if (veiculoId > 0) {
+      this.carregarVeiculo(veiculoId);
+    } else if (clienteId > 0) {
+      this.carregarCliente(clienteId);
+    } else if (placa) {
       this.placa.set(placa);
       this.buscarVeiculo();
     }
+  }
+
+  private carregarVeiculo(id: number): void {
+    this.buscando.set(true);
+    this.veiculoService.buscarPorId(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: v => {
+          this.selecionarVeiculo(v);
+          this.buscando.set(false);
+        },
+        error: e => {
+          this.buscando.set(false);
+          this.erro.set(this.tratarErro(e));
+        }
+      });
+  }
+
+  /** Vindo da ficha: o cliente já é o dono de qualquer carro novo cadastrado aqui. */
+  private carregarCliente(id: number): void {
+    this.clienteService.buscarPorId(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: c => {
+          this.clienteDaFicha.set(c);
+          this.clienteSelecionado.set(c);
+          this.modoCliente.set('buscar');
+        },
+        error: e => this.erro.set(this.tratarErro(e))
+      });
+    this.clienteService.listarVeiculos(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: lista => this.veiculosDoCliente.set(lista ?? []),
+        error: () => this.veiculosDoCliente.set([])
+      });
+  }
+
+  selecionarVeiculo(v: Veiculo): void {
+    this.veiculo.set(v);
+    this.placa.set(v.placa);
+    this.placaNaoCadastrada.set(false);
+    this.erro.set('');
   }
 
   alterarPlaca(placa: string): void {
@@ -85,6 +153,7 @@ export class NovaOs implements OnInit {
   private tratarErro(e: any): string {
     if (!e) return 'Erro desconhecido.';
     if (e.status === 0) return 'Sem conexão com a API.';
+    if (e.error?.campos) return Object.values(e.error.campos).join(' · ');
     if (e.error?.mensagem) return e.error.mensagem;
     if (e.message) return e.message;
     return 'Não foi possível completar a operação. Tente novamente.';
@@ -133,10 +202,8 @@ export class NovaOs implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: veiculo => {
-          this.veiculo.set(veiculo);
-          this.placa.set(veiculo.placa);
+          this.selecionarVeiculo(veiculo);
           this.buscando.set(false);
-          this.placaNaoCadastrada.set(false);
         },
         error: (e: HttpErrorResponse) => {
           if (e.status === 404) {
@@ -179,157 +246,137 @@ export class NovaOs implements OnInit {
     this.erro.set('');
   }
 
-  salvarVeiculoENovaOs(): void {
-    if (this.salvando()) return;
-    this.erro.set('');
-
-    const placaFinal = this.placa().trim().toUpperCase().replace(/\s/g, '');
-    if (!placaFinal) {
-      this.erro.set('Informe a placa do veículo.');
-      return;
-    }
-
-    if (this.modoCliente() === 'buscar') {
-      const c = this.clienteSelecionado();
-      if (!c || !c.id) {
-        this.erro.set('Selecione o proprietário do veículo ou cadastre um novo.');
-        return;
-      }
-      this.cadastrarVeiculoEOpenOs(c.id);
-    } else {
-      // Validar dados do novo cliente
-      const nome = this.novoNomeCliente().trim();
-      const telefone = this.novoTelefoneCliente().trim();
-      if (!nome) {
-        this.erro.set('Nome do cliente é obrigatório.');
-        return;
-      }
-      if (!telefone) {
-        this.erro.set('Telefone do cliente é obrigatório.');
-        return;
-      }
-
-      this.salvando.set(true);
-      this.clienteService.criar({
-        nome,
-        telefone1: telefone,
-        cpf: this.novoCpfCliente().trim() || undefined
-      }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: novoC => {
-          if (!novoC.id) {
-            this.salvando.set(false);
-            this.erro.set('Erro ao cadastrar cliente.');
-            return;
-          }
-          this.clienteSelecionado.set(novoC);
-          this.cadastrarVeiculoEOpenOs(novoC.id);
-        },
-        error: e => {
-          this.salvando.set(false);
-          this.erro.set(this.tratarErro(e));
-        }
-      });
-    }
-  }
-
-  private cadastrarVeiculoEOpenOs(clienteId: number): void {
-    const marca = this.marca().trim();
-    const modelo = this.modelo().trim();
-    const cor = this.cor().trim();
-    const combustivel = this.combustivel();
-    const ano = this.anoFabricacao();
-    const placaFinal = this.placa().trim().toUpperCase().replace(/\s/g, '');
-
-    if (!marca) {
-      this.salvando.set(false);
-      this.erro.set('Marca do veículo é obrigatória.');
-      return;
-    }
-    if (!modelo) {
-      this.salvando.set(false);
-      this.erro.set('Modelo do veículo é obrigatório.');
-      return;
-    }
-    if (!cor) {
-      this.salvando.set(false);
-      this.erro.set('Cor do veículo é obrigatória.');
-      return;
-    }
-
-    this.salvando.set(true);
-    const veiculoReq: Veiculo = {
-      placa: placaFinal,
-      marca,
-      modelo,
-      cor,
-      combustivel,
-      anoFabricacao: ano ? Number(ano) : undefined
-    };
-
-    this.veiculoService.criar(clienteId, veiculoReq)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: veiculoCriado => {
-          this.veiculo.set(veiculoCriado);
-          this.placaNaoCadastrada.set(false);
-          // Continua para abrir a OS
-          this.enviarAberturaOs(veiculoCriado.id!);
-        },
-        error: e => {
-          this.salvando.set(false);
-          this.erro.set(this.tratarErro(e));
-        }
-      });
-  }
-
   criar(): void {
     if (this.salvando() || this.buscando()) return;
     this.erro.set('');
 
+    // Ordem das checagens = ordem da tela: veículo/dono primeiro, depois a OS.
+    let pedido: AtendimentoRequest;
     if (this.placaNaoCadastrada()) {
-      this.salvarVeiculoENovaOs();
-      return;
+      const cadastro = this.montarCadastro();
+      if (!cadastro) return;
+      const os = this.montarAbertura();
+      if (!os) return;
+      pedido = { ...cadastro, os };
+    } else {
+      const veiculoId = this.veiculo()?.id;
+      if (!veiculoId) {
+        this.erro.set('Busque e selecione um veículo cadastrado antes de criar a OS.');
+        return;
+      }
+      const os = this.montarAbertura();
+      if (!os) return;
+      pedido = { veiculoId, os };
     }
 
-    const veiculoId = this.veiculo()?.id;
-    if (!veiculoId) {
-      this.erro.set('Busque e selecione um veículo cadastrado antes de criar a OS.');
-      return;
-    }
-
-    this.enviarAberturaOs(veiculoId);
+    this.salvando.set(true);
+    this.atendimentoService.registrar(pedido)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: r => {
+          this.salvando.set(false);
+          if (r.os?.id) this.router.navigate(['/ordens', r.os.id]);
+          else this.router.navigate(['/ordens']);
+        },
+        error: e => {
+          // Nada foi gravado: os dados digitados continuam na tela para corrigir.
+          this.salvando.set(false);
+          this.erro.set(this.tratarErro(e));
+          this.focarCampoDoErro(e);
+        }
+      });
   }
 
-  private enviarAberturaOs(veiculoId: number): void {
+  /** Dados da OS. Devolve null (e mostra o erro) se algo estiver faltando. */
+  private montarAbertura(): DadosAbertura | null {
     const relato = this.reclamacoes().trim();
     if (!relato) {
-      this.salvando.set(false);
       this.erro.set('Relato do cliente é obrigatório.');
-      return;
+      return null;
     }
 
     const km = this.km();
     if (km !== null && km !== undefined && (!Number.isInteger(Number(km)) || Number(km) < 0 || Number(km) > 2147483647)) {
-      this.salvando.set(false);
       this.erro.set('Informe uma quilometragem inteira entre 0 e 2.147.483.647.');
-      return;
+      return null;
     }
 
-    this.salvando.set(true);
-    this.osService.criar(veiculoId, {
+    return {
       kmEntrada: km !== null && km !== undefined ? Number(km) : undefined,
       dataSaidaPrevista: this.previsao() || undefined,
       reclamacoes: relato
-    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: os => {
-        this.salvando.set(false);
-        if (os.id) this.router.navigate(['/ordens', os.id]);
-        else this.router.navigate(['/ordens']);
-      },
-      error: e => {
-        this.salvando.set(false);
-        this.erro.set(this.tratarErro(e));
+    };
+  }
+
+  /** Dono e veículo novos. Devolve null (e mostra o erro) se algo estiver faltando. */
+  private montarCadastro(): Pick<AtendimentoRequest, 'clienteId' | 'novoCliente' | 'novoVeiculo'> | null {
+    const placaFinal = this.placa().trim().toUpperCase().replace(/\s/g, '');
+    if (!placaFinal) {
+      this.erro.set('Informe a placa do veículo.');
+      return null;
+    }
+
+    let dono: Pick<AtendimentoRequest, 'clienteId' | 'novoCliente'>;
+    if (this.modoCliente() === 'buscar') {
+      const c = this.clienteSelecionado();
+      if (!c || !c.id) {
+        this.erro.set('Selecione o proprietário do veículo ou cadastre um novo.');
+        return null;
       }
-    });
+      dono = { clienteId: c.id };
+    } else {
+      const nome = this.novoNomeCliente().trim();
+      const telefone = this.novoTelefoneCliente().trim();
+      if (!nome) {
+        this.erro.set('Nome do cliente é obrigatório.');
+        return null;
+      }
+      if (!telefone) {
+        this.erro.set('Telefone do cliente é obrigatório.');
+        return null;
+      }
+      dono = { novoCliente: { nome, telefone1: telefone, cpf: this.novoCpfCliente().trim() || undefined } };
+    }
+
+    const marca = this.marca().trim();
+    const modelo = this.modelo().trim();
+    const cor = this.cor().trim();
+    if (!marca) {
+      this.erro.set('Marca do veículo é obrigatória.');
+      return null;
+    }
+    if (!modelo) {
+      this.erro.set('Modelo do veículo é obrigatório.');
+      return null;
+    }
+    if (!cor) {
+      this.erro.set('Cor do veículo é obrigatória.');
+      return null;
+    }
+
+    const ano = this.anoFabricacao();
+    return {
+      ...dono,
+      novoVeiculo: {
+        placa: placaFinal,
+        marca,
+        modelo,
+        cor,
+        combustivel: this.combustivel(),
+        anoFabricacao: ano ? Number(ano) : undefined
+      }
+    };
+  }
+
+  /** Leva o cursor ao campo que causou o erro (placa repetida → campo da placa, etc.). */
+  private focarCampoDoErro(e: any): void {
+    const texto = `${e?.error?.mensagem ?? ''} ${Object.keys(e?.error?.campos ?? {}).join(' ')}`;
+    let id: string | null = null;
+    if (/placa/i.test(texto)) id = 'nova-placa';
+    else if (/cpf/i.test(texto)) id = 'novo-cpf';
+    else if (/novoCliente/.test(texto)) id = 'novo-nome';
+    else if (/novoVeiculo/.test(texto)) id = 'veic-marca';
+    else if (/previs/i.test(texto)) id = 'nova-previsao';
+    if (id) setTimeout(() => document.getElementById(id!)?.focus());
   }
 }

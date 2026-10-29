@@ -157,12 +157,11 @@
           </div>
         </div>
 
-        <div style="margin-top: 24px;">
-          <h3 style="margin: 0 0 12px; font-size: 22px;">Veículos cadastrados</h3>
-          <p class="client-notes">
-            {{ clienteSelecionado.totalVeiculos ?? 'Quantidade não disponível' }}
-          </p>
-        </div>
+        @if (clienteSelecionado.id) {
+          <div style="margin-top: 24px;">
+            <app-veiculos-do-cliente [clienteId]="clienteSelecionado.id" />
+          </div>
+        }
       </section>
     </div>
 
