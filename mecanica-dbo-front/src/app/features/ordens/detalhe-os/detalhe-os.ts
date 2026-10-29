@@ -237,8 +237,9 @@ export class DetalheOs implements OnInit {
       this.pErro.set('Informe uma quantidade maior que zero');
       return;
     }
-    if (this.pValor() === null || !Number.isFinite(this.pValor()) || this.pValor()! < 0) {
-      this.pErro.set('Informe um valor unitário igual ou maior que zero');
+    // Valor negativo é permitido: é assim que se lança o "Crédito mecânico".
+    if (this.pValor() === null || !Number.isFinite(this.pValor())) {
+      this.pErro.set('Informe o valor unitário (use valor negativo para crédito)');
       return;
     }
     this.pErro.set(null);

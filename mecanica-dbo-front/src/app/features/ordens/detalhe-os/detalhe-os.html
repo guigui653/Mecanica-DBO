@@ -203,13 +203,13 @@
               </div>
               <div class="field campo-qtd">
                 <label for="pqtd">Qtd</label>
-                <input id="pqtd" class="input" type="number" min="0.001" step="any" [disabled]="salvando()"
+                <input id="pqtd" class="input" type="number" min="0.01" step="any" [disabled]="salvando()"
                        [ngModel]="pQuantidade()"
                        (ngModelChange)="pQuantidade.set($event)">
               </div>
               <div class="field campo-valor">
                 <label for="pval">Valor unitário</label>
-                <input id="pval" class="input" type="number" min="0" step="0.01" [disabled]="salvando()"
+                <input id="pval" class="input" type="number" step="0.01" [disabled]="salvando()"
                        [class.is-invalid]="pErro() && pValor() === null"
                        [ngModel]="pValor()"
                        (ngModelChange)="pValor.set($event); pErro.set(null)"

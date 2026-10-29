@@ -21,6 +21,7 @@ public record ItemPecaRequest(
         String descricao,
 
         /** Se vier null, assume 1. */
+        @Positive(message = "Quantidade deve ser maior que zero")
         @Digits(integer = 6, fraction = 2, message = "Quantidade inválida")
         BigDecimal quantidade,
 
