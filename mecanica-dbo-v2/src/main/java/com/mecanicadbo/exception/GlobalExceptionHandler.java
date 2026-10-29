@@ -225,6 +225,7 @@ public class GlobalExceptionHandler {
         if (d.contains("veiculo_chassi"))             return "Já existe um veículo cadastrado com esse chassi.";
         if (d.contains("combustivel"))                return "Combustível inválido. Use GASOLINA, ETANOL, FLEX, DIESEL, ELETRICO, HIBRIDO ou GNV.";
         if (d.contains("item_servico_valor"))         return "O valor do serviço não pode ser negativo.";
+        if (d.contains("chk_datas"))                  return "A previsão de entrega não pode ser antes da data de entrada do carro.";
         if (d.contains("foreign key") || d.contains("chave estrangeira"))
             return "Não é possível concluir: este registro está ligado a outro (OS, veículo ou item).";
         if (d.contains("not null") || d.contains("não-nulo") || d.contains("nao-nulo"))
