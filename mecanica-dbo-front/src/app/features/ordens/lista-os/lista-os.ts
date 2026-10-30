@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { OrdemServicoService } from '../../../core/services/ordem-servico';
 import { OrdemServico, StatusOs } from '../../../shared/models/ordem-servico.model';
+import { formatarPlaca } from '../../../shared/pipes/placa.pipe';
 
 export interface OsViewItem {
   id?: number;
@@ -58,7 +59,7 @@ export class ListaOs implements OnInit {
           return {
             id: o.id,
             num,
-            placa: o.veiculo?.placa ?? '—',
+            placa: formatarPlaca(o.veiculo?.placa) || '—',
             carro: [o.veiculo?.marca, o.veiculo?.modelo].filter(Boolean).join(' ') || '—',
             cliente: o.veiculo?.cliente?.nome ?? '—',
             servico: o.diagnostico || o.reclamacoes || 'Não informado',
@@ -95,7 +96,8 @@ export class ListaOs implements OnInit {
   aplicarFiltros() {
     const q = this.termoBusca.trim().toLowerCase();
     this.ordensFiltradas = this.todasOrdens.filter(o => {
-      const matchQ = !q || [o.num, o.placa, o.carro, o.cliente, o.servico, o.mec].join(' ').toLowerCase().includes(q);
+      // A placa entra com e sem hífen, para "jeh3030" e "jeh-3030" acharem o mesmo carro.
+      const matchQ = !q || [o.num, o.placa, o.placa.replace('-', ''), o.carro, o.cliente, o.servico, o.mec].join(' ').toLowerCase().includes(q);
 
       let matchF = true;
       if (this.filtroAtivo === 'Em serviço') {

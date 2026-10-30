@@ -10,6 +10,7 @@ import { OrdemServicoService } from '../../../core/services/ordem-servico';
 import { FormVeiculo } from '../form-veiculo/form-veiculo';
 import { Veiculo } from '../../../shared/models/veiculo.model';
 import { OrdemServico, ROTULOS_STATUS } from '../../../shared/models/ordem-servico.model';
+import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
 
 interface HistoricoItem {
   id?: number;
@@ -30,7 +31,7 @@ interface VeiculoExt extends Veiculo {
 @Component({
   selector: 'app-busca-veiculo',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PlacaPipe],
   templateUrl: './busca-veiculo.html',
   styleUrl: './busca-veiculo.css'
 })

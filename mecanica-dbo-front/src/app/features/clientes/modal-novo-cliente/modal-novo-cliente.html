@@ -39,7 +39,7 @@
           <div class="resumo-item">
             <span class="resumo-rotulo">Veículo vinculado</span>
             <span class="resumo-valor">
-              <span class="resumo-placa">{{ veiculoCadastrado()?.placa }}</span>
+              <span class="resumo-placa">{{ veiculoCadastrado()?.placa | placa }}</span>
               {{ veiculoCadastrado()?.marca }} {{ veiculoCadastrado()?.modelo }}
             </span>
             <span class="text-sm text-soft">{{ veiculoCadastrado()?.cor }} · {{ veiculoCadastrado()?.combustivel }}</span>

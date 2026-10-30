@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ClienteService } from '../../../core/services/cliente';
 import { Veiculo } from '../../../shared/models/veiculo.model';
+import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
 
 /**
  * Lista de veículos na ficha do cliente, com "Abrir OS" em cada carro.
@@ -12,6 +13,7 @@ import { Veiculo } from '../../../shared/models/veiculo.model';
 @Component({
   selector: 'app-veiculos-do-cliente',
   standalone: true,
+  imports: [PlacaPipe],
   templateUrl: './veiculos-do-cliente.html',
   styleUrl: './veiculos-do-cliente.css'
 })

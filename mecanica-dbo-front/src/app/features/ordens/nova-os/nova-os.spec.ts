@@ -41,7 +41,6 @@ describe('Abertura de uma OS', () => {
   it('placa nova: grava cliente, veículo e OS numa chamada só e mantém os dados se der erro', () => {
     tela.placa.set('TST1A23'); tela.buscarVeiculo();
     http.expectOne('/veiculos/placa/TST1A23').flush(null, { status: 404, statusText: 'Not Found' });
-    http.expectOne('/veiculos/placa/TST-1A23').flush(null, { status: 404, statusText: 'Not Found' });
     expect(tela.placaNaoCadastrada()).toBe(true);
 
     tela.modoCliente.set('novo');

@@ -30,7 +30,7 @@
               @for (v of veiculosDoCliente(); track v.id) {
                 <div class="cliente-item" (click)="selecionarVeiculo(v)">
                   <div>
-                    <strong>{{ v.placa }}</strong>
+                    <strong>{{ v.placa | placa }}</strong>
                     <span class="cliente-info"> · {{ v.marca }} {{ v.modelo }} ({{ v.cor }})</span>
                   </div>
                   <button type="button" class="btn btn-sm btn-ghost">Abrir OS</button>
@@ -48,7 +48,7 @@
     <!-- Placa encontrada -->
     @if (veiculo(); as v) {
       <div class="veiculo-selecionado" role="status">
-        <p><strong>{{ v.placa }}</strong> · {{ v.marca }} {{ v.modelo }} ({{ v.cor }})</p>
+        <p><strong>{{ v.placa | placa }}</strong> · {{ v.marca }} {{ v.modelo }} ({{ v.cor }})</p>
         <p>Proprietário: <strong>{{ v.cliente?.nome ?? 'Não informado' }}</strong> · {{ v.cliente?.telefone1 }}</p>
       </div>
     }

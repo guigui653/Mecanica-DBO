@@ -63,7 +63,7 @@
         <div class="veiculo-card">
           <div class="card-top-row">
             <div>
-              <div class="vehicle-plate">{{ veiculo.placa }}</div>
+              <div class="vehicle-plate">{{ veiculo.placa | placa }}</div>
               <div class="vehicle-model">
                 {{ veiculo.marca }} {{ veiculo.modelo }}
                 @if (veiculo.anoFabricacao) { · {{ veiculo.anoFabricacao }} }

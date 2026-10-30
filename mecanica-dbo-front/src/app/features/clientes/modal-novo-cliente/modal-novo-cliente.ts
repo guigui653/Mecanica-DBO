@@ -6,11 +6,12 @@ import { AtendimentoService } from '../../../core/services/atendimento';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { Combustivel } from '../../../shared/models/veiculo.model';
 import { VeiculoResumo } from '../../../shared/models/ordem-servico.model';
+import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
 
 @Component({
   selector: 'app-modal-novo-cliente',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PlacaPipe],
   templateUrl: './modal-novo-cliente.html',
   styleUrl: './modal-novo-cliente.css'
 })

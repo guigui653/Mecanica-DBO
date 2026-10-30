@@ -9,6 +9,7 @@ import { ClienteService } from '../../../core/services/cliente';
 import { AtendimentoRequest, AtendimentoService, DadosAbertura } from '../../../core/services/atendimento';
 import { Veiculo, Combustivel } from '../../../shared/models/veiculo.model';
 import { Cliente } from '../../../shared/models/cliente.model';
+import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
 
 /**
  * Abertura de OS.
@@ -18,6 +19,8 @@ import { Cliente } from '../../../shared/models/cliente.model';
  * backend grava numa transação. Se a placa já existir, nada fica gravado —
  * antes, o cliente ficava salvo e um novo clique criava um cliente repetido.
  *
+ * A placa é buscada uma vez, sem hífen: o backend grava todas assim (V2).
+ *
  * Aceita na URL:
  *   ?placa=ABC1234  → já busca a placa
  *   ?veiculoId=3    → já seleciona o veículo (vindo da ficha do cliente)
@@ -26,7 +29,7 @@ import { Cliente } from '../../../shared/models/cliente.model';
 @Component({
   selector: 'app-nova-os',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, PlacaPipe],
   templateUrl: './nova-os.html',
   styleUrl: './nova-os.css'
 })
@@ -161,8 +164,7 @@ export class NovaOs implements OnInit {
 
   buscarVeiculo(): void {
     if (this.buscando() || this.salvando()) return;
-    const digitada = this.placa().trim().toUpperCase();
-    const semEspeciais = digitada.replace(/[\s-]/g, '');
+    const semEspeciais = this.placa().toUpperCase().replace(/[^A-Z0-9]/g, '');
 
     this.veiculo.set(null);
     this.placaNaoCadastrada.set(false);
@@ -173,32 +175,9 @@ export class NovaOs implements OnInit {
       return;
     }
 
-    // Gerar tentativas de grafia: primeiro limpa (sem espaço/hífen), depois com hífen AAA-0000, depois como digitado
-    const tentativas: string[] = [];
-    if (semEspeciais) tentativas.push(semEspeciais);
-    if (semEspeciais.length === 7) {
-      const comHifen = `${semEspeciais.substring(0, 3)}-${semEspeciais.substring(3)}`;
-      if (!tentativas.includes(comHifen)) {
-        tentativas.push(comHifen);
-      }
-    }
-    if (digitada && !tentativas.includes(digitada)) {
-      tentativas.push(digitada);
-    }
-
+    // Uma busca só: o backend grava e procura a placa sem hífen (JEH-3030 = JEH3030).
     this.buscando.set(true);
-    this.tentarBuscar(tentativas, 0);
-  }
-
-  private tentarBuscar(tentativas: string[], index: number): void {
-    if (index >= tentativas.length) {
-      this.buscando.set(false);
-      this.placaNaoCadastrada.set(true);
-      return;
-    }
-
-    const placaAtual = tentativas[index];
-    this.veiculoService.buscarPorPlaca(placaAtual)
+    this.veiculoService.buscarPorPlaca(semEspeciais)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: veiculo => {
@@ -206,12 +185,9 @@ export class NovaOs implements OnInit {
           this.buscando.set(false);
         },
         error: (e: HttpErrorResponse) => {
-          if (e.status === 404) {
-            this.tentarBuscar(tentativas, index + 1);
-          } else {
-            this.buscando.set(false);
-            this.erro.set(this.tratarErro(e));
-          }
+          this.buscando.set(false);
+          if (e.status === 404) this.placaNaoCadastrada.set(true);
+          else this.erro.set(this.tratarErro(e));
         }
       });
   }
@@ -310,7 +286,7 @@ export class NovaOs implements OnInit {
 
   /** Dono e veículo novos. Devolve null (e mostra o erro) se algo estiver faltando. */
   private montarCadastro(): Pick<AtendimentoRequest, 'clienteId' | 'novoCliente' | 'novoVeiculo'> | null {
-    const placaFinal = this.placa().trim().toUpperCase().replace(/\s/g, '');
+    const placaFinal = this.placa().toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (!placaFinal) {
       this.erro.set('Informe a placa do veículo.');
       return null;

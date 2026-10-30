@@ -8,6 +8,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { OrdemServicoService } from '../../../core/services/ordem-servico';
 import { ImportarNota } from './importar-nota/importar-nota';
+import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
 import {
   OrdemServico, ItemPeca, ItemServico, StatusOs,
   ROTULOS_STATUS, PROXIMO_STATUS
@@ -22,7 +23,7 @@ interface Toast {
 @Component({
   selector: 'app-detalhe-os',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ImportarNota],
+  imports: [CommonModule, FormsModule, RouterLink, ImportarNota, PlacaPipe],
   templateUrl: './detalhe-os.html',
   styleUrl: './detalhe-os.css'
 })

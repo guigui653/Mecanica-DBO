@@ -54,7 +54,7 @@
     <!-- ── VEÍCULO E CLIENTE ─────────────────────────────── -->
     <div class="card faixa-veiculo">
       <div class="veiculo-bloco">
-        <span class="placa placa-grande">{{ o.veiculo?.placa ?? '—' }}</span>
+        <span class="placa placa-grande">{{ (o.veiculo?.placa | placa) || '—' }}</span>
         <div>
           <div class="veiculo-nome">{{ o.veiculo?.marca }} {{ o.veiculo?.modelo }}</div>
           <div class="text-sm text-faint">
