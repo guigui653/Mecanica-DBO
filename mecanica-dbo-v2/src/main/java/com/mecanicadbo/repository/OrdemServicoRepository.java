@@ -102,17 +102,20 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
      *
      * O trecho do id foi acrescentado porque o mecânico procura pelo número
      * impresso no recibo ("a 12"), e antes isso não achava nada.
+     *
+     * @param placa o termo já normalizado por Placas.paraBusca ("jeh-30" → "JEH30"),
+     *              porque a placa fica gravada sem hífen.
      */
     @Query("""
         SELECT os FROM OrdemServico os
         JOIN FETCH os.veiculo v
         JOIN FETCH v.cliente c
         WHERE LOWER(c.nome)  LIKE LOWER(CONCAT('%', :q, '%'))
-           OR LOWER(v.placa) LIKE LOWER(CONCAT('%', :q, '%'))
+           OR v.placa        LIKE CONCAT('%', :placa, '%')
            OR CAST(os.id AS string) = :q
         ORDER BY os.dataEntrada DESC, os.id DESC
     """)
-    List<OrdemServico> buscarPorClienteOuPlaca(@Param("q") String termo);
+    List<OrdemServico> buscarPorClienteOuPlaca(@Param("q") String termo, @Param("placa") String placa);
 
     /** Contadores do dashboard, sem carregar as OS. */
     long countByStatus(StatusOs status);

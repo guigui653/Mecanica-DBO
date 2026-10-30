@@ -43,7 +43,7 @@ public class OrdemServicoService {
     @Transactional(readOnly = true)
     public List<OrdemServico> buscar(String termo) {
         if (termo == null || termo.isBlank()) return osRepo.buscarTodas();
-        return osRepo.buscarPorClienteOuPlaca(termo.trim());
+        return osRepo.buscarPorClienteOuPlaca(termo.trim(), Placas.paraBusca(termo));
     }
 
     @Transactional(readOnly = true)

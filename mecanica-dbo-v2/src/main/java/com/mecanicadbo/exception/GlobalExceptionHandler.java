@@ -221,6 +221,8 @@ public class GlobalExceptionHandler {
         String d = detalhe.toLowerCase();
 
         if (d.contains("cliente_cpf"))                return "Já existe um cliente cadastrado com esse CPF.";
+        // Antes do "veiculo_placa": o nome desta constraint também contém esse texto.
+        if (d.contains("veiculo_placa_formato"))      return "Placa inválida: use só letras e números, como ABC1234 ou ABC1D23.";
         if (d.contains("veiculo_placa"))              return "Já existe um veículo cadastrado com essa placa.";
         if (d.contains("veiculo_chassi"))             return "Já existe um veículo cadastrado com esse chassi.";
         if (d.contains("combustivel"))                return "Combustível inválido. Use GASOLINA, ETANOL, FLEX, DIESEL, ELETRICO, HIBRIDO ou GNV.";

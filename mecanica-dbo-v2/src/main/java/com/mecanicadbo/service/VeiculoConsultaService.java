@@ -34,7 +34,7 @@ public class VeiculoConsultaService {
     public List<VeiculoResumoDTO> listar(String termo) {
         List<Veiculo> veiculos = (termo == null || termo.isBlank())
                 ? repo.listarAtivos()
-                : repo.buscarPorTermo(termo.trim());
+                : repo.buscarPorTermo(termo.trim(), Placas.paraBusca(termo));
 
         return veiculos.stream().map(VeiculoResumoDTO::de).toList();
     }
@@ -49,9 +49,7 @@ public class VeiculoConsultaService {
 
     @Transactional(readOnly = true)
     public VeiculoResumoDTO buscarPorPlaca(String placa) {
-        String normalizada = placa == null ? null : placa.trim().toUpperCase().replace(" ", "");
-
-        Veiculo v = repo.findByPlacaIgnoreCase(normalizada)
+        Veiculo v = repo.findByPlacaIgnoreCase(Placas.normalizar(placa))
                 .orElseThrow(() -> new RecursoNaoEncontradoException(
                         "Veículo não encontrado: placa=" + placa));
         return VeiculoResumoDTO.de(v);

@@ -1,5 +1,7 @@
 package com.mecanicadbo.service.pdf;
 
+import com.mecanicadbo.service.Placas;
+
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -74,7 +76,7 @@ public final class ReciboMontador {
         r.put("cliente", cli);
 
         Map<String, Object> vei = new LinkedHashMap<>();
-        vei.put("placa", texto(veiculo.get("placa")).toUpperCase(Locale.ROOT));
+        vei.put("placa", Placas.formatar(texto(veiculo.get("placa")).toUpperCase(Locale.ROOT)));
         vei.put("marcaModelo", juntar(veiculo.get("marca"), veiculo.get("modelo")));
         vei.put("cor", texto(veiculo.get("cor")));
         vei.put("combustivel", rotuloCombustivel(texto(veiculo.get("combustivel"), "")));

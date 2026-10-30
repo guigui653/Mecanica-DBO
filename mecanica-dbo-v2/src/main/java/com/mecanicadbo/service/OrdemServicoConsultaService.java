@@ -53,7 +53,7 @@ public class OrdemServicoConsultaService {
     public List<OrdemServicoDTO> buscar(String termo) {
         List<OrdemServico> ordens = (termo == null || termo.isBlank())
                 ? osRepo.buscarTodas()
-                : osRepo.buscarPorClienteOuPlaca(termo.trim());
+                : osRepo.buscarPorClienteOuPlaca(termo.trim(), Placas.paraBusca(termo));
         return paraResumo(ordens);
     }
 

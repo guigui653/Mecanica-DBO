@@ -108,9 +108,13 @@ public class VeiculoService {
         v.setChassi(vazioParaNull(dados.chassi()));
     }
 
-    /** Placa sempre gravada em maiúsculas e sem espaços, para a busca bater. */
+    /** Placa gravada só com letras e números ("jeh-3030" → "JEH3030"); ver Placas. */
     private String normalizarPlaca(String placa) {
-        return placa == null ? null : placa.trim().toUpperCase().replace(" ", "");
+        String p = Placas.normalizar(placa);
+        if (p != null && p.isEmpty()) {
+            throw new RegraDeNegocioException("Placa inválida: use letras e números, como ABC1234 ou ABC1D23.");
+        }
+        return p;
     }
 
     private String vazioParaNull(String valor) {
@@ -123,7 +127,7 @@ public class VeiculoService {
     private void validarPlacaDisponivel(String placa, Long idAtual) {
         veiculoRepo.findByPlacaIgnoreCase(placa).ifPresent(existente -> {
             if (existente.getId().equals(idAtual)) return;
-            throw new RegraDeNegocioException("Placa já cadastrada: " + placa);
+            throw new RegraDeNegocioException("Placa já cadastrada: " + Placas.formatar(placa));
         });
     }
 }
