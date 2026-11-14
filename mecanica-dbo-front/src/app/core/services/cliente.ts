@@ -35,12 +35,13 @@ export class ClienteService {
     return this.http.put<Cliente>(`${this.base}/${id}`, cliente);
   }
 
-  /** DELETE /clientes/{id} — 204 No Content */
+  /** DELETE /clientes/{id} — apaga de verdade; só para cliente sem nenhuma OS (409 se tiver). */
   excluir(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
 
+  /** PATCH /clientes/{id}/inativar — some da lista, o histórico de OS continua. */
   inativar(id: number): Observable<void> {
-    return this.excluir(id);
+    return this.http.patch<void>(`${this.base}/${id}/inativar`, null);
   }
 }

@@ -7,6 +7,7 @@ import { Cliente } from '../../../shared/models/cliente.model';
 import { Combustivel } from '../../../shared/models/veiculo.model';
 import { VeiculoResumo } from '../../../shared/models/ordem-servico.model';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
+import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 
 @Component({
   selector: 'app-modal-novo-cliente',
@@ -70,16 +71,6 @@ export class ModalNovoCliente {
   alterarPlaca(valor: string): void {
     this.placa.set(valor.toUpperCase());
     this.erro.set('');
-  }
-
-  private tratarErro(e: any): string {
-    if (!e) return 'Erro inesperado.';
-    if (e.status === 0) return 'Não foi possível conectar ao servidor (API offline).';
-    if (e.error?.campos) return Object.values(e.error.campos).join(' · ');
-    if (e.error?.mensagem) return e.error.mensagem;
-    if (e.error?.message) return e.error.message;
-    if (e.message) return e.message;
-    return 'Não foi possível completar o cadastro. Verifique os dados e tente novamente.';
   }
 
   salvar(): void {
@@ -156,7 +147,7 @@ export class ModalNovoCliente {
       },
       error: e => {
         this.salvando.set(false);
-        this.erro.set(this.tratarErro(e));
+        this.erro.set(mensagemDoErro(e));
       }
     });
   }

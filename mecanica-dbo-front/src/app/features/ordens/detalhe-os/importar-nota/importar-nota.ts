@@ -6,6 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { OcrService, OcrItem, OcrMetadados } from '../../../../core/services/ocr';
 import { OrdemServicoService } from '../../../../core/services/ordem-servico';
 import { OrdemServico } from '../../../../shared/models/ordem-servico.model';
+import { mensagemDoErro } from '../../../../core/utils/mensagem-erro';
 
 type Fase = 'inicio' | 'lendo' | 'revisao';
 
@@ -121,7 +122,7 @@ export class ImportarNota {
       },
       error: (e: HttpErrorResponse) => {
         this.fase.set('inicio');
-        this.erro.set(this.mensagemDoErro(e));
+        this.erro.set(mensagemDoErro(e));
       }
     });
   }
@@ -200,7 +201,7 @@ export class ImportarNota {
       error: (e: HttpErrorResponse) => {
         this.ocupado.set(false);
         const lancadas = feitas > 0 ? `${feitas} peça(s) já foram lançadas. ` : '';
-        this.erro.set(`${lancadas}Parou em "${linha.descricao}": ${this.mensagemDoErro(e)}`);
+        this.erro.set(`${lancadas}Parou em "${linha.descricao}": ${mensagemDoErro(e)}`);
         if (ultimaOs) this.importado.emit({ os: ultimaOs, quantidade: feitas });
       }
     });
@@ -210,13 +211,5 @@ export class ImportarNota {
     if (os) this.importado.emit({ os, quantidade });
     this.aberto.set(false);
     this.reiniciar();
-  }
-
-  // ── apoio ─────────────────────────────────────────────────
-
-  private mensagemDoErro(e: HttpErrorResponse): string {
-    if (e.error?.mensagem) return e.error.mensagem;
-    if (e.status === 0)    return 'Sem conexão com a API.';
-    return 'Ocorreu um erro inesperado.';
   }
 }

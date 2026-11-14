@@ -29,18 +29,18 @@ describe('Shell da oficina', () => {
   afterEach(() => http.verify());
   it('mostra os contadores do servidor e os links das seções', () => {
     const fixture = TestBed.createComponent(App); fixture.detectChanges();
-    http.expectOne('/ordens/abertas').flush([{ id: 1 }, { id: 2 }]);
-    http.expectOne('/clientes').flush([{ id: 7 }]);
+    http.expectOne('/dashboard/resumo').flush({
+      noPatio: 3, osAbertas: 2, faturamentoMes: 0, totalClientes: 7, patio: [], prontas: [], clientesDoMes: []
+    });
     fixture.detectChanges();
     expect(fixture.componentInstance.osAbertas()).toBe(2);
-    expect(fixture.componentInstance.totalClientes()).toBe(1);
+    expect(fixture.componentInstance.totalClientes()).toBe(7);
     expect(fixture.componentInstance.apiOnline()).toBe(true);
     expect(fixture.nativeElement.querySelector('a[href="/ordens"]')).toBeTruthy();
   });
   it('indica indisponibilidade quando a consulta da API falha', () => {
     const fixture = TestBed.createComponent(App); fixture.detectChanges();
-    http.expectOne('/ordens/abertas').error(new ProgressEvent('error'));
-    http.expectOne('/clientes').error(new ProgressEvent('error'));
+    http.expectOne('/dashboard/resumo').error(new ProgressEvent('error'));
     expect(fixture.componentInstance.apiOnline()).toBe(false);
     expect(fixture.componentInstance.osAbertas()).toBeNull();
   });

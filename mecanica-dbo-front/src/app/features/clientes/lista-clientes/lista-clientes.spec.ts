@@ -13,32 +13,55 @@ describe('Clientes com informações reais', () => {
     const fixture = TestBed.createComponent(ListaClientes); tela = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController); fixture.detectChanges();
   });
-  afterEach(() => http.verify());
+  afterEach(() => { http.verify(); vi.restoreAllMocks(); });
+
   it('deduz a última visita e OS em aberto a partir das ordens', () => {
     http.expectOne('/clientes').flush([{ id: 7, nome: 'Cliente real', telefone1: '123' }]);
     http.expectOne('/ordens').flush([{ id: 3, status: 'ABERTA', dataEntrada: '2026-09-01', veiculo: { cliente: { id: 7 } } }]);
-    expect(tela.clientes[0].tags).toContain('Com OS aberta');
-    expect(tela.clientes[0].ultimaVisita).toBe('01/09/2026');
-    expect(tela.clientes[0].totalVeiculos).toBeUndefined();
-    tela.selecionarCliente(tela.clientes[0]);
+    expect(tela.clientes()[0].tags).toContain('Com OS aberta');
+    expect(tela.clientes()[0].ultimaVisita).toBe('01/09/2026');
+    expect(tela.clientes()[0].totalVeiculos).toBeUndefined();
+    tela.selecionarCliente(tela.clientes()[0]);
     http.expectOne('/clientes/7/veiculos').flush([{ id: 4 }, { id: 5 }]);
-    expect(tela.clientes[0].totalVeiculos).toBe(2);
+    expect(tela.clientes()[0].totalVeiculos).toBe(2);
+    expect(tela.clienteSelecionado()?.totalVeiculos).toBe(2);
   });
+
   it('não fabrica visitas nem filtros quando as ordens estão indisponíveis', () => {
     http.expectOne('/clientes').flush([{ id: 7, nome: 'Cliente real', telefone1: '123' }]);
     http.expectOne('/ordens').error(new ProgressEvent('error'));
-    expect(tela.clientes[0].ultimaVisita).toBeUndefined();
-    expect(tela.clientes[0].tags).toHaveLength(0);
-    expect(tela.aviso).toBeTruthy();
-    expect(tela.filtros).toEqual(['Todos']);
+    expect(tela.clientes()[0].ultimaVisita).toBeUndefined();
+    expect(tela.clientes()[0].tags).toHaveLength(0);
+    expect(tela.aviso()).toBeTruthy();
+    expect(tela.filtros()).toEqual(['Todos']);
   });
-  it('exclui um cliente da lista após confirmação', () => {
+
+  it('filtra enquanto se digita', () => {
+    http.expectOne('/clientes').flush([{ id: 1, nome: 'Tatiana', telefone1: '1' }, { id: 2, nome: 'Diogo', telefone1: '2' }]);
+    http.expectOne('/ordens').flush([]);
+    tela.termoBusca.set('tat');
+    expect(tela.clientesFiltrados().map(c => c.id)).toEqual([1]);
+  });
+
+  it('apaga um cliente sem histórico após confirmação', () => {
     http.expectOne('/clientes').flush([{ id: 7, nome: 'Carlos Teste', telefone1: '123' }]);
     http.expectOne('/ordens').flush([]);
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    tela.excluirCliente(new Event('click'), tela.clientes[0]);
+    tela.excluirCliente(new Event('click'), tela.clientes()[0]);
     http.expectOne(r => r.method === 'DELETE' && r.url === '/clientes/7').flush(null, { status: 204, statusText: 'No Content' });
-    expect(tela.clientes).toHaveLength(0);
-    expect(tela.clientesFiltrados).toHaveLength(0);
+    expect(tela.clientes()).toHaveLength(0);
+    expect(tela.clientesFiltrados()).toHaveLength(0);
+  });
+
+  it('cliente com histórico: o backend recusa e a tela oferece inativar', () => {
+    http.expectOne('/clientes').flush([{ id: 8, nome: 'Diogo', telefone1: '123' }]);
+    http.expectOne('/ordens').flush([]);
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    tela.excluirCliente(new Event('click'), tela.clientes()[0]);
+    http.expectOne(r => r.method === 'DELETE' && r.url === '/clientes/8')
+      .flush({ status: 409, mensagem: 'Diogo tem 2 ordens de serviço no histórico e não pode ser apagado.' }, { status: 409, statusText: 'Conflict' });
+    expect(confirmar).toHaveBeenLastCalledWith(expect.stringContaining('Inativar Diogo agora?'));
+    http.expectOne(r => r.method === 'PATCH' && r.url === '/clientes/8/inativar').flush(null, { status: 204, statusText: 'No Content' });
+    expect(tela.clientes()).toHaveLength(0);
   });
 });

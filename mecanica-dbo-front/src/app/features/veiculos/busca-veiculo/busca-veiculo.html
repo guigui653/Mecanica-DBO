@@ -27,8 +27,9 @@
 
       <div class="plate-input-row">
         <input class="input plate-input" type="text" placeholder="ABC1D23"
-               [(ngModel)]="placa" (keyup.enter)="buscar()" maxlength="8" [disabled]="carregando || carregandoHistorico" aria-label="Placa do veículo">
-        <button type="button" class="btn btn-primary btn-search-plate" (click)="buscar()" [disabled]="carregando || carregandoHistorico">
+               [ngModel]="placa()" (ngModelChange)="placa.set($event)" (keyup.enter)="buscar()" maxlength="8"
+               [disabled]="carregando() || carregandoHistorico()" aria-label="Placa do veículo">
+        <button type="button" class="btn btn-primary btn-search-plate" (click)="buscar()" [disabled]="carregando() || carregandoHistorico()">
           Buscar
         </button>
       </div>
@@ -41,37 +42,38 @@
 
       <div class="recent-label">CONSULTAS RECENTES</div>
       <div class="recent-chips">
-        @for (p of recentes; track p) {
+        @for (p of recentes(); track p) {
           <button type="button" class="recent-plate-btn" (click)="selecionarPlaca(p)">
-            {{ p }}
+            {{ p | placa }}
           </button>
         }
-        @if (recentes.length === 0) { <p class="text-faint">Nenhuma consulta recente.</p> }
+        @if (recentes().length === 0) { <p class="text-faint">Nenhuma consulta recente.</p> }
       </div>
     </section>
 
     <!-- Coluna Direita: Ficha do Veículo -->
     <section class="card-side">
-      @if (carregando) {
+      @let v = veiculo();
+      @if (carregando()) {
         <div class="spinner-wrap">Buscando veículo...</div>
-      } @else if (erro) {
+      } @else if (erro()) {
         <div class="not-found-box" role="alert">
-          <p>{{ erro }}</p>
+          <p>{{ erro() }}</p>
           <button type="button" class="btn btn-secondary" (click)="buscar()">Tentar novamente</button>
         </div>
-      } @else if (veiculo) {
+      } @else if (v) {
         <div class="veiculo-card">
           <div class="card-top-row">
             <div>
-              <div class="vehicle-plate">{{ veiculo.placa | placa }}</div>
+              <div class="vehicle-plate">{{ v.placa | placa }}</div>
               <div class="vehicle-model">
-                {{ veiculo.marca }} {{ veiculo.modelo }}
-                @if (veiculo.anoFabricacao) { · {{ veiculo.anoFabricacao }} }
-                @if (veiculo.cor) { · {{ veiculo.cor }} }
+                {{ v.marca }} {{ v.modelo }}
+                @if (v.anoFabricacao) { · {{ v.anoFabricacao }} }
+                @if (v.cor) { · {{ v.cor }} }
               </div>
             </div>
-            <span class="tag" [ngClass]="obterTagClass(veiculo.status)">
-              {{ veiculo.status || 'Sem situação informada' }}
+            <span class="tag" [ngClass]="classeTag(v.status)">
+              {{ rotuloStatus(v.status) }}
             </span>
           </div>
 
@@ -81,16 +83,16 @@
             <div>
               <div class="info-label">Proprietário</div>
               <a href="#" class="owner-link" (click)="$event.preventDefault(); irParaCliente()">
-                {{ veiculo.dono || 'Não informado' }}
+                {{ v.dono || 'Não informado' }}
               </a>
             </div>
             <div>
               <div class="info-label">Telefone</div>
-              <span class="tabular">{{ veiculo.fone || 'Não informado' }}</span>
+              <span class="tabular">{{ v.fone || 'Não informado' }}</span>
             </div>
             <div>
               <div class="info-label">Quilometragem</div>
-              <span class="tabular">{{ veiculo.km || 'Não informada' }}</span>
+              <span class="tabular">{{ v.km || 'Não informada' }}</span>
             </div>
             <div>
               <div class="info-label">Próxima revisão</div>
@@ -103,14 +105,14 @@
           <div class="history-section">
             <div class="info-label" style="margin-bottom: 6px;">Histórico de serviços</div>
 
-            @if (carregandoHistorico) {
+            @if (carregandoHistorico()) {
               <p role="status">Carregando histórico…</p>
-            } @else if (historicoErro) {
-              <p class="field-error" role="alert">{{ historicoErro }}</p>
-            } @else if (veiculo.historico.length === 0) {
+            } @else if (historicoErro()) {
+              <p class="field-error" role="alert">{{ historicoErro() }}</p>
+            } @else if (v.historico.length === 0) {
               <p class="text-faint">Nenhuma ordem de serviço registrada para este veículo.</p>
             }
-            @for (h of veiculo.historico; track h.id) {
+            @for (h of v.historico; track h.id) {
               <div class="history-item">
                 <div class="history-date tabular">{{ h.data }}</div>
                 <div class="history-details">
@@ -131,10 +133,10 @@
             </button>
           </div>
         </div>
-      } @else if (buscaRealizada) {
+      } @else if (buscaRealizada()) {
         <div class="not-found-box">
           <div class="not-found-title">Placa não encontrada</div>
-          <p class="not-found-text">Nenhum veículo cadastrado com “{{ placa }}”.</p>
+          <p class="not-found-text">Nenhum veículo cadastrado com “{{ placa() | placa }}”.</p>
           <button type="button" class="btn btn-primary" (click)="abrirCadastroVeiculo()">
             Cadastrar veículo
           </button>

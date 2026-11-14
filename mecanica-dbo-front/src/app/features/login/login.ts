@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
+import { mensagemDoErro } from '../../core/utils/mensagem-erro';
 
 @Component({
   selector: 'app-login',
@@ -37,11 +38,7 @@ export class Login {
       error: (e: HttpErrorResponse) => {
         this.carregando.set(false);
         this.senha = '';
-        this.erro.set(
-          e.status === 0
-            ? 'Não foi possível conectar ao servidor.'
-            : (e.error?.mensagem ?? 'Não foi possível entrar.'),
-        );
+        this.erro.set(mensagemDoErro(e, 'Não foi possível entrar.'));
       },
     });
   }

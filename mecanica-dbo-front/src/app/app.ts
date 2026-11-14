@@ -1,8 +1,7 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { catchError, of } from 'rxjs';
 import { AuthService } from './core/services/auth';
+import { DashboardService } from './core/services/dashboard';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +12,7 @@ import { AuthService } from './core/services/auth';
 })
 export class App {
   protected auth = inject(AuthService);
-  private http = inject(HttpClient);
+  private dashboard = inject(DashboardService);
 
   /** Contadores exibidos ao lado dos itens do menu. */
   totalClientes = signal<number | null>(null);
@@ -42,30 +41,19 @@ export class App {
   }
 
   /**
-   * O backend não expõe /health. Usamos /ordens/abertas como sinal de vida:
-   * se responder, a API está no ar — e o resultado já alimenta o contador.
+   * Uma chamada ao resumo do painel alimenta os dois contadores do menu e
+   * serve de sinal de vida: se responder, a API está no ar.
    */
   private carregarContadores(): void {
-    this.http.get<any[]>('/ordens/abertas')
-      .pipe(catchError(() => of(null)))
-      .subscribe(ordens => {
-        if (ordens === null) {
-          this.apiOnline.set(false);
-          return;
-        }
+    this.dashboard.resumo().subscribe({
+      next: r => {
         this.apiOnline.set(true);
-        this.osAbertas.set(ordens.length);
+        this.osAbertas.set(r.osAbertas);
+        this.totalClientes.set(r.totalClientes);
         this.atualizarHora();
-      });
-
-    this.http.get<any[]>('/clientes')
-      .pipe(catchError(() => of(null)))
-      .subscribe(clientes => {
-        if (clientes) {
-          this.totalClientes.set(clientes.length);
-          this.atualizarHora();
-        }
-      });
+      },
+      error: () => this.apiOnline.set(false)
+    });
   }
 }
 

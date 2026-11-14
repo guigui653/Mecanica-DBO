@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -10,6 +10,7 @@ import { VeiculoService } from '../../../core/services/veiculo';
 import { ClienteService } from '../../../core/services/cliente';
 import { Veiculo, Combustivel } from '../../../shared/models/veiculo.model';
 import { Cliente } from '../../../shared/models/cliente.model';
+import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 
 @Component({
   selector: 'app-form-veiculo',
@@ -30,7 +31,7 @@ import { Cliente } from '../../../shared/models/cliente.model';
         <mat-form-field appearance="outline">
           <mat-label>Cliente *</mat-label>
           <mat-select formControlName="clienteId">
-            @for (c of clientes; track c.id) {
+            @for (c of clientes(); track c.id) {
               <mat-option [value]="c.id">{{ c.nome }} — {{ c.telefone1 }}</mat-option>
             }
           </mat-select>
@@ -75,16 +76,16 @@ import { Cliente } from '../../../shared/models/cliente.model';
         </mat-form-field>
       </form>
 
-      @if (erro) {
-        <p style="color: red; margin: 8px 0;">{{ erro }}</p>
+      @if (erro()) {
+        <p style="color: red; margin: 8px 0;">{{ erro() }}</p>
       }
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button (click)="fechar()" [disabled]="salvando">Cancelar</button>
+      <button mat-button (click)="fechar()" [disabled]="salvando()">Cancelar</button>
       <button mat-flat-button color="primary"
-              [disabled]="form.invalid || salvando" (click)="salvar()">
-        {{ salvando ? 'Salvando...' : 'Salvar' }}
+              [disabled]="form.invalid || salvando()" (click)="salvar()">
+        {{ salvando() ? 'Salvando...' : 'Salvar' }}
       </button>
     </mat-dialog-actions>
   `,
@@ -99,12 +100,11 @@ export class FormVeiculo implements OnInit {
   private service = inject(VeiculoService);
   private clienteService = inject(ClienteService);
   private ref = inject(MatDialogRef<FormVeiculo>);
-  private cdr = inject(ChangeDetectorRef);
   data = inject<{ veiculo?: Veiculo; clienteId?: number } | null>(MAT_DIALOG_DATA);
 
-  clientes: Cliente[] = [];
-  salvando = false;
-  erro = '';
+  clientes = signal<Cliente[]>([]);
+  salvando = signal(false);
+  erro = signal('');
 
   form = this.fb.group({
     placa: [this.data?.veiculo?.placa ?? '', Validators.required],
@@ -119,20 +119,20 @@ export class FormVeiculo implements OnInit {
 
   ngOnInit() {
     this.clienteService.listar().subscribe({
-      next: c => { this.clientes = c; this.cdr.markForCheck(); },
-      error: () => { this.erro = 'Não foi possível carregar os clientes'; this.cdr.markForCheck(); }
+      next: c => this.clientes.set(c),
+      error: () => this.erro.set('Não foi possível carregar os clientes.')
     });
   }
 
   salvar() {
-    if (this.salvando || this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.salvando() || this.form.invalid) { this.form.markAllAsTouched(); return; }
     const placa = (this.form.value.placa ?? '').trim().toUpperCase().replace(/[\s-]/g, '');
     if (!/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(placa)) {
-      this.erro = 'Informe uma placa válida, como ABC1234 ou ABC1D23.';
+      this.erro.set('Informe uma placa válida, como ABC1234 ou ABC1D23.');
       return;
     }
-    this.salvando = true;
-    this.erro = '';
+    this.salvando.set(true);
+    this.erro.set('');
     const v = this.form.value;
 
     const veiculoPayload: Veiculo = {
@@ -157,11 +157,10 @@ export class FormVeiculo implements OnInit {
     req.subscribe({
       next: (resp) => this.ref.close(resp),
       error: (e) => {
-        this.erro = e.error?.mensagem ?? e.error?.message ?? 'Erro ao salvar veículo';
-        this.salvando = false;
+        this.erro.set(mensagemDoErro(e, 'Não foi possível salvar o veículo.'));
+        this.salvando.set(false);
         this.form.enable();
         this.ref.disableClose = false;
-        this.cdr.markForCheck();
       }
     });
   }

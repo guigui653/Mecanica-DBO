@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,7 +9,7 @@ import { VeiculoService } from '../../../core/services/veiculo';
 import { OrdemServicoService } from '../../../core/services/ordem-servico';
 import { FormVeiculo } from '../form-veiculo/form-veiculo';
 import { Veiculo } from '../../../shared/models/veiculo.model';
-import { OrdemServico, ROTULOS_STATUS } from '../../../shared/models/ordem-servico.model';
+import { OrdemServico, ROTULOS_STATUS, StatusOs, TAG_STATUS } from '../../../shared/models/ordem-servico.model';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
 
 interface HistoricoItem {
@@ -24,7 +24,8 @@ interface VeiculoExt extends Veiculo {
   dono?: string;
   fone?: string;
   km?: string;
-  status?: string;
+  /** Status da OS mais recente do carro. */
+  status?: StatusOs;
   historico: HistoricoItem[];
 }
 
@@ -40,82 +41,73 @@ export class BuscaVeiculo {
   private osService = inject(OrdemServicoService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
-  private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
-  placa = '';
-  veiculo: VeiculoExt | null = null;
-  carregando = false;
-  carregandoHistorico = false;
-  buscaRealizada = false;
-  recentes: string[] = [];
-  erro = '';
-  historicoErro = '';
+  placa               = signal('');
+  veiculo             = signal<VeiculoExt | null>(null);
+  carregando          = signal(false);
+  carregandoHistorico = signal(false);
+  buscaRealizada      = signal(false);
+  recentes            = signal<string[]>([]);
+  erro                = signal('');
+  historicoErro       = signal('');
 
   buscar(): void {
-    if (this.carregando || this.carregandoHistorico) return;
-    const placa = this.placa.trim().toUpperCase().replace(/[\s-]/g, '');
-    this.erro = '';
+    if (this.carregando() || this.carregandoHistorico()) return;
+    const placa = this.placa().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    this.erro.set('');
     if (!/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(placa)) {
-      this.erro = 'Informe uma placa válida, como ABC1234 ou ABC1D23.';
-      this.veiculo = null;
-      this.buscaRealizada = false;
+      this.erro.set('Informe uma placa válida, como ABC1234 ou ABC1D23.');
+      this.veiculo.set(null);
+      this.buscaRealizada.set(false);
       return;
     }
-    this.placa = placa;
-    this.carregando = true;
-    this.buscaRealizada = false;
-    this.veiculo = null;
-    this.historicoErro = '';
+    this.placa.set(placa);
+    this.carregando.set(true);
+    this.buscaRealizada.set(false);
+    this.veiculo.set(null);
+    this.historicoErro.set('');
 
     this.service.buscarPorPlaca(placa).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: v => {
-        this.veiculo = {
-          ...v,
-          dono: v.cliente?.nome,
-          fone: v.cliente?.telefone1,
-          historico: []
-        };
-        this.recentes = [placa, ...this.recentes.filter(p => p !== placa)].slice(0, 5);
-        this.carregando = false;
-        this.buscaRealizada = true;
+        this.veiculo.set({ ...v, dono: v.cliente?.nome, fone: v.cliente?.telefone1, historico: [] });
+        this.recentes.update(r => [placa, ...r.filter(p => p !== placa)].slice(0, 5));
+        this.carregando.set(false);
+        this.buscaRealizada.set(true);
         if (v.id) this.carregarHistorico(v.id);
-        this.cdr.markForCheck();
       },
       error: (e: HttpErrorResponse) => {
-        this.carregando = false;
-        this.buscaRealizada = e.status === 404;
-        if (e.status !== 404) this.erro = 'Não foi possível consultar o veículo. Tente novamente.';
-        this.cdr.markForCheck();
+        this.carregando.set(false);
+        this.buscaRealizada.set(e.status === 404);
+        if (e.status !== 404) this.erro.set('Não foi possível consultar o veículo. Tente novamente.');
       }
     });
   }
 
   private carregarHistorico(veiculoId: number): void {
-    this.carregandoHistorico = true;
+    this.carregandoHistorico.set(true);
     this.osService.listarPorVeiculo(veiculoId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ordens => {
-        const ordenadas = [...ordens].sort((a, b) => (b.dataEntrada ?? '').localeCompare(a.dataEntrada ?? '') || (b.id ?? 0) - (a.id ?? 0));
-        const ultima = ordenadas[0];
+        const ordenadas = [...ordens].sort((a, b) =>
+          (b.dataEntrada ?? '').localeCompare(a.dataEntrada ?? '') || (b.id ?? 0) - (a.id ?? 0));
         const comKm = ordenadas.find(o => o.kmEntrada != null);
-        if (this.veiculo) {
-          this.veiculo.status = ultima ? ROTULOS_STATUS[ultima.status] : undefined;
-          this.veiculo.km = comKm ? this.formatarKm(comKm) : undefined;
-          this.veiculo.historico = ordenadas.map(o => ({
+        this.veiculo.update(v => v && {
+          ...v,
+          status: ordenadas[0]?.status,
+          km: comKm ? this.formatarKm(comKm) : undefined,
+          historico: ordenadas.map(o => ({
             id: o.id,
             data: o.dataEntrada ? new Date(o.dataEntrada + 'T00:00:00').toLocaleDateString('pt-BR') : '—',
             servico: o.diagnostico || o.reclamacoes || `OS #${o.id} · ${ROTULOS_STATUS[o.status]}`,
             km: this.formatarKm(o),
             valor: (o.totalGeral ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-          }));
-        }
-        this.carregandoHistorico = false;
-        this.cdr.markForCheck();
+          }))
+        });
+        this.carregandoHistorico.set(false);
       },
       error: () => {
-        this.carregandoHistorico = false;
-        this.historicoErro = 'Não foi possível carregar o histórico deste veículo.';
-        this.cdr.markForCheck();
+        this.carregandoHistorico.set(false);
+        this.historicoErro.set('Não foi possível carregar o histórico deste veículo.');
       }
     });
   }
@@ -125,20 +117,22 @@ export class BuscaVeiculo {
   }
 
   selecionarPlaca(placa: string): void {
-    if (this.carregando || this.carregandoHistorico) return;
-    this.placa = placa;
+    if (this.carregando() || this.carregandoHistorico()) return;
+    this.placa.set(placa);
     this.buscar();
   }
 
-  obterTagClass(status?: string): string {
-    if (status === 'Em andamento') return 'tag-accent';
-    if (status === 'Concluída') return 'tag-accent-2';
-    if (status === 'Aberta') return 'tag-outline';
-    return 'tag-neutral';
+  rotuloStatus(status?: StatusOs): string {
+    return status ? ROTULOS_STATUS[status] : 'Sem situação informada';
+  }
+
+  classeTag(status?: StatusOs): string {
+    return status ? TAG_STATUS[status] : 'tag-neutral';
   }
 
   abrirNovaOs(): void {
-    this.router.navigate(['/ordens/nova'], { queryParams: this.veiculo ? { placa: this.veiculo.placa } : {} });
+    const v = this.veiculo();
+    this.router.navigate(['/ordens/nova'], { queryParams: v?.id ? { veiculoId: v.id } : {} });
   }
 
   irParaCliente(): void {
@@ -153,9 +147,8 @@ export class BuscaVeiculo {
     this.dialog.open(FormVeiculo, { width: '640px', maxWidth: '95vw', data: null })
       .afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((v: Veiculo | undefined) => {
         if (v?.placa) {
-          this.placa = v.placa;
+          this.placa.set(v.placa);
           this.buscar();
-          this.cdr.markForCheck();
         }
       });
   }

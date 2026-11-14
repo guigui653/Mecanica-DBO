@@ -1,11 +1,13 @@
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { catchError, forkJoin, of } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ClienteService } from '../../../core/services/cliente';
 import { OrdemServicoService } from '../../../core/services/ordem-servico';
+import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { FormCliente } from '../form-cliente/form-cliente';
 import { VeiculosDoCliente } from '../veiculos-do-cliente/veiculos-do-cliente';
@@ -13,9 +15,10 @@ import { VeiculosDoCliente } from '../veiculos-do-cliente/veiculos-do-cliente';
 export interface ClienteExt extends Cliente {
   totalVeiculos?: number;
   ultimaVisita?: string;
-  subtitulo?: string;
   tags?: string[];
 }
+
+const FILTROS_COMPLETOS = ['Todos', 'Com OS aberta', 'Inativos há 1 ano'];
 
 @Component({
   selector: 'app-lista-clientes',
@@ -29,42 +32,53 @@ export class ListaClientes implements OnInit {
   private dialog  = inject(MatDialog);
   private router  = inject(Router);
   private osService = inject(OrdemServicoService);
-  private cdr = inject(ChangeDetectorRef);
 
-  clientes: ClienteExt[] = [];
-  clientesFiltrados: ClienteExt[] = [];
-  clienteSelecionado: ClienteExt | null = null;
+  clientes           = signal<ClienteExt[]>([]);
+  clienteSelecionado = signal<ClienteExt | null>(null);
 
-  termoBusca = '';
-  carregando = false;
-  erro = '';
-  aviso = '';
-  excluindoId: number | null = null;
+  termoBusca  = signal('');
+  carregando  = signal(false);
+  erro        = signal('');
+  aviso       = signal('');
+  excluindoId = signal<number | null>(null);
 
-  filtros = ['Todos', 'Com OS aberta', 'Inativos há 1 ano'];
-  filtroAtivo = 'Todos';
+  filtros     = signal<string[]>(FILTROS_COMPLETOS);
+  filtroAtivo = signal('Todos');
+
+  /** A busca filtra enquanto se digita. */
+  clientesFiltrados = computed(() => {
+    const q = this.termoBusca().trim().toLowerCase();
+    const filtro = this.filtroAtivo();
+    return this.clientes().filter(c => {
+      const matchQuery = !q || [c.nome, c.cpf, c.telefone1, c.email].join(' ').toLowerCase().includes(q);
+      const matchFilter = filtro === 'Todos' || (c.tags || []).includes(filtro);
+      return matchQuery && matchFilter;
+    });
+  });
 
   ngOnInit() {
     this.carregar();
   }
 
   carregar() {
-    this.carregando = true;
-    this.erro = '';
-    this.aviso = '';
+    this.carregando.set(true);
+    this.erro.set('');
+    this.aviso.set('');
     forkJoin({
       clientes: this.service.listar(),
       ordens: this.osService.buscar().pipe(catchError(() => of(null)))
     }).subscribe({
       next: ({ clientes, ordens }) => {
         if (ordens === null) {
-          this.aviso = 'Os clientes foram carregados, mas as situações e últimas visitas não estão disponíveis.';
-          this.filtroAtivo = 'Todos';
-          this.filtros = ['Todos'];
-        } else this.filtros = ['Todos', 'Com OS aberta', 'Inativos há 1 ano'];
+          this.aviso.set('Os clientes foram carregados, mas as situações e últimas visitas não estão disponíveis.');
+          this.filtroAtivo.set('Todos');
+          this.filtros.set(['Todos']);
+        } else {
+          this.filtros.set(FILTROS_COMPLETOS);
+        }
         const limite = new Date();
         limite.setFullYear(limite.getFullYear() - 1);
-        this.clientes = clientes.map(c => {
+        const lista = clientes.map(c => {
           const historico = (ordens ?? []).filter(o => o.veiculo?.cliente?.id === c.id);
           const ultima = historico.map(o => o.dataEntrada ?? '').filter(Boolean).sort().at(-1);
           const tags: string[] = [];
@@ -72,58 +86,51 @@ export class ListaClientes implements OnInit {
           if (ultima && tags.length === 0 && new Date(ultima + 'T00:00:00') < limite) tags.push('Inativos há 1 ano');
           return { ...c, ultimaVisita: ultima ? new Date(ultima + 'T00:00:00').toLocaleDateString('pt-BR') : undefined, tags };
         });
-        if (this.clienteSelecionado) this.clienteSelecionado = this.clientes.find(c => c.id === this.clienteSelecionado?.id) ?? null;
-        this.aplicarFiltros();
-        this.carregando = false;
-        this.cdr.markForCheck();
+        this.clientes.set(lista);
+        const selecionado = this.clienteSelecionado();
+        if (selecionado) this.clienteSelecionado.set(lista.find(c => c.id === selecionado.id) ?? null);
+        this.carregando.set(false);
       },
-      error: (e) => {
-        this.erro = 'Não foi possível carregar os clientes. Tente novamente.';
-        this.carregando = false;
-        this.cdr.markForCheck();
+      error: () => {
+        this.erro.set('Não foi possível carregar os clientes. Tente novamente.');
+        this.carregando.set(false);
       }
     });
   }
 
-  aplicarBusca() {
-    this.aplicarFiltros();
-  }
-
   selecionarFiltro(f: string) {
-    this.filtroAtivo = f;
-    this.aplicarFiltros();
-  }
-
-  private aplicarFiltros() {
-    const q = this.termoBusca.trim().toLowerCase();
-    this.clientesFiltrados = this.clientes.filter(c => {
-      const matchQuery = !q || [c.nome, c.cpf, c.telefone1, c.email].join(' ').toLowerCase().includes(q);
-      const matchFilter = this.filtroAtivo === 'Todos' || (c.tags || []).includes(this.filtroAtivo);
-      return matchQuery && matchFilter;
-    });
+    this.filtroAtivo.set(f);
   }
 
   selecionarCliente(c: ClienteExt) {
-    this.clienteSelecionado = c;
-    if (c.id) this.service.listarVeiculos(c.id).subscribe({
-      next: veiculos => { c.totalVeiculos = veiculos.length; this.cdr.markForCheck(); },
-      error: () => { c.totalVeiculos = undefined; this.cdr.markForCheck(); }
+    this.clienteSelecionado.set(c);
+    if (!c.id) return;
+    const id = c.id;
+    this.service.listarVeiculos(id).subscribe({
+      next: veiculos => this.atualizarCliente(id, { totalVeiculos: veiculos.length }),
+      error: () => this.atualizarCliente(id, { totalVeiculos: undefined })
     });
   }
 
+  /** Troca um cliente da lista por uma cópia alterada (signals só percebem objeto novo). */
+  private atualizarCliente(id: number, mudanca: Partial<ClienteExt>) {
+    this.clientes.update(lista => lista.map(c => (c.id === id ? { ...c, ...mudanca } : c)));
+    const selecionado = this.clienteSelecionado();
+    if (selecionado?.id === id) this.clienteSelecionado.set({ ...selecionado, ...mudanca });
+  }
+
   voltarLista() {
-    this.clienteSelecionado = null;
+    this.clienteSelecionado.set(null);
   }
 
   obterSubtitulo(c: ClienteExt): string {
-    if (c.subtitulo) return c.subtitulo;
     if (c.tags?.includes('Com OS aberta')) return 'OS em aberto';
     return c.criadoEm ? `Cliente desde ${new Date(c.criadoEm).getFullYear()}` : 'Cliente cadastrado';
   }
 
   /** Na ficha, a Nova OS já abre com os carros deste cliente. */
   abrirNovaOs() {
-    const id = this.clienteSelecionado?.id;
+    const id = this.clienteSelecionado()?.id;
     this.router.navigate(['/ordens/nova'], id ? { queryParams: { clienteId: id } } : {});
   }
 
@@ -141,32 +148,50 @@ export class ListaClientes implements OnInit {
     }
   }
 
+  /**
+   * Apagar de verdade só funciona para cliente SEM nenhuma OS (cadastro
+   * duplicado ou de teste). Se ele tiver histórico, o backend recusa (409) e
+   * a tela oferece inativar: some da lista, mas as OS continuam guardadas.
+   */
   excluirCliente(event: Event, c: ClienteExt) {
     event.stopPropagation();
     if (!c.id) return;
+    const id = c.id;
 
     const confirma = window.confirm(
-      `Excluir o cliente ${c.nome}${c.cpf ? ' (' + c.cpf + ')' : ''}?\n\nEsta ação não pode ser desfeita.`
+      `Apagar o cliente ${c.nome}${c.cpf ? ' (' + c.cpf + ')' : ''}?\n\n`
+      + 'Use para cadastro duplicado ou de teste. Esta ação não pode ser desfeita.'
     );
     if (!confirma) return;
 
-    this.excluindoId = c.id;
-    this.service.excluir(c.id).subscribe({
-      next: () => {
-        this.clientes = this.clientes.filter(x => x.id !== c.id);
-        if (this.clienteSelecionado?.id === c.id) {
-          this.clienteSelecionado = null;
+    this.excluindoId.set(id);
+    this.service.excluir(id).subscribe({
+      next: () => this.tirarDaLista(id),
+      error: (e: HttpErrorResponse) => {
+        this.excluindoId.set(null);
+        if (e.status === 409 && window.confirm(`${mensagemDoErro(e)}\n\nInativar ${c.nome} agora?`)) {
+          this.inativar(id);
+        } else if (e.status !== 409) {
+          window.alert(mensagemDoErro(e, 'Não foi possível apagar o cliente.'));
         }
-        this.aplicarFiltros();
-        this.excluindoId = null;
-        this.cdr.markForCheck();
-      },
-      error: (e) => {
-        this.excluindoId = null;
-        const msg = e?.error?.mensagem ?? 'Não foi possível excluir o cliente.';
-        window.alert(msg);
-        this.cdr.markForCheck();
       }
     });
+  }
+
+  private inativar(id: number) {
+    this.excluindoId.set(id);
+    this.service.inativar(id).subscribe({
+      next: () => this.tirarDaLista(id),
+      error: e => {
+        this.excluindoId.set(null);
+        window.alert(mensagemDoErro(e, 'Não foi possível inativar o cliente.'));
+      }
+    });
+  }
+
+  private tirarDaLista(id: number) {
+    this.clientes.update(lista => lista.filter(x => x.id !== id));
+    if (this.clienteSelecionado()?.id === id) this.clienteSelecionado.set(null);
+    this.excluindoId.set(null);
   }
 }

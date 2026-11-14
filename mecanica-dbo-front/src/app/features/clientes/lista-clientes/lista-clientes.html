@@ -1,15 +1,18 @@
+@let cs = clienteSelecionado();
+@let filtrados = clientesFiltrados();
+
 <div class="view-header">
   <div class="view-title-group">
-    @if (clienteSelecionado) {
+    @if (cs) {
       <div class="kicker">FICHA DO CLIENTE</div>
-      <h1 class="title">{{ clienteSelecionado.nome }}</h1>
+      <h1 class="title">{{ cs.nome }}</h1>
     } @else {
-      <div class="kicker">{{ clientesFiltrados.length }} CADASTROS</div>
+      <div class="kicker">{{ filtrados.length }} CADASTROS</div>
       <h1 class="title">Clientes</h1>
     }
   </div>
   <div class="actions">
-    @if (clienteSelecionado) {
+    @if (cs) {
       <button type="button" class="btn btn-secondary" (click)="voltarLista()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
           <path d="M19 12H5m0 0 6-6m-6 6 6 6"></path>
@@ -28,30 +31,29 @@
 
 <div class="view-content">
 
-  @if (!clienteSelecionado) {
+  @if (!cs) {
     <!-- LISTA DE CLIENTES -->
     <div class="search-bar">
       <input class="input" type="text" placeholder="Nome, CPF, telefone ou e-mail"
-             [(ngModel)]="termoBusca" (keyup.enter)="aplicarBusca()">
-      <button type="button" class="btn btn-primary" (click)="aplicarBusca()">Buscar</button>
+             [ngModel]="termoBusca()" (ngModelChange)="termoBusca.set($event)">
       <button type="button" class="btn btn-secondary" (click)="abrirForm()">Novo cliente</button>
     </div>
 
     <div class="filters-row">
-      @for (f of filtros; track f) {
-        <button type="button" class="chip" [class.active]="filtroAtivo === f"
+      @for (f of filtros(); track f) {
+        <button type="button" class="chip" [class.active]="filtroAtivo() === f"
                 (click)="selecionarFiltro(f)">
           {{ f }}
         </button>
       }
     </div>
 
-    @if (carregando) {
+    @if (carregando()) {
       <div class="spinner-wrap">Carregando clientes...</div>
-    } @else if (erro) {
-      <div class="empty-state" role="alert"><p>{{ erro }}</p><button class="btn btn-secondary" (click)="carregar()">Tentar novamente</button></div>
+    } @else if (erro()) {
+      <div class="empty-state" role="alert"><p>{{ erro() }}</p><button class="btn btn-secondary" (click)="carregar()">Tentar novamente</button></div>
     } @else {
-      @if (aviso) { <p class="field-hint" role="status">{{ aviso }}</p> }
+      @if (aviso()) { <p class="field-hint" role="status">{{ aviso() }}</p> }
       <div class="table-scroll"><table class="table">
         <thead>
           <tr>
@@ -65,7 +67,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (c of clientesFiltrados; track c.id) {
+          @for (c of filtrados; track c.id) {
             <tr (click)="selecionarCliente(c)" style="cursor: pointer;">
               <td>
                 <div class="client-name">{{ c.nome }}</div>
@@ -82,10 +84,10 @@
                 <button
                   type="button"
                   class="btn-excluir"
-                  [disabled]="excluindoId === c.id"
+                  [disabled]="excluindoId() === c.id"
                   (click)="excluirCliente($event, c)"
-                  title="Excluir cliente">
-                  @if (excluindoId === c.id) {
+                  title="Apagar cliente (só cadastro duplicado ou de teste)">
+                  @if (excluindoId() === c.id) {
                     …
                   } @else {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -104,14 +106,14 @@
         </tbody>
       </table></div>
 
-      @if (clientesFiltrados.length === 0) {
+      @if (filtrados.length === 0) {
         <div class="empty-state">
-          Nenhum cliente encontrado{{ termoBusca ? ' para “' + termoBusca + '”' : '' }}.
+          Nenhum cliente encontrado{{ termoBusca() ? ' para “' + termoBusca() + '”' : '' }}.
         </div>
       }
 
       <div class="table-foot">
-        <span class="tabular">{{ clientesFiltrados.length }} de {{ clientes.length }} cadastros</span>
+        <span class="tabular">{{ filtrados.length }} de {{ clientes().length }} cadastros</span>
       </div>
     }
 
@@ -123,22 +125,22 @@
       <section class="card-side">
         <div class="detail-card">
           <div class="card-kicker">PESSOA FÍSICA</div>
-          <div class="detail-client-name">{{ clienteSelecionado.nome }}</div>
+          <div class="detail-client-name">{{ cs.nome }}</div>
           <hr class="hr">
 
           <div class="info-list">
             <div>
               <div class="info-label">Documento</div>
-              <span class="tabular">{{ clienteSelecionado.cpf || 'Não informado' }}</span>
+              <span class="tabular">{{ cs.cpf || 'Não informado' }}</span>
             </div>
             <div>
               <div class="info-label">Telefone</div>
-              <span class="tabular">{{ clienteSelecionado.telefone1 }}</span>
+              <span class="tabular">{{ cs.telefone1 }}</span>
             </div>
-            @if (clienteSelecionado.email) {
+            @if (cs.email) {
               <div>
                 <div class="info-label">E-mail</div>
-                <span>{{ clienteSelecionado.email }}</span>
+                <span>{{ cs.email }}</span>
               </div>
             }
           </div>
@@ -148,23 +150,23 @@
           <div class="stats-grid">
             <div>
               <div class="info-label">Cliente desde</div>
-              <div class="stat-value tabular">{{ (clienteSelecionado.criadoEm | date:'yyyy') || '—' }}</div>
+              <div class="stat-value tabular">{{ (cs.criadoEm | date:'yyyy') || '—' }}</div>
             </div>
             <div>
               <div class="info-label">Status</div>
               <div class="stat-value" style="font-size: 16px; font-weight: 500;">
-                <span class="tag tag-accent">{{ clienteSelecionado.ativo === false ? 'Inativo' : 'Ativo' }}</span>
+                <span class="tag tag-accent">{{ cs.ativo === false ? 'Inativo' : 'Ativo' }}</span>
               </div>
             </div>
           </div>
 
           <div class="card-actions">
             <button type="button" class="btn btn-primary" (click)="abrirNovaOs()">Nova OS</button>
-            <button type="button" class="btn btn-secondary" (click)="abrirForm(clienteSelecionado)">Editar cadastro</button>
+            <button type="button" class="btn btn-secondary" (click)="abrirForm(cs)">Editar cadastro</button>
             <button type="button" class="btn btn-ghost btn-excluir-ficha"
-                    [disabled]="excluindoId === clienteSelecionado.id"
-                    (click)="excluirCliente($event, clienteSelecionado)">
-              {{ excluindoId === clienteSelecionado.id ? 'Excluindo…' : 'Excluir cliente' }}
+                    [disabled]="excluindoId() === cs.id"
+                    (click)="excluirCliente($event, cs)">
+              {{ excluindoId() === cs.id ? 'Aguarde…' : 'Apagar cliente' }}
             </button>
           </div>
         </div>
@@ -178,15 +180,15 @@
             <button type="button" class="btn btn-secondary" (click)="abrirNovaOs()">
               Abrir ordem para este cliente
             </button>
-            <button type="button" class="btn btn-ghost" (click)="enviarWhatsApp(clienteSelecionado)">
+            <button type="button" class="btn btn-ghost" (click)="enviarWhatsApp(cs)">
               Enviar WhatsApp
             </button>
           </div>
         </div>
 
-        @if (clienteSelecionado.id) {
+        @if (cs.id) {
           <div style="margin-top: 24px;">
-            <app-veiculos-do-cliente [clienteId]="clienteSelecionado.id" />
+            <app-veiculos-do-cliente [clienteId]="cs.id" />
           </div>
         }
       </section>

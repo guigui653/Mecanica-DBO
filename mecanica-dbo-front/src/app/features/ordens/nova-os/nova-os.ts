@@ -10,6 +10,7 @@ import { AtendimentoRequest, AtendimentoService, DadosAbertura } from '../../../
 import { Veiculo, Combustivel } from '../../../shared/models/veiculo.model';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
+import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 
 /**
  * Abertura de OS.
@@ -114,7 +115,7 @@ export class NovaOs implements OnInit {
         },
         error: e => {
           this.buscando.set(false);
-          this.erro.set(this.tratarErro(e));
+          this.erro.set(mensagemDoErro(e));
         }
       });
   }
@@ -129,7 +130,7 @@ export class NovaOs implements OnInit {
           this.clienteSelecionado.set(c);
           this.modoCliente.set('buscar');
         },
-        error: e => this.erro.set(this.tratarErro(e))
+        error: e => this.erro.set(mensagemDoErro(e))
       });
     this.clienteService.listarVeiculos(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -151,15 +152,6 @@ export class NovaOs implements OnInit {
     this.veiculo.set(null);
     this.placaNaoCadastrada.set(false);
     this.erro.set('');
-  }
-
-  private tratarErro(e: any): string {
-    if (!e) return 'Erro desconhecido.';
-    if (e.status === 0) return 'Sem conexão com a API.';
-    if (e.error?.campos) return Object.values(e.error.campos).join(' · ');
-    if (e.error?.mensagem) return e.error.mensagem;
-    if (e.message) return e.message;
-    return 'Não foi possível completar a operação. Tente novamente.';
   }
 
   buscarVeiculo(): void {
@@ -187,7 +179,7 @@ export class NovaOs implements OnInit {
         error: (e: HttpErrorResponse) => {
           this.buscando.set(false);
           if (e.status === 404) this.placaNaoCadastrada.set(true);
-          else this.erro.set(this.tratarErro(e));
+          else this.erro.set(mensagemDoErro(e));
         }
       });
   }
@@ -212,7 +204,7 @@ export class NovaOs implements OnInit {
         },
         error: e => {
           this.buscandoCliente.set(false);
-          this.erro.set(this.tratarErro(e));
+          this.erro.set(mensagemDoErro(e));
         }
       });
   }
@@ -257,7 +249,7 @@ export class NovaOs implements OnInit {
         error: e => {
           // Nada foi gravado: os dados digitados continuam na tela para corrigir.
           this.salvando.set(false);
-          this.erro.set(this.tratarErro(e));
+          this.erro.set(mensagemDoErro(e));
           this.focarCampoDoErro(e);
         }
       });

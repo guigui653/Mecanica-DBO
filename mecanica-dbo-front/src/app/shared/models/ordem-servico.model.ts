@@ -62,12 +62,26 @@ export interface AtualizarOsRequest {
   diagnostico?: string | null;
 }
 
+/** Nome do status em todas as telas. Mude aqui, e só aqui. */
 export const ROTULOS_STATUS: Record<StatusOs, string> = {
   ABERTA: 'Aberta',
   EM_ANDAMENTO: 'Em andamento',
-  CONCLUIDA: 'Concluída',
+  CONCLUIDA: 'Pronta p/ entrega',
   ENTREGUE: 'Entregue'
 };
+
+/** Cor da etiqueta (classe "tag-*") nas listas. */
+export const TAG_STATUS: Record<StatusOs, string> = {
+  ABERTA: 'tag-outline',
+  EM_ANDAMENTO: 'tag-accent',
+  CONCLUIDA: 'tag-accent-2',
+  ENTREGUE: 'tag-neutral'
+};
+
+/** Classe do selo de status (classe "badge-*") no painel e no detalhe da OS. */
+export function classeBadge(status?: StatusOs | null): string {
+  return status ? 'badge badge-' + status.toLowerCase().replace('_', '-') : 'badge';
+}
 
 /**
  * Próximo passo do fluxo. O backend só impõe uma regra — ENTREGUE exige

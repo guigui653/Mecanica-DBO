@@ -9,9 +9,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { OrdemServicoService } from '../../../core/services/ordem-servico';
 import { ImportarNota } from './importar-nota/importar-nota';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
+import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 import {
   OrdemServico, ItemPeca, ItemServico, StatusOs,
-  ROTULOS_STATUS, PROXIMO_STATUS
+  ROTULOS_STATUS, PROXIMO_STATUS, classeBadge as badgeDoStatus
 } from '../../../shared/models/ordem-servico.model';
 
 interface Toast {
@@ -183,7 +184,7 @@ export class DetalheOs implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.salvando.set(false);
-        this.notificar(this.mensagemDoErro(e), true);
+        this.notificar(mensagemDoErro(e), true);
       }
     });
   }
@@ -213,7 +214,7 @@ export class DetalheOs implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.salvando.set(false);
-        this.notificar(this.mensagemDoErro(e), true);
+        this.notificar(mensagemDoErro(e), true);
       }
     });
   }
@@ -262,7 +263,7 @@ export class DetalheOs implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.salvando.set(false);
-        this.notificar(this.mensagemDoErro(e), true);
+        this.notificar(mensagemDoErro(e), true);
       }
     });
   }
@@ -288,7 +289,7 @@ export class DetalheOs implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.salvando.set(false);
-        this.notificar(this.mensagemDoErro(e), true);
+        this.notificar(mensagemDoErro(e), true);
       }
     });
   }
@@ -335,7 +336,7 @@ export class DetalheOs implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.salvando.set(false);
-        this.notificar(this.mensagemDoErro(e), true);
+        this.notificar(mensagemDoErro(e), true);
       }
     });
   }
@@ -354,7 +355,7 @@ export class DetalheOs implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.salvando.set(false);
-        this.notificar(this.mensagemDoErro(e), true);
+        this.notificar(mensagemDoErro(e), true);
       }
     });
   }
@@ -391,8 +392,7 @@ export class DetalheOs implements OnInit {
   // ── Apoio ─────────────────────────────────────────────────
 
   classeBadge(status?: StatusOs): string {
-    if (!status) return 'badge';
-    return 'badge badge-' + status.toLowerCase().replace('_', '-');
+    return badgeDoStatus(status);
   }
 
   rotulo(status?: StatusOs): string {
@@ -418,14 +418,6 @@ export class DetalheOs implements OnInit {
       event.preventDefault();
       event.returnValue = '';
     }
-  }
-
-  private mensagemDoErro(e: HttpErrorResponse): string {
-    // O GlobalExceptionHandler do backend devolve { status, mensagem, campos }
-    if (e.error?.campos) return Object.values(e.error.campos).join(' · ');
-    if (e.error?.mensagem) return e.error.mensagem;
-    if (e.status === 0)    return 'Sem conexão com a API.';
-    return 'Ocorreu um erro inesperado.';
   }
 
   private notificar(texto: string, erro = false): void {

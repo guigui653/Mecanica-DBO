@@ -18,17 +18,24 @@ describe('Lista de OS com dados reais', () => {
   it('exibe placa, veículo e cliente do servidor, sem acrescentar exemplos', () => {
     http.expectOne('/ordens').flush([{ id: 17, status: 'CONCLUIDA', totalGeral: 50,
       veiculo: { placa: 'ABC1D23', marca: 'Fiat', modelo: 'Uno', cliente: { nome: 'Cliente real' } } }]);
-    expect(tela.todasOrdens).toHaveLength(1);
-    expect(tela.todasOrdens[0]).toMatchObject({ id: 17, placa: 'ABC1D23', carro: 'Fiat Uno', cliente: 'Cliente real' });
-    tela.selecionarFiltro('Prontas'); expect(tela.ordensFiltradas).toHaveLength(1);
+    expect(tela.todasOrdens()).toHaveLength(1);
+    expect(tela.todasOrdens()[0]).toMatchObject({ id: 17, placa: 'ABC1D23', carro: 'Fiat Uno', cliente: 'Cliente real', statusLabel: 'Pronta p/ entrega' });
+    tela.selecionarFiltro('Prontas'); expect(tela.ordensFiltradas()).toHaveLength(1);
+    tela.selecionarFiltro('Entregues'); expect(tela.ordensFiltradas()).toHaveLength(0);
+  });
+  it('acha a placa com ou sem hífen', () => {
+    http.expectOne('/ordens').flush([{ id: 1, status: 'ABERTA', veiculo: { placa: 'JEH3030' } }]);
+    expect(tela.todasOrdens()[0].placa).toBe('JEH-3030');
+    tela.termoBusca.set('jeh3030'); expect(tela.ordensFiltradas()).toHaveLength(1);
+    tela.termoBusca.set('jeh-3030'); expect(tela.ordensFiltradas()).toHaveLength(1);
   });
   it('mantém o banco vazio e distingue falha de carregamento', () => {
     http.expectOne('/ordens').flush([]);
-    expect(tela.todasOrdens).toHaveLength(0);
-    expect(tela.erro).toBe('');
+    expect(tela.todasOrdens()).toHaveLength(0);
+    expect(tela.erro()).toBe('');
     tela.carregar();
     http.expectOne('/ordens').flush({}, { status: 500, statusText: 'Error' });
-    expect(tela.todasOrdens).toHaveLength(0);
-    expect(tela.erro).toBeTruthy();
+    expect(tela.todasOrdens()).toHaveLength(0);
+    expect(tela.erro()).toBeTruthy();
   });
 });

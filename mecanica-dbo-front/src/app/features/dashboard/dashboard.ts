@@ -1,13 +1,15 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { forkJoin, catchError, of } from 'rxjs';
-import { OrdemServicoService } from '../../core/services/ordem-servico';
-import { ClienteService } from '../../core/services/cliente';
-import { OrdemServico } from '../../shared/models/ordem-servico.model';
+import { DashboardResumo, DashboardService } from '../../core/services/dashboard';
+import { OrdemServico, ROTULOS_STATUS, classeBadge } from '../../shared/models/ordem-servico.model';
 import { Cliente } from '../../shared/models/cliente.model';
 import { ModalNovoCliente } from '../clientes/modal-novo-cliente/modal-novo-cliente';
 
+/**
+ * Painel do dia. Os números vêm prontos do backend (GET /dashboard/resumo),
+ * contados pelo banco — o navegador não baixa mais todas as OS e clientes.
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -16,71 +18,29 @@ import { ModalNovoCliente } from '../clientes/modal-novo-cliente/modal-novo-clie
   styleUrl: './dashboard.css'
 })
 export class Dashboard implements OnInit {
-  private osService      = inject(OrdemServicoService);
-  private clienteService = inject(ClienteService);
+  private service = inject(DashboardService);
 
   readonly today = new Date();
 
-  /* ── estado bruto ───────────────────────────────────────── */
   carregando = signal(true);
   erro       = signal(false);
-  todasOrdens = signal<OrdemServico[]>([]);
-  clientes    = signal<Cliente[]>([]);
+  resumo     = signal<DashboardResumo | null>(null);
   modalNovoClienteAberto = signal(false);
 
-  /* ── métricas computadas ─────────────────────────────────── */
+  /* ── números e listas do painel ──────────────────────────── */
 
-  /** Carros fisicamente no pátio: ABERTA ou EM_ANDAMENTO */
-  noPatio = computed(() =>
-    this.todasOrdens().filter(o =>
-      o.status === 'ABERTA' || o.status === 'EM_ANDAMENTO'
-    )
-  );
-
-  totalPatio = computed(() => this.noPatio().length);
-
-  /** No pátio do mais antigo ao mais recente (encalhado no topo) */
-  patioOrdenado = computed(() =>
-    [...this.noPatio()].sort((a, b) =>
-      new Date(a.dataEntrada ?? '').getTime() -
-      new Date(b.dataEntrada ?? '').getTime()
-    )
-  );
-
-  /** Concluídas — precisam de ligação para o cliente */
-  prontas = computed(() =>
-    this.todasOrdens().filter(o => o.status === 'CONCLUIDA')
-  );
-
-  /** Faturamento: totalGeral das ENTREGUE no mês atual */
-  faturamentoMes = computed(() => {
-    const agora = new Date();
-    return this.todasOrdens()
-      .filter(o => {
-        if (o.status !== 'ENTREGUE') return false;
-        const ref = o.dataSaidaReal ?? o.dataEntrada;
-        if (!ref) return false;
-        const d = new Date(ref + 'T00:00:00');
-        return d.getFullYear() === agora.getFullYear() &&
-               d.getMonth()    === agora.getMonth();
-      })
-      .reduce((acc, o) => acc + (o.totalGeral ?? 0), 0);
-  });
-
-  /** Clientes cadastrados neste mês */
-  clientesDoMes = computed(() => {
-    const agora = new Date();
-    return this.clientes().filter(c => {
-      if (!c.criadoEm) return false;
-      const d = new Date(c.criadoEm);
-      return d.getFullYear() === agora.getFullYear() &&
-             d.getMonth()    === agora.getMonth();
-    });
-  });
-
-  clientesNovos = computed(() => this.clientesDoMes().length);
-
-  /* ── ciclo de vida ───────────────────────────────────────── */
+  /** Carros fisicamente no pátio: ABERTA ou EM_ANDAMENTO. */
+  totalPatio     = computed(() => this.resumo()?.noPatio ?? 0);
+  /** OS abertas, ainda aguardando atendimento. */
+  osAbertas      = computed(() => this.resumo()?.osAbertas ?? 0);
+  /** No pátio, do mais antigo ao mais recente (encalhado no topo). */
+  patioOrdenado  = computed<OrdemServico[]>(() => this.resumo()?.patio ?? []);
+  /** Prontas — precisam de ligação para o cliente. */
+  prontas        = computed<OrdemServico[]>(() => this.resumo()?.prontas ?? []);
+  /** Faturamento: total das OS entregues no mês atual. */
+  faturamentoMes = computed(() => this.resumo()?.faturamentoMes ?? 0);
+  clientesDoMes  = computed<Cliente[]>(() => this.resumo()?.clientesDoMes ?? []);
+  clientesNovos  = computed(() => this.clientesDoMes().length);
 
   ngOnInit(): void {
     this.carregar();
@@ -89,19 +49,15 @@ export class Dashboard implements OnInit {
   carregar(): void {
     this.carregando.set(true);
     this.erro.set(false);
-
-    forkJoin({
-      ordens:   this.osService.buscar().pipe(catchError(() => of(null))),
-      clientes: this.clienteService.listar().pipe(catchError(() => of(null)))
-    }).subscribe(({ ordens, clientes }) => {
-      if (ordens === null) {
+    this.service.resumo().subscribe({
+      next: r => {
+        this.resumo.set(r);
+        this.carregando.set(false);
+      },
+      error: () => {
         this.erro.set(true);
         this.carregando.set(false);
-        return;
       }
-      this.todasOrdens.set(ordens);
-      this.clientes.set(clientes ?? []);
-      this.carregando.set(false);
     });
   }
 
@@ -134,23 +90,11 @@ export class Dashboard implements OnInit {
   }
 
   badgeClass(os: OrdemServico): string {
-    const map: Record<string, string> = {
-      ABERTA:       'badge badge-aberta',
-      EM_ANDAMENTO: 'badge badge-em-andamento',
-      CONCLUIDA:    'badge badge-concluida',
-      ENTREGUE:     'badge badge-entregue',
-    };
-    return map[os.status] ?? 'badge';
+    return classeBadge(os.status);
   }
 
   labelStatus(os: OrdemServico): string {
-    const map: Record<string, string> = {
-      ABERTA:       'Aberta',
-      EM_ANDAMENTO: 'Em andamento',
-      CONCLUIDA:    'Pronto p/ entrega',
-      ENTREGUE:     'Entregue',
-    };
-    return map[os.status] ?? os.status;
+    return ROTULOS_STATUS[os.status] ?? os.status;
   }
 
   mesDoCliente(c: Cliente): string {

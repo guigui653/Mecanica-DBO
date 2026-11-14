@@ -18,7 +18,7 @@
   <div class="os-toolbar">
     <div class="seg">
       @for (f of filtros; track f) {
-        <button type="button" [class.active]="filtroAtivo === f" (click)="selecionarFiltro(f)">
+        <button type="button" [class.active]="filtroAtivo() === f" (click)="selecionarFiltro(f)">
           {{ f }}
         </button>
       }
@@ -26,14 +26,14 @@
 
     <input class="input os-search-input" type="text"
            placeholder="Filtrar por placa, cliente ou nº"
-           [(ngModel)]="termoBusca" (input)="aplicarFiltros()">
+           [ngModel]="termoBusca()" (ngModelChange)="termoBusca.set($event)">
   </div>
 
-  @if (carregando) {
+  @if (carregando()) {
     <div class="spinner-wrap">Carregando ordens de serviço...</div>
-  } @else if (erro) {
+  } @else if (erro()) {
     <div class="empty-state" role="alert">
-      <p>{{ erro }}</p>
+      <p>{{ erro() }}</p>
       <button type="button" class="btn btn-secondary" (click)="carregar()">Tentar novamente</button>
     </div>
   } @else {
@@ -50,7 +50,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (o of ordensFiltradas; track o.num) {
+        @for (o of ordensFiltradas(); track o.num) {
           <tr (click)="abrirDetalhe(o)" (keydown.enter)="abrirDetalhe(o)" tabindex="0" [attr.aria-label]="'Abrir ' + o.num" style="cursor: pointer;">
             <td class="os-num tabular">{{ o.num }}</td>
             <td>
@@ -68,10 +68,10 @@
                 <button
                   type="button"
                   class="btn-excluir"
-                  [disabled]="excluindoId === o.id"
+                  [disabled]="excluindoId() === o.id"
                   (click)="excluirOs($event, o)"
                   title="Excluir OS entregue">
-                  @if (excluindoId === o.id) {
+                  @if (excluindoId() === o.id) {
                     …
                   } @else {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -91,14 +91,14 @@
       </tbody>
     </table></div>
 
-    @if (ordensFiltradas.length === 0) {
+    @if (ordensFiltradas().length === 0) {
       <div class="empty-state">
         Nenhuma ordem neste filtro.
       </div>
     }
 
     <div class="table-foot">
-      <span class="tabular">{{ resumoTexto }}</span>
+      <span class="tabular">{{ resumoTexto() }}</span>
     </div>
   }
 
