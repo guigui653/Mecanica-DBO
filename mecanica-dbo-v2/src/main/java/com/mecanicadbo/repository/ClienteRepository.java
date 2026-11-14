@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +24,12 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
      * (senão o cliente apareceria na lista cheia e sumiria ao digitar o nome).
      */
     List<Cliente> findByAtivoTrueOrderByNome();
+
+    /** Contador do painel. */
+    long countByAtivoTrue();
+
+    /** "Clientes novos" do painel: cadastrados a partir de uma data, mais recentes primeiro. */
+    List<Cliente> findByAtivoTrueAndCriadoEmGreaterThanEqualOrderByCriadoEmDesc(LocalDateTime desde);
 
     @Query("""
         SELECT c FROM Cliente c

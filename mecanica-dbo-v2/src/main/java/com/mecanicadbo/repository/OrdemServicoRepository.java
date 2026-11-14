@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -100,6 +101,29 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
         ORDER BY os.dataEntrada DESC, os.id DESC
     """)
     List<OrdemServico> buscarPorClienteOuPlaca(@Param("q") String termo, @Param("placa") String placa);
+
+    /** Carros no pátio do painel: da entrada mais antiga para a mais nova. */
+    @Query("""
+        SELECT os FROM OrdemServico os
+        JOIN FETCH os.veiculo v
+        JOIN FETCH v.cliente c
+        WHERE os.status IN :status
+        ORDER BY os.dataEntrada ASC, os.id ASC
+    """)
+    List<OrdemServico> buscarPorStatusMaisAntigasPrimeiro(@Param("status") List<StatusOs> status);
+
+    /**
+     * Soma do total das OS entregues no período (faturamento do painel).
+     * Sem data de saída registrada, vale a data de entrada.
+     */
+    @Query("""
+        SELECT COALESCE(SUM(os.totalGeral), 0) FROM OrdemServico os
+        WHERE os.status = :status
+          AND COALESCE(os.dataSaidaReal, os.dataEntrada) BETWEEN :inicio AND :fim
+    """)
+    BigDecimal somarTotalPorStatusNoPeriodo(@Param("status") StatusOs status,
+                                            @Param("inicio") LocalDate inicio,
+                                            @Param("fim") LocalDate fim);
 
     /** Contadores do dashboard, sem carregar as OS. */
     long countByStatus(StatusOs status);

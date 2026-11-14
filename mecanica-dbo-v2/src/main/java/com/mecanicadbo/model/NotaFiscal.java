@@ -3,6 +3,8 @@ package com.mecanicadbo.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,8 +45,11 @@ public class NotaFiscal {
     @Column(name = "imagem_path", length = 300)
     private String imagemPath;
 
+    // ocr_status é o enum nativo status_ocr do PostgreSQL. Sem o NAMED_ENUM, o
+    // Hibernate manda varchar e o INSERT falha (mesmo caso do status da OS).
     @Enumerated(EnumType.STRING)
-    @Column(name = "ocr_status", nullable = false, length = 20)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "ocr_status", nullable = false, columnDefinition = "status_ocr")
     @Builder.Default
     private StatusOcr ocrStatus = StatusOcr.PENDENTE;
 

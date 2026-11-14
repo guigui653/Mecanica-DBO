@@ -78,6 +78,7 @@ Decisões que valem para o projeto inteiro:
 - **Entrada sempre por DTO de request, sem `id`.** Com a entidade no corpo, um POST com `id` faria merge (UPDATE de um registro existente).
 - **Escrita em `XyzService`, leitura em `XyzConsultaService`.** As consultas montam os DTOs dentro da transação, com `JOIN FETCH`, sem N+1 nem `LazyInitializationException`.
 - **OS ENTREGUE é imutável** (`garantirEditavel`): editar a OS ou mexer em itens devolve 409. Para corrigir, volte o status para CONCLUIDA.
+- **Histórico nunca é apagado junto:** cliente com OS não pode ser apagado (só inativado), e apagar veículo não leva as OS (sem cascade).
 - **Cadastro de cliente + veículo + OS numa transação só** (`AtendimentoService`): se uma parte falha, nada é gravado.
 - **Placa:** toda normalização e formatação passa por `service/Placas`.
 
@@ -88,12 +89,13 @@ Todos exigem login, exceto `/api/auth/*` e o Swagger. O Swagger (`/swagger-ui.ht
 | Recurso | Endpoints principais |
 |---|---|
 | Login | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` |
-| Clientes | `GET /api/clientes?q=`, `GET /{id}`, `GET /{id}/veiculos`, `POST`, `PUT /{id}`, `DELETE /{id}` |
+| Clientes | `GET /api/clientes?q=`, `GET /{id}`, `GET /{id}/veiculos`, `POST`, `PUT /{id}`, `PATCH /{id}/inativar`, `DELETE /{id}` (só cliente **sem nenhuma OS** — cadastro duplicado ou de teste; com histórico, 409 sugerindo inativar) |
 | Veículos | `GET /api/veiculos?q=`, `GET /{id}`, `GET /placa/{placa}`, `POST /cliente/{clienteId}`, `PUT /{id}`, `DELETE /{id}` (inativa) |
 | Atendimento | `POST /api/atendimentos` — cliente (novo ou existente) + veículo (novo ou existente) + OS (opcional), tudo ou nada |
 | Ordens de serviço | `GET /api/ordens?q=`, `GET /abertas`, `GET /periodo?inicio=&fim=`, `GET /{id}`, `GET /veiculo/{veiculoId}`, `POST /veiculo/{veiculoId}`, `PUT /{id}`, `PATCH /{id}/status?status=`, `DELETE /{id}` (só ENTREGUE) |
 | Itens da OS | `POST /api/ordens/{id}/pecas`, `DELETE /{osId}/pecas/{itemId}`, `POST /{id}/servicos`, `DELETE /{osId}/servicos/{itemId}` |
 | Recibo | `GET /api/ordens/{id}/pdf` |
+| Painel | `GET /api/dashboard/resumo` — contadores, pátio, prontas, faturamento e clientes novos do mês, já contados pelo banco |
 | OCR | `POST /api/ocr/nota` (multipart, campo `file`), `GET /api/ocr/status` |
 
 ### Formato de erro
@@ -105,6 +107,29 @@ Todos os erros saem assim — o frontend lê `mensagem` e `campos`:
 ```
 
 `RecursoNaoEncontradoException` → 404, `RegraDeNegocioException` → 409, validação → 400 com `campos`. Erros de constraint do banco são traduzidos pelo nome da constraint em `GlobalExceptionHandler.traduzirIntegridade` — constraint nova pede um `if` lá.
+
+## Testes
+
+```bash
+mvn test
+```
+
+| Classe | O que garante |
+|---|---|
+| `PlacasTest` | Normalização e formatação de placa |
+| `ReciboMontadorTest` | Dinheiro, datas, crédito negativo, peça paga pelo cliente e campos vazios no recibo |
+| `OrdemServicoServiceTest` | Transições de status e a trava de OS entregue |
+| `AtendimentoServiceTest` | Combinações aceitas no `/atendimentos` e a ordem de gravação |
+| `ClienteServiceTest` | Apagar só cliente sem OS; inativar mantém o cadastro |
+| `BancoIntegracaoTest` | Contra um PostgreSQL de verdade: Flyway, trigger dos totais, rollback do atendimento, enum da nota fiscal e painel |
+
+O `BancoIntegracaoTest` só roda quando a variável `TESTE_DB_URL` aponta para um banco **descartável** (ele grava dados). Ele se recusa a rodar contra o `mecanica_dbo`:
+
+```powershell
+createdb -U postgres mecanica_dbo_teste
+$env:TESTE_DB_URL = "jdbc:postgresql://localhost:5432/mecanica_dbo_teste"
+mvn test
+```
 
 ## Recibo em PDF
 
