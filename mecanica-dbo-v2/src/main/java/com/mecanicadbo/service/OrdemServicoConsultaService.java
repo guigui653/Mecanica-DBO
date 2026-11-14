@@ -19,14 +19,8 @@ import java.util.List;
  * circular, então a montagem acontece aqui dentro da transação — se fosse
  * feita no controller, o lazy loading falharia com LazyInitializationException.
  *
- * O QUE MUDOU
- * -----------
- * Sumiram os .peek(os -> os.getVeiculo().getCliente().getNome()). Eles
- * existiam para forçar a carga do proxy lazy, e era exatamente esse peek que
- * disparava o N+1: para cada OS da lista, dois SELECTs extras.
- *
- * Agora as consultas do OrdemServicoRepository fazem JOIN FETCH do veículo e
- * do cliente, então tudo vem numa query só e o peek deixou de ser necessário.
+ * Veículo e cliente já vêm carregados pelo JOIN FETCH das consultas do
+ * OrdemServicoRepository — não é preciso "acordar" proxies aqui.
  */
 @Service
 @RequiredArgsConstructor

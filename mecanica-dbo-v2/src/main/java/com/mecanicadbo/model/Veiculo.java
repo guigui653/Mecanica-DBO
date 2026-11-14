@@ -57,7 +57,8 @@ public class Veiculo {
     private LocalDateTime criadoEm;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "veiculo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // Sem cascade de propósito: OS é histórico e nunca é apagada junto com o veículo.
+    @OneToMany(mappedBy = "veiculo", fetch = FetchType.LAZY)
     private List<OrdemServico> ordensServico;
 
     @PrePersist

@@ -24,14 +24,6 @@ public class VeiculoController {
     private final VeiculoConsultaService consulta;
 
     /**
-     * ENDPOINT NOVO — não existia antes.
-     *
-     * O VeiculoService já tinha um listar(q) e o repositório já tinha a
-     * consulta parcial por placa/modelo, mas nenhum controller expunha isso.
-     * Era código morto: o front não tinha como listar veículos, e foi por
-     * isso que a tela de busca ficou com dados mockados e o fluxo de nova OS
-     * precisou tentar variações da placa até uma dar certo.
-     *
      *   GET /api/veiculos          → todos os ativos
      *   GET /api/veiculos?q=jhx    → placa, modelo, marca ou nome do dono
      */

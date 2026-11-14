@@ -3,10 +3,8 @@ package com.mecanicadbo.service;
 import com.mecanicadbo.dto.ClienteRequest;
 import com.mecanicadbo.exception.*;
 import com.mecanicadbo.model.Cliente;
-import com.mecanicadbo.model.OrdemServico;
-import com.mecanicadbo.model.StatusOs;
-import com.mecanicadbo.model.Veiculo;
 import com.mecanicadbo.repository.ClienteRepository;
+import com.mecanicadbo.repository.OrdemServicoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,19 +16,13 @@ import java.util.List;
 public class ClienteService {
 
     private final ClienteRepository repo;
+    private final OrdemServicoRepository osRepo;
 
     // ------------------------------------------------------------------
     // Consultas
     // ------------------------------------------------------------------
 
-    /**
-     * Listagem da tela de clientes.
-     *
-     * Antes: sem termo usava findAll() (trazia inativos), com termo usava
-     * buscarPorTermo() (só ativos). O cliente desativado aparecia na lista
-     * "todos" e sumia ao digitar o nome — duas telas discordando entre si.
-     * Agora as duas pontas mostram só ativos.
-     */
+    /** Listagem da tela de clientes. Com ou sem termo, só ativos. */
     @Transactional(readOnly = true)
     public List<Cliente> buscar(String termo) {
         if (termo == null || termo.isBlank()) return repo.findByAtivoTrueOrderByNome();
@@ -72,13 +64,7 @@ public class ClienteService {
         return repo.save(c);
     }
 
-    /**
-     * O CPF agora pode ser corrigido na edição.
-     *
-     * Antes, atualizar() simplesmente não tinha setCpf. Quem digitasse o CPF
-     * errado no cadastro não conseguia arrumar pela tela — tinha que mexer no
-     * banco na mão.
-     */
+    /** Edição completa, inclusive do CPF (para corrigir digitação errada pela tela). */
     @Transactional
     public Cliente atualizar(Long id, ClienteRequest dados) {
         Cliente c = buscarPorId(id);
@@ -104,24 +90,21 @@ public class ClienteService {
     }
 
     /**
-     * Exclui um cliente e, em cascata, seus veículos e ordens de serviço já entregues.
-     * Rejeita a exclusão caso exista alguma OS ainda não entregue (ABERTA, EM_ANDAMENTO ou CONCLUIDA).
+     * Apaga de verdade um cliente SEM nenhuma OS (cadastro duplicado ou de
+     * teste), junto com os veículos dele.
+     *
+     * Cliente com OS no histórico não é apagado: as OS entregues são o
+     * histórico do carro e entram no faturamento dos meses passados. Para
+     * tirá-lo da lista sem perder nada, use inativar().
      */
     @Transactional
     public void excluir(Long id) {
         Cliente c = buscarPorId(id);
-        if (c.getVeiculos() != null) {
-            for (Veiculo v : c.getVeiculos()) {
-                if (v.getOrdensServico() != null) {
-                    for (OrdemServico os : v.getOrdensServico()) {
-                        if (os.getStatus() != StatusOs.ENTREGUE) {
-                            throw new RegraDeNegocioException(
-                                    "Não é possível excluir um cliente com OS em andamento (OS #"
-                                  + os.getId() + " — " + os.getStatus() + ").");
-                        }
-                    }
-                }
-            }
+        long ordens = osRepo.countByVeiculoClienteId(id);
+        if (ordens > 0) {
+            throw new RegraDeNegocioException(
+                    c.getNome() + " tem " + ordens + (ordens == 1 ? " ordem de serviço" : " ordens de serviço")
+                  + " no histórico e não pode ser apagado. Use \"Inativar\" para tirá-lo da lista sem perder o histórico.");
         }
         repo.delete(c);
     }
@@ -129,17 +112,11 @@ public class ClienteService {
     // ------------------------------------------------------------------
 
     /**
-     * ESTE É O BUG DO "CADASTREI O CLIENTE E ELE NÃO APARECE NA LISTA".
+     * CPF em branco vira null antes de chegar no banco.
      *
-     * A coluna cpf tem índice único. String vazia NÃO é null para o
-     * PostgreSQL: o primeiro cliente sem CPF gravava "", o segundo tentava
-     * gravar "" de novo e batia no índice único. Como não havia handler para
-     * DataIntegrityViolationException, o erro virava um 500 genérico que o
-     * front engolia — o cadastro parecia ter dado certo e o cliente nunca
-     * aparecia.
-     *
-     * Null, ao contrário de "", pode se repetir à vontade num índice único.
-     * Por isso todo CPF em branco vira null antes de chegar no banco.
+     * A coluna cpf tem índice único, e para o PostgreSQL "" não é null: o
+     * segundo cliente sem CPF gravaria "" de novo e bateria no índice. Null,
+     * ao contrário, pode se repetir à vontade num índice único.
      */
     private String normalizarCpf(String cpf) {
         if (cpf == null) return null;
@@ -161,9 +138,7 @@ public class ClienteService {
     private void validarCpfDisponivel(String cpf, Long idAtual) {
         if (cpf == null) return;
 
-        // findByCpf, e não findByCpfAndAtivoTrue: o índice único vale para a
-        // tabela toda, inclusive para clientes inativos. Checar só os ativos
-        // deixava passar um CPF que o banco ia recusar depois.
+        // Sem filtrar por ativo: o índice único vale para a tabela toda.
         repo.findByCpf(cpf).ifPresent(existente -> {
             if (existente.getId().equals(idAtual)) return;
 

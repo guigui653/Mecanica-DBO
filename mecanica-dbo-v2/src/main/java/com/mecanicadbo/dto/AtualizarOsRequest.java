@@ -14,8 +14,7 @@ import java.time.LocalDate;
  *   campo null      → não mexe no valor que já está gravado
  *   campo ""        → limpa o campo de texto
  *
- * Antes, os quatro setters rodavam sempre: um PUT mandando só o
- * diagnóstico apagava km, previsão de saída e reclamações da OS.
+ * Assim, um PUT mandando só o diagnóstico não apaga km, previsão e reclamações.
  */
 public record AtualizarOsRequest(
 

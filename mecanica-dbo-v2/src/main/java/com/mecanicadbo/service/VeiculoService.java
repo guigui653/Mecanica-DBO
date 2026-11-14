@@ -26,13 +26,6 @@ public class VeiculoService {
                         "Veículo não encontrado: id=" + id));
     }
 
-    @Transactional(readOnly = true)
-    public Veiculo buscarPorPlaca(String placa) {
-        return veiculoRepo.findByPlacaIgnoreCase(normalizarPlaca(placa))
-                .orElseThrow(() -> new RecursoNaoEncontradoException(
-                        "Veículo não encontrado: placa=" + placa));
-    }
-
     // ------------------------------------------------------------------
     // Escrita
     // ------------------------------------------------------------------
@@ -67,13 +60,7 @@ public class VeiculoService {
         return veiculoRepo.save(v);
     }
 
-    /**
-     * A placa agora pode ser corrigida na edição.
-     *
-     * Antes, atualizar() não tinha setPlaca. Placa digitada errada no
-     * cadastro só saía do banco na mão — e placa errada significa recibo e
-     * histórico do veículo errados.
-     */
+    /** Edição completa, inclusive da placa (placa errada = recibo e histórico errados). */
     @Transactional
     public Veiculo atualizar(Long id, VeiculoRequest dados) {
         Veiculo v = buscarPorId(id);

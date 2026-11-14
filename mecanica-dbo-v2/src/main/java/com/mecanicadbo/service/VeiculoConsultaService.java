@@ -12,10 +12,7 @@ import java.util.List;
 
 /**
  * Consultas de veículo que retornam DTO com o cliente aninhado.
- *
- * As chamadas .getCliente().getNome() que existiam aqui só para "acordar" o
- * proxy lazy sumiram: as consultas do repositório agora fazem JOIN FETCH do
- * cliente, então ele já vem carregado na mesma query.
+ * O cliente já vem carregado pelo JOIN FETCH das consultas do repositório.
  */
 @Service
 @RequiredArgsConstructor
@@ -23,13 +20,7 @@ public class VeiculoConsultaService {
 
     private final VeiculoRepository repo;
 
-    /**
-     * Listagem/busca da tela de consulta de veículos.
-     *
-     * Este método não existia — o VeiculoService tinha um listar(q) que
-     * nenhum controller chamava. Era código morto, e por isso a tela de busca
-     * do front ficou com dados mockados.
-     */
+    /** Listagem/busca da tela de veículos: placa, modelo, marca ou nome do dono. */
     @Transactional(readOnly = true)
     public List<VeiculoResumoDTO> listar(String termo) {
         List<Veiculo> veiculos = (termo == null || termo.isBlank())

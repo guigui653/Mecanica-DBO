@@ -8,26 +8,15 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * O QUE MUDOU AQUI
- * ----------------
- * Saiu o @PositiveOrZero do valorUnitario.
+ * Peça lançada numa OS.
  *
- * Lembra da linha "Crédito mecânico -258,51" da planilha do seu pai? Ela é um
- * abatimento: valor que o cliente já tinha em crédito e que entra na OS com
- * sinal negativo. Você já removeu o CHECK do banco por causa disso:
+ * valorUnitario aceita valor NEGATIVO de propósito: é assim que entra a linha
+ * de crédito (ex.: "Crédito mecânico -258,51"), um abatimento que o cliente já
+ * tinha. Por isso não há @PositiveOrZero aqui nem CHECK no banco — o Bean
+ * Validation roda antes do INSERT, então a anotação sozinha já barraria.
  *
- *     ALTER TABLE item_peca DROP CONSTRAINT item_peca_valor_unitario_check;
- *
- * Só que a anotação continuou aqui, e o Bean Validation roda ANTES do INSERT,
- * dentro do Hibernate. Ou seja: o banco já aceitava o valor negativo, mas a
- * aplicação nunca deixava a linha chegar até ele. Derrubar a constraint sem
- * tirar a anotação não resolve nada — é preciso tirar as duas.
- *
- * Em item_servico o @PositiveOrZero FOI MANTIDO de propósito: lá o CHECK do
- * banco continua de pé, e serviço com valor negativo não faz sentido no
- * negócio. Crédito é peça, não mão de obra.
- *
- * O resto do arquivo está igual ao seu — nada mais foi tocado.
+ * Em item_servico o valor continua sem poder ser negativo (anotação e CHECK):
+ * crédito é peça, não mão de obra.
  */
 @Entity
 @Table(name = "item_peca")

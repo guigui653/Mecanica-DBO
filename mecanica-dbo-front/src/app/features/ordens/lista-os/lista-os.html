@@ -44,7 +44,6 @@
           <th>Veículo</th>
           <th>Cliente</th>
           <th>Serviço</th>
-          <th style="width: 104px">Mecânico</th>
           <th style="width: 104px; text-align: right">Valor R$</th>
           <th style="width: 158px">Situação</th>
           <th style="width: 48px"></th>
@@ -60,7 +59,6 @@
             </td>
             <td class="os-cliente">{{ o.cliente }}</td>
             <td class="os-servico">{{ o.servico }}</td>
-            <td class="os-mec">{{ o.mec }}</td>
             <td class="os-valor tabular" style="text-align: right">{{ o.valor }}</td>
             <td>
               <span class="tag" [ngClass]="o.tagClass">{{ o.statusLabel }}</span>

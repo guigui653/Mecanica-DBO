@@ -13,23 +13,12 @@ import java.util.Optional;
 /**
  * Consultas de OS.
  *
- * O QUE MUDOU AQUI E POR QUÊ
- * --------------------------
- * A versão anterior usava JOIN simples:
+ * Todas usam JOIN FETCH do veículo e do cliente: a lista da tela mostra os
+ * dois, e com JOIN simples (que só filtra) cada OS dispararia mais dois
+ * SELECTs — o problema N+1. Com o fetch, a lista inteira é um SELECT só.
  *
- *     SELECT os FROM OrdemServico os JOIN os.veiculo v JOIN v.cliente c
- *
- * JOIN sozinho serve só para filtrar. Ele NÃO traz o veículo nem o cliente
- * junto no resultado — as duas associações continuam lazy. Então, ao montar
- * a lista da tela, cada OS disparava dois SELECTs extras (um do veículo, um
- * do cliente). Uma lista de 50 OS = 1 + 100 consultas. É o clássico N+1, e
- * era ele o motivo da busca de veículo/OS demorar.
- *
- * Trocando por JOIN FETCH, o Hibernate traz OS + veículo + cliente na mesma
- * consulta. A lista inteira passa a ser 1 SELECT.
- *
- * Por isso as duas consultas derivadas (findByVeiculoId... e findByStatus...)
- * viraram @Query: derivação por nome de método não tem como declarar fetch.
+ * Por isso até as consultas que poderiam ser derivadas do nome do método
+ * (findByVeiculoId..., findByStatus...) são @Query: derivação não declara fetch.
  */
 public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long> {
 
@@ -48,9 +37,7 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
 
     /**
      * Listagem sem filtro, para GET /api/ordens sem parâmetro q.
-     *
-     * Antes o service chamava findAll() nesse caso, que não faz fetch
-     * nenhum — a listagem mais usada do sistema era justamente a mais lenta.
+     * (Não use findAll() aqui: ele não faz fetch e cai no N+1.)
      */
     @Query("""
         SELECT os FROM OrdemServico os
@@ -80,11 +67,8 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
 
     /**
      * Período com limites opcionais: se o usuário mandar só a data inicial,
-     * a final deixa de filtrar, e vice-versa.
-     *
-     * Antes, BETWEEN :inicio AND :fim com qualquer um dos dois null fazia a
-     * consulta devolver lista vazia sem erro nenhum — parecia que não havia
-     * OS no período.
+     * a final deixa de filtrar, e vice-versa. (Um BETWEEN com um dos lados
+     * null devolveria lista vazia sem erro.)
      */
     @Query("""
         SELECT os FROM OrdemServico os
@@ -119,4 +103,7 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
 
     /** Contadores do dashboard, sem carregar as OS. */
     long countByStatus(StatusOs status);
+
+    /** Quantas OS (de qualquer status) existem nos veículos deste cliente. */
+    long countByVeiculoClienteId(Long clienteId);
 }

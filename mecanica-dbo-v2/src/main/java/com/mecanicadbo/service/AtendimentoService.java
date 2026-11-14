@@ -7,11 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Grava cliente, veículo e OS numa transação só.
- *
- * Antes, a tela fazia três chamadas seguidas: se o veículo falhasse (placa
- * repetida, por exemplo), o cliente já tinha ficado gravado, e um novo clique
- * em salvar criava um segundo cliente igual.
+ * Grava cliente, veículo e OS numa transação só: se o veículo falhar (placa
+ * repetida, por exemplo), o cliente também não fica gravado — e um novo
+ * clique em salvar não cria um cliente repetido.
  *
  * Aqui os criar() dos services existentes são chamados pelos beans, então
  * entram nesta mesma transação e reaproveitam todas as regras (CPF e placa

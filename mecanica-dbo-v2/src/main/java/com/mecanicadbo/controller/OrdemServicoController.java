@@ -16,19 +16,12 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * O QUE MUDOU AQUI
- * ----------------
- * Os três @RequestBody que recebiam entidade (OrdemServico, ItemPeca,
- * ItemServico) passaram a receber DTOs de request, e todos ganharam @Valid.
+ * Todos os @RequestBody são DTOs de request com @Valid, nunca entidades.
  *
- * O motivo é sério. Com a entidade no corpo, um POST assim:
- *
- *     POST /api/ordens/veiculo/1
+ * Com a entidade no corpo, um POST como
  *     { "id": 1, "status": "ENTREGUE", "totalGeral": 99999 }
- *
- * não criava OS nenhuma. O repo.save() com id preenchido faz merge, ou seja,
- * UPDATE na OS 1 — e todo campo ausente no JSON vira null no banco. Um POST
- * apagava uma OS antiga. Os DTOs não têm campo id, então não há o que mandar.
+ * faria merge (UPDATE na OS 1) e zeraria os campos não enviados. Os DTOs não
+ * têm id, status nem totais, então não há como mandar isso.
  */
 @RestController
 @RequestMapping("/api/ordens")

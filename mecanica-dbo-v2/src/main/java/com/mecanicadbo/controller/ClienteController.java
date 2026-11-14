@@ -15,17 +15,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * O retorno continua sendo a entidade Cliente, de propósito.
+ * O retorno é a entidade Cliente, de propósito: o campo veiculos tem
+ * @JsonIgnore (sem referência circular), e o ClienteResumoDTO não traz
+ * telefone2 nem e-mail, que a tela de cadastro precisa.
  *
- * Serializar Cliente é seguro aqui porque o campo veiculos tem @JsonIgnore —
- * não há risco de referência circular. E o ClienteResumoDTO só carrega id,
- * nome, cpf e telefone1: trocar o retorno por ele faria o front perder
- * telefone2 e e-mail na tela de cadastro.
- *
- * O que mudou foi só a ENTRADA: @RequestBody agora recebe ClienteRequest, que
- * não tem campo id. Antes, um POST /api/clientes com {"id": 3, ...} não criava
- * cliente nenhum — fazia merge, isto é, UPDATE no cliente 3, e os campos
- * ausentes no JSON viravam null.
+ * A entrada é ClienteRequest, sem campo id: com a entidade no corpo, um POST
+ * com "id" faria merge (UPDATE num cliente existente) em vez de INSERT.
  */
 @RestController
 @RequestMapping("/api/clientes")
@@ -68,9 +63,16 @@ public class ClienteController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Excluir cliente")
+    @Operation(summary = "Apagar cliente — só se não tiver nenhuma OS (cadastro duplicado ou de teste)")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
         clienteService.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/inativar")
+    @Operation(summary = "Inativar cliente — some da lista, mas o histórico de OS continua")
+    public ResponseEntity<Void> inativar(@PathVariable Long id) {
+        clienteService.inativar(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -8,11 +8,6 @@ export class VeiculoService {
   private http = inject(HttpClient);
   private base = '/veiculos';
 
-  /**
-   * NÃO há GET /veiculos genérico na API.
-   * A busca parte sempre da placa (buscarPorPlaca) ou do cliente (listarPorCliente).
-   */
-
   /** GET /veiculos/placa/{placa} */
   buscarPorPlaca(placa: string): Observable<Veiculo> {
     return this.http.get<Veiculo>(`${this.base}/placa/${placa}`);

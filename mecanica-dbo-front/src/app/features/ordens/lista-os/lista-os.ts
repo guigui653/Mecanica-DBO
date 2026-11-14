@@ -13,7 +13,6 @@ export interface OsViewItem {
   carro: string;
   cliente: string;
   servico: string;
-  mec: string;
   valor: string;
   valorNum: number;
   status: string;
@@ -37,6 +36,14 @@ export class ListaOs implements OnInit {
   ordensFiltradas: OsViewItem[] = [];
 
   filtros = ['Todas', 'Em serviço', 'Aguardando', 'Prontas', 'Entregues'];
+
+  /** Cada filtro corresponde a um status da OS ("Todas" não filtra). */
+  private readonly statusDoFiltro: Record<string, StatusOs> = {
+    'Em serviço': 'EM_ANDAMENTO',
+    'Aguardando': 'ABERTA',
+    'Prontas':    'CONCLUIDA',
+    'Entregues':  'ENTREGUE'
+  };
   filtroAtivo = 'Todas';
   termoBusca = '';
   carregando = false;
@@ -63,7 +70,6 @@ export class ListaOs implements OnInit {
             carro: [o.veiculo?.marca, o.veiculo?.modelo].filter(Boolean).join(' ') || '—',
             cliente: o.veiculo?.cliente?.nome ?? '—',
             servico: o.diagnostico || o.reclamacoes || 'Não informado',
-            mec: '—',
             valor,
             valorNum: o.totalGeral ?? 0,
             status: o.status,
@@ -97,18 +103,10 @@ export class ListaOs implements OnInit {
     const q = this.termoBusca.trim().toLowerCase();
     this.ordensFiltradas = this.todasOrdens.filter(o => {
       // A placa entra com e sem hífen, para "jeh3030" e "jeh-3030" acharem o mesmo carro.
-      const matchQ = !q || [o.num, o.placa, o.placa.replace('-', ''), o.carro, o.cliente, o.servico, o.mec].join(' ').toLowerCase().includes(q);
+      const matchQ = !q || [o.num, o.placa, o.placa.replace('-', ''), o.carro, o.cliente, o.servico].join(' ').toLowerCase().includes(q);
 
-      let matchF = true;
-      if (this.filtroAtivo === 'Em serviço') {
-        matchF = o.statusLabel === 'Em serviço' || o.status === 'EM_ANDAMENTO';
-      } else if (this.filtroAtivo === 'Aguardando') {
-        matchF = o.statusLabel.startsWith('Aguardando') || o.statusLabel === 'Orçamento' || o.status === 'ABERTA';
-      } else if (this.filtroAtivo === 'Prontas') {
-        matchF = o.statusLabel === 'Pronto p/ entrega' || o.status === 'CONCLUIDA';
-      } else if (this.filtroAtivo === 'Entregues') {
-        matchF = o.status === 'ENTREGUE';
-      }
+      const status = this.statusDoFiltro[this.filtroAtivo];
+      const matchF = !status || o.status === status;
 
       return matchQ && matchF;
     });

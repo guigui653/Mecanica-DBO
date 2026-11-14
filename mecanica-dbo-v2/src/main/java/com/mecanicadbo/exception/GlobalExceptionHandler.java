@@ -18,30 +18,23 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 /**
- * O QUE MUDOU AQUI
- * ----------------
- * O FORMATO DA RESPOSTA CONTINUA EXATAMENTE O MESMO:
+ * Todos os erros da API saem no MESMO formato:
  *
  *     { "timestamp": "...", "status": 409, "mensagem": "...", "campos": {...} }
  *
- * Isso não é detalhe: o seu front lê e.error?.mensagem no mensagemDoErro().
- * Se o formato mudasse, toda mensagem de erro da tela viraria o texto padrão
- * "Erro inesperado". Por isso o método erro() ficou idêntico.
+ * O front lê e.error?.mensagem; se o formato mudar, toda mensagem de erro da
+ * tela vira "Erro inesperado". Não mude o método erro().
  *
- * O que mudou foi a COBERTURA. Antes havia 3 handlers; tudo que não fosse
- * RecursoNaoEncontrado, RegraDeNegocio ou validação de @RequestBody caía no
- * erro genérico do Spring: uma resposta com um formato diferente, sem o campo
- * mensagem — e o front mostrava "Erro inesperado" mesmo quando o problema era
- * óbvio (data digitada errada, CPF repetido, JSON malformado).
- *
- * Agora cada caso comum tem um handler que explica em português o que houve.
+ * Cada caso comum (registro inexistente, regra de negócio, validação, erro de
+ * banco, JSON malformado, data inválida, URL inexistente) tem um handler que
+ * explica em português o que houve. O resto cai no genérico do final.
  */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     // ------------------------------------------------------------------
-    // Os três originais — sem mudança de comportamento
+    // Regras do sistema e validação dos DTOs
     // ------------------------------------------------------------------
 
     @ExceptionHandler(RecursoNaoEncontradoException.class)
@@ -67,17 +60,15 @@ public class GlobalExceptionHandler {
     }
 
     // ------------------------------------------------------------------
-    // Handlers novos
+    // Banco, requisição malformada e segurança
     // ------------------------------------------------------------------
 
     /**
      * Constraint do banco violada: índice único (CPF, placa), CHECK
      * (combustível, valor de serviço) ou chave estrangeira.
      *
-     * Antes isso virava 500 com stack trace na tela. A mensagem crua do
-     * PostgreSQL é ilegível para o seu pai, então aqui ela é traduzida pelo
-     * nome da constraint — que é justamente o que o Postgres coloca no texto
-     * do erro.
+     * A mensagem crua do PostgreSQL não serve para o usuário final, então ela
+     * é traduzida pelo nome da constraint, que o Postgres põe no texto do erro.
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleIntegridade(DataIntegrityViolationException ex) {
@@ -88,8 +79,7 @@ public class GlobalExceptionHandler {
 
     /**
      * JSON malformado, tipo errado no corpo ("quantidade": "abc") ou enum
-     * inexistente. Era 400 sem campo mensagem — o front mostrava
-     * "Erro inesperado" e você não sabia qual campo estava errado.
+     * inexistente.
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleJsonIlegivel(HttpMessageNotReadableException ex) {
@@ -147,17 +137,6 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Falha ao gerar o recibo em PDF. O detalhe (saída do Python, traceback)
-     * já foi gravado no log pelo PdfService; aqui só vai a mensagem amigável.
-     */
-    @ExceptionHandler(GeracaoPdfException.class)
-    public ResponseEntity<Map<String, Object>> handleGeracaoPdf(GeracaoPdfException ex) {
-        log.error("Falha na geração do PDF: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(erro(500,
-                "Não foi possível gerar o recibo em PDF. O detalhe foi gravado no log do servidor."));
-    }
-
-    /**
      * Exceções de segurança lançadas DENTRO de um controller (ex.: @PreAuthorize).
      * Sem estes handlers, o handler genérico abaixo as transformaria em 500.
      * As que acontecem nos filtros (sem sessão, CSRF) são respondidas pelo SecurityConfig.
@@ -179,8 +158,7 @@ public class GlobalExceptionHandler {
      * mensagem curta na tela e o stack trace COMPLETO no log do Spring.
      *
      * A mensagem devolvida é propositalmente genérica: detalhe interno de
-     * exceção não deve aparecer para o usuário final. Quem precisa do detalhe
-     * é você, e ele está no console do IntelliJ.
+     * exceção não deve aparecer para o usuário final. O detalhe fica no log.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenerico(Exception ex) {
@@ -214,8 +192,8 @@ public class GlobalExceptionHandler {
     /**
      * Traduz a mensagem do PostgreSQL pelo nome da constraint que aparece nela.
      *
-     * Se você criar outra constraint no banco, acrescente um if aqui — senão
-     * o usuário cai na mensagem genérica do final.
+     * Constraint nova no banco (numa migração V3, V4...) pede um if aqui —
+     * senão o usuário cai na mensagem genérica do final.
      */
     private String traduzirIntegridade(String detalhe) {
         String d = detalhe.toLowerCase();

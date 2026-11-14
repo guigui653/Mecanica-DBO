@@ -11,12 +11,11 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.charset.StandardCharsets;
 
 /**
- * O QUE MUDOU AQUI
- * ----------------
- * Só o texto da mensagem de erro. A versão anterior mandava o usuário conferir
- * o Python e o ReportLab, que não fazem mais parte do caminho do PDF.
- * O resto (rethrow de RuntimeException para virar 404/409, ausência de
- * produces, corpo text/plain no erro) continua igual.
+ * Recibo da OS em PDF (gerado pelo PdfService).
+ *
+ * RuntimeException (OS inexistente etc.) é relançada para o
+ * GlobalExceptionHandler devolver 404/409. Outras falhas viram 500 com texto
+ * simples, e o detalhe vai para o log.
  */
 @Slf4j
 @RestController

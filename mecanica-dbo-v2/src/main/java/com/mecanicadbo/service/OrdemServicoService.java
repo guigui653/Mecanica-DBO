@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +29,7 @@ public class OrdemServicoService {
     private final ItemServicoRepository itemServicoRepo;
 
     // ------------------------------------------------------------------
-    // Consultas
+    // Consultas (as listagens que devolvem DTO ficam no OrdemServicoConsultaService)
     // ------------------------------------------------------------------
 
     @Transactional(readOnly = true)
@@ -40,25 +39,6 @@ public class OrdemServicoService {
                         "OS não encontrada: id=" + id));
     }
 
-    @Transactional(readOnly = true)
-    public List<OrdemServico> buscar(String termo) {
-        if (termo == null || termo.isBlank()) return osRepo.buscarTodas();
-        return osRepo.buscarPorClienteOuPlaca(termo.trim(), Placas.paraBusca(termo));
-    }
-
-    @Transactional(readOnly = true)
-    public List<OrdemServico> listarAbertas() {
-        return osRepo.findByStatusOrderByDataEntradaDesc(StatusOs.ABERTA);
-    }
-
-    @Transactional(readOnly = true)
-    public List<OrdemServico> buscarPorPeriodo(LocalDate inicio, LocalDate fim) {
-        if (inicio != null && fim != null && inicio.isAfter(fim)) {
-            throw new RegraDeNegocioException(
-                    "Data inicial não pode ser maior que a data final.");
-        }
-        return osRepo.findByPeriodo(inicio, fim);
-    }
 
     // ------------------------------------------------------------------
     // Escrita
