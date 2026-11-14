@@ -18,7 +18,14 @@ export interface ClienteExt extends Cliente {
   tags?: string[];
 }
 
-const FILTROS_COMPLETOS = ['Todos', 'Com OS aberta', 'Inativos há 1 ano'];
+interface AvisoExclusao {
+  etapa: 'confirmar' | 'historico';
+  /** Texto do backend explicando por que não pode apagar (etapa 'historico'). */
+  mensagem?: string;
+  erro?: string;
+}
+
+const FILTROS_COMPLETOS =['Todos', 'Com OS aberta', 'Inativos há 1 ano'];
 
 @Component({
   selector: 'app-lista-clientes',
@@ -41,6 +48,8 @@ export class ListaClientes implements OnInit {
   erro        = signal('');
   aviso       = signal('');
   excluindoId = signal<number | null>(null);
+  /** Aviso de apagar/inativar mostrado na ficha (null = fechado). */
+  avisoExclusao = signal<AvisoExclusao | null>(null);
 
   filtros     = signal<string[]>(FILTROS_COMPLETOS);
   filtroAtivo = signal('Todos');
@@ -104,6 +113,7 @@ export class ListaClientes implements OnInit {
 
   selecionarCliente(c: ClienteExt) {
     this.clienteSelecionado.set(c);
+    this.avisoExclusao.set(null);
     if (!c.id) return;
     const id = c.id;
     this.service.listarVeiculos(id).subscribe({
@@ -121,6 +131,7 @@ export class ListaClientes implements OnInit {
 
   voltarLista() {
     this.clienteSelecionado.set(null);
+    this.avisoExclusao.set(null);
   }
 
   obterSubtitulo(c: ClienteExt): string {
@@ -148,43 +159,53 @@ export class ListaClientes implements OnInit {
     }
   }
 
-  /**
-   * Apagar de verdade só funciona para cliente SEM nenhuma OS (cadastro
-   * duplicado ou de teste). Se ele tiver histórico, o backend recusa (409) e
-   * a tela oferece inativar: some da lista, mas as OS continuam guardadas.
-   */
-  excluirCliente(event: Event, c: ClienteExt) {
-    event.stopPropagation();
-    if (!c.id) return;
-    const id = c.id;
+  // ── Apagar / inativar ─────────────────────────────────────
+  //
+  // Apagar de verdade só funciona para cliente SEM nenhuma OS (cadastro
+  // duplicado ou de teste). Nada acontece sem passar pelo aviso da ficha:
+  //   'confirmar' → explica e pede confirmação para apagar;
+  //   'historico' → o backend recusou (tem OS): explica e oferece inativar,
+  //                 que tira da lista mas mantém o histórico.
 
-    const confirma = window.confirm(
-      `Apagar o cliente ${c.nome}${c.cpf ? ' (' + c.cpf + ')' : ''}?\n\n`
-      + 'Use para cadastro duplicado ou de teste. Esta ação não pode ser desfeita.'
-    );
-    if (!confirma) return;
+  /** Lixeira da lista ou "Apagar cliente" da ficha: abre a ficha com o aviso. */
+  pedirExclusao(event: Event, c: ClienteExt) {
+    event.stopPropagation();
+    if (this.clienteSelecionado()?.id !== c.id) this.selecionarCliente(c);
+    this.avisoExclusao.set({ etapa: 'confirmar' });
+  }
+
+  cancelarExclusao() {
+    this.avisoExclusao.set(null);
+  }
+
+  confirmarExclusao() {
+    const id = this.clienteSelecionado()?.id;
+    if (!id || this.excluindoId()) return;
 
     this.excluindoId.set(id);
     this.service.excluir(id).subscribe({
       next: () => this.tirarDaLista(id),
       error: (e: HttpErrorResponse) => {
         this.excluindoId.set(null);
-        if (e.status === 409 && window.confirm(`${mensagemDoErro(e)}\n\nInativar ${c.nome} agora?`)) {
-          this.inativar(id);
-        } else if (e.status !== 409) {
-          window.alert(mensagemDoErro(e, 'Não foi possível apagar o cliente.'));
-        }
+        this.avisoExclusao.set(e.status === 409
+          ? { etapa: 'historico', mensagem: mensagemDoErro(e) }
+          : { etapa: 'confirmar', erro: mensagemDoErro(e, 'Não foi possível apagar o cliente.') });
       }
     });
   }
 
-  private inativar(id: number) {
+  confirmarInativacao() {
+    const id = this.clienteSelecionado()?.id;
+    if (!id || this.excluindoId()) return;
+
     this.excluindoId.set(id);
     this.service.inativar(id).subscribe({
       next: () => this.tirarDaLista(id),
       error: e => {
         this.excluindoId.set(null);
-        window.alert(mensagemDoErro(e, 'Não foi possível inativar o cliente.'));
+        const atual = this.avisoExclusao();
+        this.avisoExclusao.set({ etapa: 'historico', mensagem: atual?.mensagem,
+          erro: mensagemDoErro(e, 'Não foi possível inativar o cliente.') });
       }
     });
   }
@@ -192,6 +213,7 @@ export class ListaClientes implements OnInit {
   private tirarDaLista(id: number) {
     this.clientes.update(lista => lista.filter(x => x.id !== id));
     if (this.clienteSelecionado()?.id === id) this.clienteSelecionado.set(null);
+    this.avisoExclusao.set(null);
     this.excluindoId.set(null);
   }
 }

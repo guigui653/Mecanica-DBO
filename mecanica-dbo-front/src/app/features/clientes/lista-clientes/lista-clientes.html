@@ -85,7 +85,7 @@
                   type="button"
                   class="btn-excluir"
                   [disabled]="excluindoId() === c.id"
-                  (click)="excluirCliente($event, c)"
+                  (click)="pedirExclusao($event, c)"
                   title="Apagar cliente (só cadastro duplicado ou de teste)">
                   @if (excluindoId() === c.id) {
                     …
@@ -163,12 +163,56 @@
           <div class="card-actions">
             <button type="button" class="btn btn-primary" (click)="abrirNovaOs()">Nova OS</button>
             <button type="button" class="btn btn-secondary" (click)="abrirForm(cs)">Editar cadastro</button>
-            <button type="button" class="btn btn-ghost btn-excluir-ficha"
-                    [disabled]="excluindoId() === cs.id"
-                    (click)="excluirCliente($event, cs)">
-              {{ excluindoId() === cs.id ? 'Aguarde…' : 'Apagar cliente' }}
-            </button>
           </div>
+
+          @let av = avisoExclusao();
+          @if (!av) {
+            <!-- Fica no canto, longe dos botões do dia a dia -->
+            <div class="zona-apagar">
+              <button type="button" class="btn btn-ghost btn-excluir-ficha" (click)="pedirExclusao($event, cs)">
+                Apagar cliente
+              </button>
+            </div>
+          } @else {
+            <div class="aviso-exclusao" role="alertdialog" aria-labelledby="aviso-exclusao-titulo">
+              @if (av.etapa === 'confirmar') {
+                <div id="aviso-exclusao-titulo" class="aviso-exclusao-titulo">Apagar {{ cs.nome }} definitivamente?</div>
+                <p>
+                  Use só para <strong>cadastro duplicado ou de teste</strong>. O cliente e os carros dele
+                  somem do sistema, e isso <strong>não pode ser desfeito</strong>.
+                </p>
+                <p class="text-soft text-sm">
+                  Se ele tiver ordem de serviço no histórico, o sistema não apaga — vai oferecer inativar.
+                </p>
+              } @else {
+                <div id="aviso-exclusao-titulo" class="aviso-exclusao-titulo">Este cliente tem histórico</div>
+                <p>{{ av.mensagem }}</p>
+                <p class="text-soft text-sm">
+                  Inativado, ele sai da lista de clientes, mas as ordens de serviço e o faturamento continuam guardados.
+                </p>
+              }
+
+              @if (av.erro) {
+                <p class="field-error" role="alert">{{ av.erro }}</p>
+              }
+
+              <div class="aviso-exclusao-acoes">
+                <button type="button" class="btn btn-secondary" (click)="cancelarExclusao()"
+                        [disabled]="excluindoId() === cs.id">Cancelar</button>
+                @if (av.etapa === 'confirmar') {
+                  <button type="button" class="btn btn-danger" (click)="confirmarExclusao()"
+                          [disabled]="excluindoId() === cs.id">
+                    {{ excluindoId() === cs.id ? 'Apagando…' : 'Apagar definitivamente' }}
+                  </button>
+                } @else {
+                  <button type="button" class="btn btn-primary" (click)="confirmarInativacao()"
+                          [disabled]="excluindoId() === cs.id">
+                    {{ excluindoId() === cs.id ? 'Inativando…' : 'Inativar cliente' }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
         </div>
       </section>
 

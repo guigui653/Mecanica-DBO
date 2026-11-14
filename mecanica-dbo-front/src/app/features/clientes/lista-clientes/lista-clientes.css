@@ -181,8 +181,45 @@
   cursor: not-allowed;
 }
 
+/* "Apagar cliente" no canto inferior direito do cartão, separado das ações do dia a dia */
+.zona-apagar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-divider);
+}
+
 .btn-excluir-ficha {
   color: #c0392b;
+  font-size: 13px;
+}
+
+/* Aviso antes de apagar/inativar */
+.aviso-exclusao {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, #c0392b 35%, transparent);
+  border-left-width: 4px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, #c0392b 5%, var(--color-surface));
+}
+
+.aviso-exclusao p {
+  margin: 6px 0 0;
+}
+
+.aviso-exclusao-titulo {
+  font-weight: 600;
+  color: #c0392b;
+}
+
+.aviso-exclusao-acoes {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 .btn-excluir-ficha:hover:not(:disabled) {
