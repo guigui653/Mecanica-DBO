@@ -61,8 +61,11 @@ O banco tem os dados reais da oficina. O script `scripts\backup-banco.ps1` gera 
 ## Testes
 
 ```bash
+cd mecanica-dbo-v2
+mvn test                      # backend (veja no README do backend como incluir os testes com banco)
+
 cd mecanica-dbo-front
-npx ng test --watch=false
+npx ng test --watch=false     # frontend
 ```
 
 ## Regras que não podem quebrar
@@ -70,5 +73,6 @@ npx ng test --watch=false
 - **Totais da OS são calculados pelo banco** (trigger), nunca no Java nem no Angular.
 - **Peça pode ter valor negativo** (linha de crédito); serviço não.
 - **OS entregue não pode ser alterada** — para corrigir, volte o status para Concluída.
+- **Histórico não se apaga:** só é possível apagar cliente sem nenhuma OS (cadastro duplicado ou de teste). Quem tem histórico é inativado.
 - **Estrutura do banco só muda por migração nova** (`V3__...sql`), nunca editando uma já aplicada.
 - **O formato de erro da API** (`timestamp`, `status`, `mensagem`, `campos`) é lido pelo frontend: não mude.

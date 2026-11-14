@@ -11,6 +11,7 @@ import shutil
 import json
 import base64
 import traceback
+import unicodedata
 from io import BytesIO
 from datetime import datetime
 
@@ -110,6 +111,26 @@ def separar_quantidade(descricao: str):
     limpa = re.sub(r'\s{2,}', ' ', limpa).strip()
     return (limpa if len(limpa) >= 3 else descricao), int(m.group(1))
 
+# Palavras de cabeçalho/rodapé da nota. Comparadas como PALAVRA INTEIRA e sem
+# acento: "DATA: 01/02/2026" e "Cartão de crédito" são descartadas, mas um item
+# como "SENSOR DATALINK" não (antes, qualquer linha que CONTIVESSE "data" sumia).
+_PALAVRAS_DE_CABECALHO = re.compile(
+    r'\b(cnpj|cpf|nota fiscal|nf-?e|data|hora|total|troco|subtotal|desconto|'
+    r'acrescimo|forma de pagamento|pix|dinheiro|cartao|protocolo|autorizacao|'
+    r'serie|numero)\b'
+)
+
+
+def _sem_acento(texto: str) -> str:
+    return ''.join(c for c in unicodedata.normalize('NFD', texto)
+                   if unicodedata.category(c) != 'Mn')
+
+
+def linha_de_cabecalho(linha: str) -> bool:
+    """True para linhas que não são item (CNPJ, data, totais, forma de pagamento...)."""
+    return bool(_PALAVRAS_DE_CABECALHO.search(_sem_acento(linha.lower())))
+
+
 def parsear_itens(texto: str) -> list:
     """
     Extrai itens, quantidades e valores do texto da NF.
@@ -138,12 +159,7 @@ def parsear_itens(texto: str) -> list:
         if len(linha) < 5:
             continue
 
-        # Ignora linhas de cabeçalho/rodapé comuns
-        ignorar = ['cnpj', 'cpf', 'nota fiscal', 'nf-e', 'data', 'hora',
-                   'total', 'troco', 'subtotal', 'desconto', 'acrescimo',
-                   'forma de pagamento', 'pix', 'dinheiro', 'cartao',
-                   'protocolo', 'autorizacao', 'serie', 'numero']
-        if any(p in linha.lower() for p in ignorar):
+        if linha_de_cabecalho(linha):
             continue
 
         # Tenta padrão simples (descrição + valor)
@@ -215,15 +231,15 @@ def extrair_metadados(texto: str) -> dict:
         try:
             d = datetime.strptime(data.group(1), '%d/%m/%Y')
             meta['data_emissao'] = d.strftime('%Y-%m-%d')
-        except:
-            pass
+        except ValueError:
+            pass   # OCR leu algo como 31/02/2026: fica sem data, o resto segue
 
     # Valor total
     totais = re.findall(r'(?:TOTAL|Total|Valor\s+Total)[^\d]*(\d{1,3}(?:\.\d{3})*,\d{2})', texto, re.I)
     if totais:
         try:
             meta['valor_total_nf'] = float(totais[-1].replace('.', '').replace(',', '.'))
-        except:
+        except ValueError:
             pass
 
     # Nome do fornecedor (primeira linha não vazia)
@@ -314,45 +330,11 @@ def processar_nf():
         }), 500
 
 
-@app.route('/ocr/processar-url', methods=['POST'])
-def processar_nf_url():
-    """
-    Alternativa: recebe caminho local da imagem.
-    Body: { "caminho": "C:/fotos/nf.jpg" }
-    """
-    try:
-        dados = request.get_json()
-        caminho = dados.get('caminho', '')
-
-        if not caminho or not os.path.exists(caminho):
-            return jsonify({"erro": f"Arquivo não encontrado: {caminho}"}), 404
-
-        img_array = cv2.imread(caminho)
-        if img_array is None:
-            return jsonify({"erro": "Não foi possível abrir a imagem"}), 400
-
-        texto_bruto = extrair_texto(img_array)
-        itens = parsear_itens(texto_bruto)
-        metadados = extrair_metadados(texto_bruto)
-
-        return jsonify({
-            "sucesso": True,
-            "metadados": metadados,
-            "itens": itens,
-            "total_itens": len(itens),
-            "texto_bruto": texto_bruto,
-        })
-
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"sucesso": False, "erro": str(e)}), 500
-
-
 if __name__ == '__main__':
     from waitress import serve
 
-    # 127.0.0.1 = só esta máquina (o Spring Boot roda no mesmo PC). O endpoint /ocr/processar-url
-    # lê arquivos pelo caminho, então NÃO exponha na rede. Para liberar: set OCR_HOST=0.0.0.0
+    # 127.0.0.1 = só esta máquina: quem chama o OCR é o Spring Boot, no mesmo PC.
+    # Para aceitar conexões de outro computador: set OCR_HOST=0.0.0.0
     host = os.environ.get('OCR_HOST', '127.0.0.1')
     port = int(os.environ.get('OCR_PORT', '5000'))
 
@@ -363,7 +345,6 @@ if __name__ == '__main__':
     print("  Endpoints:")
     print("    GET  /health")
     print("    POST /ocr/processar       (base64 ou multipart)")
-    print("    POST /ocr/processar-url   (caminho local)")
     print("=" * 60)
     serve(app, host=host, port=port, threads=4,
           max_request_body_size=20 * 1024 * 1024)  # imagens de até 20 MB

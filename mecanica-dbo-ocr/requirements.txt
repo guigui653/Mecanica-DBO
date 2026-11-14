@@ -1,6 +1,8 @@
-flask
-waitress
-opencv-python
-numpy
-pytesseract
-Pillow
+flask==3.1.3
+waitress==3.0.2
+# Versão "headless": sem janelas/GUI, que o serviço não usa. Não instale junto
+# com o opencv-python comum (os dois brigam pelo mesmo módulo cv2).
+opencv-python-headless==4.14.0.94
+numpy==2.5.1
+pytesseract==0.3.13
+Pillow==12.3.0
