@@ -61,6 +61,7 @@
             <th style="width: 84px; text-align: right">Veículos</th>
             <th style="width: 126px">Última visita</th>
             <th style="width: 60px"></th>
+            <th style="width: 48px"></th>
           </tr>
         </thead>
         <tbody>
@@ -76,6 +77,27 @@
               <td class="tabular">{{ c.ultimaVisita || '—' }}</td>
               <td style="text-align: right">
                 <span class="link-abrir">Abrir</span>
+              </td>
+              <td class="cliente-acao">
+                <button
+                  type="button"
+                  class="btn-excluir"
+                  [disabled]="excluindoId === c.id"
+                  (click)="excluirCliente($event, c)"
+                  title="Excluir cliente">
+                  @if (excluindoId === c.id) {
+                    …
+                  } @else {
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6l-1 14H6L5 6"></path>
+                      <path d="M10 11v6"></path>
+                      <path d="M14 11v6"></path>
+                      <path d="M9 6V4h6v2"></path>
+                    </svg>
+                  }
+                </button>
               </td>
             </tr>
           }
@@ -139,6 +161,11 @@
           <div class="card-actions">
             <button type="button" class="btn btn-primary" (click)="abrirNovaOs()">Nova OS</button>
             <button type="button" class="btn btn-secondary" (click)="abrirForm(clienteSelecionado)">Editar cadastro</button>
+            <button type="button" class="btn btn-ghost btn-excluir-ficha"
+                    [disabled]="excluindoId === clienteSelecionado.id"
+                    (click)="excluirCliente($event, clienteSelecionado)">
+              {{ excluindoId === clienteSelecionado.id ? 'Excluindo…' : 'Excluir cliente' }}
+            </button>
           </div>
         </div>
       </section>

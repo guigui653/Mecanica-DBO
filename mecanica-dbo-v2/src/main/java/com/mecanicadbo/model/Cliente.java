@@ -46,7 +46,7 @@ public class Cliente {
     private LocalDateTime criadoEm;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "cliente", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Veiculo> veiculos;
 
     @PrePersist

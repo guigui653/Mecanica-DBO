@@ -1,4 +1,4 @@
-﻿import { Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Cliente } from '../../shared/models/cliente.model';
@@ -36,7 +36,11 @@ export class ClienteService {
   }
 
   /** DELETE /clientes/{id} — 204 No Content */
-  inativar(id: number): Observable<void> {
+  excluir(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
+  }
+
+  inativar(id: number): Observable<void> {
+    return this.excluir(id);
   }
 }

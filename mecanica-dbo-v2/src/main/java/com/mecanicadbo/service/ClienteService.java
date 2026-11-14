@@ -3,6 +3,9 @@ package com.mecanicadbo.service;
 import com.mecanicadbo.dto.ClienteRequest;
 import com.mecanicadbo.exception.*;
 import com.mecanicadbo.model.Cliente;
+import com.mecanicadbo.model.OrdemServico;
+import com.mecanicadbo.model.StatusOs;
+import com.mecanicadbo.model.Veiculo;
 import com.mecanicadbo.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -98,6 +101,29 @@ public class ClienteService {
         if (Boolean.FALSE.equals(c.getAtivo())) return;   // já estava inativo
         c.setAtivo(false);
         repo.save(c);
+    }
+
+    /**
+     * Exclui um cliente e, em cascata, seus veículos e ordens de serviço já entregues.
+     * Rejeita a exclusão caso exista alguma OS ainda não entregue (ABERTA, EM_ANDAMENTO ou CONCLUIDA).
+     */
+    @Transactional
+    public void excluir(Long id) {
+        Cliente c = buscarPorId(id);
+        if (c.getVeiculos() != null) {
+            for (Veiculo v : c.getVeiculos()) {
+                if (v.getOrdensServico() != null) {
+                    for (OrdemServico os : v.getOrdensServico()) {
+                        if (os.getStatus() != StatusOs.ENTREGUE) {
+                            throw new RegraDeNegocioException(
+                                    "Não é possível excluir um cliente com OS em andamento (OS #"
+                                  + os.getId() + " — " + os.getStatus() + ").");
+                        }
+                    }
+                }
+            }
+        }
+        repo.delete(c);
     }
 
     // ------------------------------------------------------------------

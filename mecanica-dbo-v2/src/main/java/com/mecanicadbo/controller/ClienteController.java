@@ -68,9 +68,9 @@ public class ClienteController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Inativar cliente")
-    public ResponseEntity<Void> inativar(@PathVariable Long id) {
-        clienteService.inativar(id);
+    @Operation(summary = "Excluir cliente")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        clienteService.excluir(id);
         return ResponseEntity.noContent().build();
     }
 }

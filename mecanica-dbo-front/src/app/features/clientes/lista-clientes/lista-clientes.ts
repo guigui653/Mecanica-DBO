@@ -39,6 +39,7 @@ export class ListaClientes implements OnInit {
   carregando = false;
   erro = '';
   aviso = '';
+  excluindoId: number | null = null;
 
   filtros = ['Todos', 'Com OS aberta', 'Inativos há 1 ano'];
   filtroAtivo = 'Todos';
@@ -138,5 +139,34 @@ export class ListaClientes implements OnInit {
     if (fone) {
       window.open(`https://wa.me/55${fone}`, '_blank');
     }
+  }
+
+  excluirCliente(event: Event, c: ClienteExt) {
+    event.stopPropagation();
+    if (!c.id) return;
+
+    const confirma = window.confirm(
+      `Excluir o cliente ${c.nome}${c.cpf ? ' (' + c.cpf + ')' : ''}?\n\nEsta ação não pode ser desfeita.`
+    );
+    if (!confirma) return;
+
+    this.excluindoId = c.id;
+    this.service.excluir(c.id).subscribe({
+      next: () => {
+        this.clientes = this.clientes.filter(x => x.id !== c.id);
+        if (this.clienteSelecionado?.id === c.id) {
+          this.clienteSelecionado = null;
+        }
+        this.aplicarFiltros();
+        this.excluindoId = null;
+        this.cdr.markForCheck();
+      },
+      error: (e) => {
+        this.excluindoId = null;
+        const msg = e?.error?.mensagem ?? 'Não foi possível excluir o cliente.';
+        window.alert(msg);
+        this.cdr.markForCheck();
+      }
+    });
   }
 }

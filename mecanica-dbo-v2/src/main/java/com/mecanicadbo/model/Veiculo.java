@@ -57,7 +57,7 @@ public class Veiculo {
     private LocalDateTime criadoEm;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "veiculo", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "veiculo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrdemServico> ordensServico;
 
     @PrePersist

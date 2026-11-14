@@ -32,4 +32,13 @@ describe('Clientes com informações reais', () => {
     expect(tela.aviso).toBeTruthy();
     expect(tela.filtros).toEqual(['Todos']);
   });
+  it('exclui um cliente da lista após confirmação', () => {
+    http.expectOne('/clientes').flush([{ id: 7, nome: 'Carlos Teste', telefone1: '123' }]);
+    http.expectOne('/ordens').flush([]);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    tela.excluirCliente(new Event('click'), tela.clientes[0]);
+    http.expectOne(r => r.method === 'DELETE' && r.url === '/clientes/7').flush(null, { status: 204, statusText: 'No Content' });
+    expect(tela.clientes).toHaveLength(0);
+    expect(tela.clientesFiltrados).toHaveLength(0);
+  });
 });
