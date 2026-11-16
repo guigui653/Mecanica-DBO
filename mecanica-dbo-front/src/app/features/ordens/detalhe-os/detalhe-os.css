@@ -111,7 +111,7 @@
 }
 
 .campo-desc  { flex: 1 1 200px; min-width: 0; }
-.campo-qtd   { flex: 0 0 68px; }
+.campo-qtd   { flex: 0 0 104px; }
 .campo-valor { flex: 0 0 130px; }
 
 .btn-add {

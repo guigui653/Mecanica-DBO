@@ -203,9 +203,12 @@
               </div>
               <div class="field campo-qtd">
                 <label for="pqtd">Qtd</label>
-                <input id="pqtd" class="input" type="number" min="0.01" step="any" [disabled]="salvando()"
+                <!-- Texto, não "number": sem as setinhas (que davam 1,01) e aceitando vírgula -->
+                <input id="pqtd" class="input" type="text" inputmode="decimal" maxlength="9" placeholder="Ex.: 2"
+                       [disabled]="salvando()"
+                       [class.is-invalid]="pErro() && !pQuantidade().trim()"
                        [ngModel]="pQuantidade()"
-                       (ngModelChange)="pQuantidade.set($event)">
+                       (ngModelChange)="pQuantidade.set($event); pErro.set(null)">
               </div>
               <div class="field campo-valor">
                 <label for="pval">Valor unitário</label>

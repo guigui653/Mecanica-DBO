@@ -33,7 +33,7 @@ describe('Detalhe da OS: preservação e validação', () => {
   it('mantém o diagnóstico pendente ao adicionar uma peça e atualiza o total', () => {
     carregar();
     tela.fDiagnostico.set('Laudo ainda não salvo');
-    tela.pDescricao.set('Filtro'); tela.pValor.set(50);
+    tela.pDescricao.set('Filtro'); tela.pValor.set(50); tela.pQuantidade.set('1');
     tela.adicionarPeca();
     const req = http.expectOne('/ordens/1/pecas');
     expect(req.request.body.quantidade).toBe(1);
@@ -58,11 +58,16 @@ describe('Detalhe da OS: preservação e validação', () => {
     expect(tela.erro()).toBeNull();
     expect(tela.os()?.id).toBe(1);
   });
-  it.each([0, -1, null, NaN])('recusa quantidade inválida %s antes de enviar', quantidade => {
+  it.each(['', '  ', '0', '-1', 'abc', '1,234'])('recusa quantidade inválida "%s" antes de enviar', quantidade => {
     carregar(); tela.pDescricao.set('Peça'); tela.pValor.set(10); tela.pQuantidade.set(quantidade);
     tela.adicionarPeca();
     http.expectNone('/ordens/1/pecas');
-    expect(tela.pErro()).toContain('quantidade');
+    expect(tela.pErro()).toMatch(/quantidade/i);
+  });
+  it.each([['2', 2], ['1,5', 1.5], ['0.25', 0.25]])('aceita a quantidade digitada "%s"', (digitada, esperada) => {
+    carregar(); tela.pDescricao.set('Peça'); tela.pValor.set(10); tela.pQuantidade.set(digitada);
+    tela.adicionarPeca();
+    expect(http.expectOne('/ordens/1/pecas').request.body.quantidade).toBe(esperada);
   });
   it('recusa valor negativo e aceita um serviço gratuito', () => {
     carregar(); tela.sDescricao.set('Verificação'); tela.sValor.set(-10);
@@ -92,7 +97,7 @@ describe('Detalhe da OS: preservação e validação', () => {
     expect(tela.podeSair()).toBe(false);
   });
   it('bloqueia a repetição de uma operação em andamento', () => {
-    carregar(); tela.pDescricao.set('Filtro'); tela.pValor.set(50);
+    carregar(); tela.pDescricao.set('Filtro'); tela.pValor.set(50); tela.pQuantidade.set('1');
     tela.adicionarPeca(); tela.adicionarPeca();
     const req = http.expectOne('/ordens/1/pecas');
     req.flush(ordem);
@@ -101,7 +106,7 @@ describe('Detalhe da OS: preservação e validação', () => {
   it('bloqueia edição de uma OS entregue mesmo chamando os métodos diretamente', () => {
     carregar({ ...ordem, status: 'ENTREGUE' });
     tela.fDiagnostico.set('Alteração'); tela.salvar();
-    tela.pDescricao.set('Peça'); tela.pValor.set(1); tela.adicionarPeca();
+    tela.pDescricao.set('Peça'); tela.pValor.set(1); tela.pQuantidade.set('1'); tela.adicionarPeca();
     expect(http.match(() => true).length).toBe(0);
   });
 });

@@ -58,7 +58,7 @@ export class DetalheOs implements OnInit {
 
   // ── Formulário de nova peça ───────────────────────────────
   pDescricao  = signal('');
-  pQuantidade = signal<number | null>(1);
+  pQuantidade = signal('');
   pValor      = signal<number | null>(null);
   pPagoCliente = signal(false);
   pErro       = signal<string | null>(null);
@@ -234,8 +234,18 @@ export class DetalheOs implements OnInit {
       this.pErro.set('A descrição deve ter no máximo 200 caracteres');
       return;
     }
-    const quantidade = this.pQuantidade();
-    if (quantidade === null || !Number.isFinite(quantidade) || quantidade <= 0) {
+    // Digitada pela pessoa: aceita "2", "1,5" ou "1.5" (no máximo 2 casas, como no banco).
+    const qtdDigitada = this.pQuantidade().trim();
+    if (!qtdDigitada) {
+      this.pErro.set('Informe a quantidade');
+      return;
+    }
+    if (!/^\d+([.,]\d{1,2})?$/.test(qtdDigitada)) {
+      this.pErro.set('Quantidade inválida. Use números, como 2 ou 1,5');
+      return;
+    }
+    const quantidade = Number(qtdDigitada.replace(',', '.'));
+    if (quantidade <= 0) {
       this.pErro.set('Informe uma quantidade maior que zero');
       return;
     }
@@ -296,7 +306,7 @@ export class DetalheOs implements OnInit {
 
   private limparFormPeca(): void {
     this.pDescricao.set('');
-    this.pQuantidade.set(1);
+    this.pQuantidade.set('');
     this.pValor.set(null);
     this.pPagoCliente.set(false);
     this.pErro.set(null);
