@@ -508,8 +508,7 @@ Angular configurado com budget de `4 kB` por arquivo CSS de componente. O `dashb
 ```typescript
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/api',
-  ocrUrl: 'http://localhost:5000'   // microserviço Python de OCR (nota fiscal)
+  apiUrl: 'http://localhost:8080/api'
 };
 ```
 

@@ -8,7 +8,6 @@ Sistema de gestão de ordens de serviço da **Mecânica DBO** (Recanto das Emas,
 |---|---|---|
 | [`mecanica-dbo-v2/`](mecanica-dbo-v2/README.md) | Backend (API REST) | Spring Boot 3.3, Java 21, PostgreSQL, Flyway |
 | [`mecanica-dbo-front/`](mecanica-dbo-front/) | Frontend (telas) | Angular 22 |
-| [`mecanica-dbo-ocr/`](mecanica-dbo-ocr/) | Leitura de nota fiscal por foto (opcional) | Python, Flask, Tesseract |
 | [`scripts/`](scripts/LEIA-ME-backup.md) | Backup e restauração do banco | PowerShell |
 | `docs/rascunhos/` | Rascunhos e protótipos de design antigos, guardados só como referência | — |
 
@@ -39,22 +38,6 @@ npm start
 ```
 
 Abra `http://localhost:4200` e entre com o usuário `admin` (ou o definido em `APP_USERNAME`) e a senha de `APP_PASSWORD`.
-
-### 4. OCR de notas fiscais (opcional)
-
-Sem ele, o resto do sistema funciona normalmente; o botão de importar nota só avisa que o leitor está desligado.
-
-No dia a dia: dois cliques em **`mecanica-dbo-ocr\iniciar-ocr.bat`** e deixe a janela aberta.
-
-Na primeira vez num PC novo, crie o ambiente Python do OCR (só ele usa estas bibliotecas):
-
-```bash
-cd mecanica-dbo-ocr
-py -m venv venv
-venv\Scripts\python.exe -m pip install -r requirements.txt
-```
-
-Precisa do [Tesseract](https://github.com/UB-Mannheim/tesseract/wiki) instalado (com o idioma português). Se ele não estiver em `C:\Program Files\Tesseract-OCR`, defina `TESSERACT_CMD` com o caminho do `tesseract.exe`.
 
 ## Backup
 

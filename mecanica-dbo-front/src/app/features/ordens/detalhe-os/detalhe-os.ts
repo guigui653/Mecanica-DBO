@@ -7,7 +7,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { OrdemServicoService } from '../../../core/services/ordem-servico';
-import { ImportarNota } from './importar-nota/importar-nota';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
 import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 import {
@@ -24,7 +23,7 @@ interface Toast {
 @Component({
   selector: 'app-detalhe-os',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ImportarNota, PlacaPipe],
+  imports: [CommonModule, FormsModule, RouterLink, PlacaPipe],
   templateUrl: './detalhe-os.html',
   styleUrl: './detalhe-os.css'
 })
@@ -276,13 +275,6 @@ export class DetalheOs implements OnInit {
         this.notificar(mensagemDoErro(e), true);
       }
     });
-  }
-
-  /** Chamado pelo <app-importar-nota> depois que as peças foram lançadas. */
-  aoImportarPecas(r: { os: OrdemServico; quantidade: number }): void {
-    // false: não sobrescreve diagnóstico/km que o mecânico ainda não salvou (igual ao adicionarPeca)
-    this.aplicar(r.os, false);
-    this.notificar(`${r.quantidade} peça(s) importada(s) da nota`);
   }
 
   removerPeca(item: ItemPeca): void {

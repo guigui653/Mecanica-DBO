@@ -2,7 +2,7 @@
 
 API REST do sistema de gestão da **Mecânica DBO**: Spring Boot 3.3, Java 21 e PostgreSQL.
 
-Para subir o sistema inteiro (banco, backend, frontend e OCR), veja o [README da raiz](../README.md).
+Para subir o sistema inteiro (banco, backend e frontend), veja o [README da raiz](../README.md).
 
 ---
 
@@ -32,7 +32,6 @@ No IntelliJ, rode `MecanicaDboApplication` com estas **variáveis de ambiente** 
 | `DB_URL` | não | `jdbc:postgresql://localhost:5432/mecanica_dbo` | Apontar para outro banco (ex.: uma cópia para teste) |
 | `DB_USERNAME` / `DB_PASSWORD` | não | `postgres` / `postgres` | Acesso ao PostgreSQL |
 | `APP_CORS_ORIGINS` | não | `http://localhost:4200,...` | Endereço do frontend, se não for o padrão |
-| `OCR_URL` | não | `http://127.0.0.1:5000` | Endereço do serviço Python de OCR |
 | `FLYWAY_ENABLED` | não | `true` | Desligar o Flyway (só em casos especiais) |
 | `SPRING_PROFILES_ACTIVE` | não | — | `prod` no PC da oficina: sem Swagger, sem SQL no console, log INFO |
 
@@ -66,7 +65,7 @@ com.mecanicadbo
 ├── config/       SecurityConfig (login, CSRF, CORS), OpenApiConfig
 ├── controller/   Endpoints REST
 ├── dto/          *Request (entrada, sem id) e *DTO (saída)
-├── exception/    GlobalExceptionHandler, OcrExceptionHandler e exceções de negócio
+├── exception/    GlobalExceptionHandler e exceções de negócio
 ├── model/        Entidades JPA
 ├── repository/   Spring Data (consultas com JOIN FETCH)
 └── service/      Regras de negócio
@@ -96,7 +95,6 @@ Todos exigem login, exceto `/api/auth/*` e o Swagger. O Swagger (`/swagger-ui.ht
 | Itens da OS | `POST /api/ordens/{id}/pecas`, `DELETE /{osId}/pecas/{itemId}`, `POST /{id}/servicos`, `DELETE /{osId}/servicos/{itemId}` |
 | Recibo | `GET /api/ordens/{id}/pdf` |
 | Painel | `GET /api/dashboard/resumo` — contadores, pátio, prontas, faturamento e clientes novos do mês, já contados pelo banco |
-| OCR | `POST /api/ocr/nota` (multipart, campo `file`), `GET /api/ocr/status` |
 
 ### Formato de erro
 
