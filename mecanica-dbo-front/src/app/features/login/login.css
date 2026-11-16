@@ -39,9 +39,9 @@
   margin: 0;
   padding: 10px 12px;
   font-size: 14px;
-  color: #9b2c2c;
-  background: #fff5f5;
-  border: 1px solid #feb2b2;
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
   border-radius: var(--radius);
 }
 .login-btn { width: 100%; justify-content: center; }

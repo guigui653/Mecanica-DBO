@@ -2,6 +2,7 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from './core/services/auth';
 import { DashboardService } from './core/services/dashboard';
+import { TemaService } from './core/services/tema';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +14,8 @@ import { DashboardService } from './core/services/dashboard';
 export class App {
   protected auth = inject(AuthService);
   private dashboard = inject(DashboardService);
+  /** Injetado aqui para o tema valer em todas as telas, inclusive no login. */
+  protected tema = inject(TemaService);
 
   /** Contadores exibidos ao lado dos itens do menu. */
   totalClientes = signal<number | null>(null);

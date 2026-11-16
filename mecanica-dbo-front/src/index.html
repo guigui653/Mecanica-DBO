@@ -6,6 +6,15 @@
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <script>
+      // Aplica o tema escolhido antes do sistema carregar, para a tela não piscar em branco.
+      // A mesma chave é usada pelo TemaService (core/services/tema.ts).
+      try {
+        if (localStorage.getItem('mecanica-dbo.tema') === 'escuro') {
+          document.documentElement.dataset.tema = 'escuro';
+        }
+      } catch (e) {}
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

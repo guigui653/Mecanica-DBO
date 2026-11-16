@@ -13,8 +13,8 @@
 .sidebar {
   flex: none;
   width: var(--sidebar-width);
-  background: #fbf9f6;
-  border-right: 1px solid rgba(26, 25, 23, 0.08);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--color-divider);
   color: var(--color-text);
   display: flex;
   flex-direction: column;
@@ -23,7 +23,7 @@
 
 .sidebar-brand {
   padding: 0 20px 22px;
-  border-bottom: 1px solid rgba(26, 25, 23, 0.08);
+  border-bottom: 1px solid var(--color-divider);
   margin-bottom: 16px;
 }
 
@@ -32,7 +32,7 @@
   font-weight: 600;
   font-size: 20px;
   line-height: 1.15;
-  color: #1a1917;
+  color: var(--color-text);
   letter-spacing: -0.01em;
 }
 
@@ -63,21 +63,21 @@
   padding: 9px 12px 9px 10px;
   border-radius: var(--radius);
   font-size: 13.5px;
-  color: #262422;
+  color: var(--color-text);
   text-decoration: none;
   border-left: 3px solid transparent;
   transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
 .nav-item:hover {
-  background: rgba(182, 130, 53, 0.06);
-  color: #1a1917;
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  color: var(--color-text);
   text-decoration: none;
 }
 
 .nav-item.active {
-  background: #f3ede2;
-  color: #a3722a;
+  background: var(--nav-ativo-bg);
+  color: var(--color-accent-texto);
   font-weight: 500;
   border-left-color: var(--color-accent);
 }
@@ -91,12 +91,12 @@
   margin-left: auto;
   font-size: 11.5px;
   font-variant-numeric: tabular-nums;
-  color: #a8a297;
+  color: var(--color-text-faint);
   transition: color 0.12s ease;
 }
 
 .nav-item.active .nav-count {
-  color: #a3722a;
+  color: var(--color-accent-texto);
   font-weight: 500;
 }
 
@@ -106,7 +106,7 @@
   margin-top: auto;
   padding: 16px 20px 20px;
   font-size: 11.5px;
-  color: #8c857b;
+  color: var(--color-text-soft);
   line-height: 1.4;
 }
 
@@ -125,7 +125,14 @@
 }
 
 .sync-dot.offline {
-  background: #dc2626;
+  background: var(--color-danger);
+}
+
+.btn-tema {
+  width: 100%;
+  margin-top: 10px;
+  gap: 8px;
+  justify-content: center;
 }
 
 /* ── CONTEÚDO ───────────────────────────────────────────── */
@@ -148,7 +155,7 @@
     width: 100%;
     padding-top: 14px;
     border-right: none;
-    border-bottom: 1px solid rgba(26, 25, 23, 0.08);
+    border-bottom: 1px solid var(--color-divider);
   }
 
   .sidebar-nav {

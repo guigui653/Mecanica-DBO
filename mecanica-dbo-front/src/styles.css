@@ -39,8 +39,61 @@
   --shadow-sm: 0 1px 2px rgba(26, 25, 23, 0.06);
   --shadow-lg: 0 12px 32px rgba(26, 25, 23, 0.14);
 
+  /* ── Avisos (fundos derivam destas cores com color-mix) ─ */
+  --color-danger:       #c53030;
+  --color-danger-forte: #9b2c2c;   /* toast de erro */
+  --color-success:      #2f855a;
+  --color-warning:      #b78103;
+  --color-accent-texto: #a3722a;   /* dourado usado como texto (item ativo, etiquetas) */
+  --tag2-bg:            #fdf3d7;
+  --tag2-texto:         #926b1c;
+
+  /* ── Menu lateral ─────────────────────────────────────── */
+  --sidebar-bg:         #fbf9f6;
+  --nav-ativo-bg:       #f3ede2;
+
   /* ── Espaçamento ──────────────────────────────────────── */
   --sidebar-width: 240px;
+
+  color-scheme: light;   /* campos de data, barras de rolagem e o Angular Material */
+}
+
+/* ============================================================
+   TEMA ESCURO — ligado pelo botão do menu (data-tema="escuro"
+   no <html>). Só troca os valores das variáveis acima: as telas
+   não precisam saber qual tema está ativo.
+   ============================================================ */
+:root[data-tema="escuro"] {
+  --color-bg:          #161513;
+  --color-surface:     #201e1b;
+  --color-text:        #ece9e4;
+
+  --color-accent:      #c9954a;   /* o dourado da oficina, um pouco mais claro para ter contraste */
+  --color-accent-700:  #dcae67;
+  --color-accent-texto:#dcae67;
+
+  --color-dark:        #0f0e0c;
+  --color-on-dark:     #f3f2f2;
+
+  --status-aberta:       #d1a052;
+  --status-em-andamento: #5b9bd5;
+  --status-concluida:    #4caf7d;
+  --status-entregue:     #9aa5b4;
+
+  --color-danger:       #f07272;
+  --color-danger-forte: #b23a3a;
+  --color-success:      #5cbf8a;
+  --color-warning:      #e0b04a;
+  --tag2-bg:            color-mix(in srgb, #e0b04a 16%, transparent);
+  --tag2-texto:         #e7c27a;
+
+  --sidebar-bg:         #1b1a17;
+  --nav-ativo-bg:       color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+
+  color-scheme: dark;
 }
 
 /* ============================================================
@@ -147,11 +200,11 @@ td.valor {
 
 .btn-danger {
   background: transparent;
-  color: #c53030;
-  border-color: color-mix(in srgb, #c53030 30%, transparent);
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
 }
 .btn-danger:hover:not(:disabled) {
-  background: color-mix(in srgb, #c53030 8%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
 }
 
 .btn-block {
@@ -208,12 +261,12 @@ td.valor {
 }
 
 .input.is-invalid {
-  border-color: #c53030;
+  border-color: var(--color-danger);
 }
 
 .field-error {
   font-size: 11.5px;
-  color: #c53030;
+  color: var(--color-danger);
 }
 
 .field-hint {
@@ -511,7 +564,7 @@ td.valor {
 }
 
 .toast-error {
-  background: #9b2c2c;
+  background: var(--color-danger-forte);
 }
 
 /* ============================================================
@@ -631,11 +684,11 @@ td.valor {
 }
 .tag-accent {
   background: color-mix(in srgb, var(--color-accent) 15%, transparent);
-  color: #8c5e18;
+  color: var(--color-accent-texto);
 }
 .tag-accent-2 {
-  background: #fdf3d7;
-  color: #926b1c;
+  background: var(--tag2-bg);
+  color: var(--tag2-texto);
 }
 .tag-neutral {
   background: color-mix(in srgb, var(--color-text) 8%, transparent);

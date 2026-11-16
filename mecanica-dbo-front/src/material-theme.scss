@@ -21,10 +21,9 @@ html {
 }
 
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
-  color-scheme: light;
+  // Sem color-scheme aqui: o body herda o do <html>, que o styles.css troca
+  // entre light e dark conforme o tema escolhido no menu (data-tema).
+  // Assim os formulários do Angular Material acompanham o tema.
 
   // Set a default background, font and text colors for the application using
   // Angular Material's system-level CSS variables. Learn more about these

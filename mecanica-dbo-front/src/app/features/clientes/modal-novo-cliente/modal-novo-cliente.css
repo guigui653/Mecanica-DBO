@@ -12,8 +12,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-dialog {
@@ -31,8 +36,15 @@
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-header {
@@ -143,29 +155,32 @@
 }
 
 .field label .req {
-  color: #c53030;
+  color: var(--color-danger);
   font-weight: bold;
 }
 
-.input, select.input {
+.input,
+select.input {
   width: 100%;
   padding: 8px 11px;
   border: 1px solid var(--color-divider, #d5dae1);
   border-radius: var(--radius, 4px);
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-text, #1a1917);
   font-size: 13.5px;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.input:focus, select.input:focus {
+.input:focus,
+select.input:focus {
   border-color: var(--color-accent, #b68235);
   box-shadow: 0 0 0 2px var(--color-accent-soft, rgba(182, 130, 53, 0.2));
 }
 
-.input:disabled, select.input:disabled {
-  background: #f8f7f5;
+.input:disabled,
+select.input:disabled {
+  background: color-mix(in srgb, var(--color-text) 4%, var(--color-surface));
   cursor: not-allowed;
   opacity: 0.7;
 }
@@ -177,9 +192,9 @@
 }
 
 .field-error-banner {
-  background: #fff5f5;
-  border: 1px solid #feb2b2;
-  color: #c53030;
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  color: var(--color-danger);
   padding: 9px 12px;
   border-radius: 4px;
   font-size: 13px;
@@ -209,8 +224,8 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #edf7ee;
-  color: #2f855a;
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-success);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -231,7 +246,7 @@
 }
 
 .resumo-card {
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid var(--color-divider, #e2e0dc);
   border-radius: 6px;
   padding: 14px;
@@ -280,6 +295,13 @@
 }
 
 @media (max-width: 600px) {
-  .grid-2, .resumo-card { grid-template-columns: 1fr; }
-  .modal-dialog { max-height: 96vh; }
+
+  .grid-2,
+  .resumo-card {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-dialog {
+    max-height: 96vh;
+  }
 }
