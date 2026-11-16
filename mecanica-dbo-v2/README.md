@@ -29,6 +29,7 @@ No IntelliJ, rode `MecanicaDboApplication` com estas **variáveis de ambiente** 
 |---|---|---|---|
 | `APP_PASSWORD` | **sim** | — | Senha do login. Sem ela o sistema não sobe |
 | `CPF_CHAVE` | **sim** | — | Chave da criptografia do CPF (32 bytes em Base64; como gerar, abaixo). Sem ela o sistema não sobe |
+| `CPF_CHAVE_ANTIGA` | não | — | Só na **troca de chave** (abaixo). Apague depois |
 | `APP_USERNAME` | não | `admin` | Usuário do login |
 | `DB_URL` | não | `jdbc:postgresql://localhost:5432/mecanica_dbo` | Apontar para outro banco (ex.: uma cópia para teste) |
 | `DB_USERNAME` / `DB_PASSWORD` | não | `postgres` / `postgres` | Acesso ao PostgreSQL |
@@ -49,6 +50,20 @@ $b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create
 - **Anote a chave em papel e guarde fora do PC**, junto com a senha dos backups. **Perder a chave = perder todos os CPFs**: nem restaurando um backup dá para lê-los.
 - **A chave acompanha o banco.** Ao levar o banco (ou restaurar um backup) para outro PC, o backend de lá precisa da **mesma** `CPF_CHAVE`.
 - A tela e o recibo mostram o CPF mascarado (`***.456.789-**`). A busca de clientes acha o CPF só pelo número completo.
+- O sistema **recusa chave de exemplo** (tipo `xxxx...=` ou `AAAA...=`): a chave tem que ser gerada pelo comando acima.
+- Se o terminal já é PowerShell, rode o comando **direto** (sem `powershell -Command "..."` em volta). Para a chave ir direto para a área de transferência, sem aparecer na tela, termine com `| Set-Clipboard`.
+
+### Trocar a chave do CPF
+
+Quando a chave vazou ou foi usada uma chave fraca:
+
+1. Gere a chave nova (comando acima) e **anote no papel**.
+2. Nas variáveis de ambiente, renomeie a `CPF_CHAVE` atual para `CPF_CHAVE_ANTIGA` e crie a `CPF_CHAVE` com a nova:
+   `APP_PASSWORD=...;CPF_CHAVE_ANTIGA=<chave antiga>;CPF_CHAVE=<chave nova>`
+3. Suba o backend. Logo depois do Flyway, o log mostra `Troca da chave do CPF concluída: N CPF(s) trancado(s) com a chave nova`. É tudo numa transação: se algum CPF não abrir com nenhuma das duas chaves, nada muda e o sistema não sobe.
+4. **Apague a `CPF_CHAVE_ANTIGA`** e faça um backup novo.
+
+Os backups feitos **antes** da troca continuam trancados com a chave antiga.
 
 ## Banco de dados e Flyway
 
