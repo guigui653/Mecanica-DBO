@@ -25,7 +25,7 @@ Não precisa rodar script de tabelas: o **Flyway** cria toda a estrutura na prim
 
 ### 2. Backend
 
-No IntelliJ, abra `mecanica-dbo-v2` e rode `MecanicaDboApplication` com a variável de ambiente **`APP_PASSWORD`** (a senha do login — sem ela o sistema não sobe). As outras variáveis estão no [README do backend](mecanica-dbo-v2/README.md#como-rodar).
+No IntelliJ, abra `mecanica-dbo-v2` e rode `MecanicaDboApplication` com as variáveis de ambiente **`APP_PASSWORD`** (a senha do login) e **`CPF_CHAVE`** (a chave da criptografia do CPF). Sem elas o sistema não sobe. As outras variáveis estão no [README do backend](mecanica-dbo-v2/README.md#como-rodar).
 
 A API fica em `http://localhost:8080` e a documentação em `http://localhost:8080/swagger-ui.html`.
 
@@ -60,6 +60,7 @@ npx ng test --watch=false     # frontend
 - **Totais da OS são calculados pelo banco** (trigger), nunca no Java nem no Angular.
 - **Peça pode ter valor negativo** (linha de crédito); serviço não.
 - **OS entregue não pode ser alterada** — para corrigir, volte o status para Concluída.
+- **CPF criptografado no banco e mascarado na tela e no recibo.** A chave (`CPF_CHAVE`) fica anotada fora do PC e acompanha o banco: sem ela os CPFs não abrem.
 - **Histórico não se apaga:** só é possível apagar cliente sem nenhuma OS (cadastro duplicado ou de teste). Quem tem histórico é inativado.
 - **Estrutura do banco só muda por migração nova** (`V3__...sql`), nunca editando uma já aplicada.
 - **O formato de erro da API** (`timestamp`, `status`, `mensagem`, `campos`) é lido pelo frontend: não mude.

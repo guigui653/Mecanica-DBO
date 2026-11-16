@@ -40,7 +40,7 @@ class ReciboMontadorTest {
     void osComCamposVaziosVirandoTracoECreditoNegativo() {
         Map<String, Object> cliente = new HashMap<>();
         cliente.put("nome", "Teste Dois");
-        cliente.put("cpf", null);                       // CPF ausente não pode quebrar
+        cliente.put("cpf", "12345678900");
 
         Map<String, Object> veiculo = new HashMap<>();
         veiculo.put("placa", "JEH3030");
@@ -66,7 +66,8 @@ class ReciboMontadorTest {
 
         assertThat(r.get("numero")).isEqualTo("#3");
         assertThat(r.get("status")).isEqualTo("Concluída");
-        assertThat(cli.get("cpf")).isEqualTo(ReciboMontador.VAZIO);
+        assertThat(cli.get("cpf")).isEqualTo("***.456.789-**");      // recibo vai para o cliente: sempre mascarado
+        assertThat(cli.get("telefone")).isEqualTo(ReciboMontador.VAZIO);  // campo ausente não pode quebrar
         assertThat(vei.get("placa")).isEqualTo("JEH-3030");
         assertThat(vei.get("combustivel")).isEqualTo("Híbrido");
         assertThat(r.get("reclamacoes")).isEqualTo(List.of("Barulho", "na frente"));

@@ -11,6 +11,7 @@ import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { FormCliente } from '../form-cliente/form-cliente';
 import { VeiculosDoCliente } from '../veiculos-do-cliente/veiculos-do-cliente';
+import { CpfPipe, formatarCpf } from '../../../shared/pipes/cpf.pipe';
 
 export interface ClienteExt extends Cliente {
   totalVeiculos?: number;
@@ -30,7 +31,7 @@ const FILTROS_COMPLETOS =['Todos', 'Com OS aberta', 'Inativos há 1 ano'];
 @Component({
   selector: 'app-lista-clientes',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, VeiculosDoCliente],
+  imports: [CommonModule, FormsModule, MatDialogModule, VeiculosDoCliente, CpfPipe],
   templateUrl: './lista-clientes.html',
   styleUrl: './lista-clientes.css'
 })
@@ -50,6 +51,8 @@ export class ListaClientes implements OnInit {
   excluindoId = signal<number | null>(null);
   /** Aviso de apagar/inativar mostrado na ficha (null = fechado). */
   avisoExclusao = signal<AvisoExclusao | null>(null);
+  /** CPF inteiro na ficha só quando a pessoa clica em "Mostrar"; volta a esconder ao trocar de cliente. */
+  mostrarCpf = signal(false);
 
   filtros     = signal<string[]>(FILTROS_COMPLETOS);
   filtroAtivo = signal('Todos');
@@ -59,7 +62,8 @@ export class ListaClientes implements OnInit {
     const q = this.termoBusca().trim().toLowerCase();
     const filtro = this.filtroAtivo();
     return this.clientes().filter(c => {
-      const matchQuery = !q || [c.nome, c.cpf, c.telefone1, c.email].join(' ').toLowerCase().includes(q);
+      // CPF com e sem pontos, para "123.456.789-00" e "12345678900" acharem o mesmo cliente.
+      const matchQuery = !q || [c.nome, c.cpf, formatarCpf(c.cpf), c.telefone1, c.email].join(' ').toLowerCase().includes(q);
       const matchFilter = filtro === 'Todos' || (c.tags || []).includes(filtro);
       return matchQuery && matchFilter;
     });
@@ -114,6 +118,7 @@ export class ListaClientes implements OnInit {
   selecionarCliente(c: ClienteExt) {
     this.clienteSelecionado.set(c);
     this.avisoExclusao.set(null);
+    this.mostrarCpf.set(false);
     if (!c.id) return;
     const id = c.id;
     this.service.listarVeiculos(id).subscribe({
@@ -132,6 +137,7 @@ export class ListaClientes implements OnInit {
   voltarLista() {
     this.clienteSelecionado.set(null);
     this.avisoExclusao.set(null);
+    this.mostrarCpf.set(false);
   }
 
   obterSubtitulo(c: ClienteExt): string {

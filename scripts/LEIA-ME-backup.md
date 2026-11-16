@@ -68,6 +68,8 @@ O backup no mesmo computador protege contra erro de digitação ou dado apagado,
 
 ## 5. Restaurar um backup
 
+> **Os CPFs dos clientes estão criptografados no banco.** Um backup restaurado só mostra os CPFs se o sistema rodar com a **mesma `CPF_CHAVE`** de quando ele foi feito. Guarde essa chave junto com as outras senhas, fora do PC. (Backups anteriores a 16/11/2026 ainda têm o CPF legível.)
+
 ### Para conferir ou consultar dados antigos (seguro)
 
 ```powershell

@@ -73,7 +73,7 @@
                 <div class="client-name">{{ c.nome }}</div>
                 <div class="client-sub">{{ obterSubtitulo(c) }}</div>
               </td>
-              <td class="tabular">{{ c.cpf || '—' }}</td>
+              <td class="tabular">{{ (c.cpf | cpf) || '—' }}</td>
               <td class="tabular">{{ c.telefone1 || '—' }}</td>
               <td class="tabular" style="text-align: right">{{ c.totalVeiculos ?? '—' }}</td>
               <td class="tabular">{{ c.ultimaVisita || '—' }}</td>
@@ -131,7 +131,15 @@
           <div class="info-list">
             <div>
               <div class="info-label">Documento</div>
-              <span class="tabular">{{ cs.cpf || 'Não informado' }}</span>
+              @if (cs.cpf) {
+                <span class="tabular">{{ cs.cpf | cpf:(mostrarCpf() ? 'completo' : 'mascarado') }}</span>
+                <button type="button" class="btn btn-ghost btn-mostrar-cpf" (click)="mostrarCpf.set(!mostrarCpf())"
+                        [attr.aria-label]="mostrarCpf() ? 'Esconder o CPF' : 'Mostrar o CPF completo'">
+                  {{ mostrarCpf() ? 'Esconder' : 'Mostrar' }}
+                </button>
+              } @else {
+                <span class="tabular">Não informado</span>
+              }
             </div>
             <div>
               <div class="info-label">Telefone</div>

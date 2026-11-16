@@ -10,6 +10,7 @@ import { AtendimentoRequest, AtendimentoService, DadosAbertura } from '../../../
 import { Veiculo, Combustivel } from '../../../shared/models/veiculo.model';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
+import { CpfPipe } from '../../../shared/pipes/cpf.pipe';
 import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 
 /**
@@ -30,7 +31,7 @@ import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 @Component({
   selector: 'app-nova-os',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PlacaPipe],
+  imports: [CommonModule, FormsModule, RouterLink, PlacaPipe, CpfPipe],
   templateUrl: './nova-os.html',
   styleUrl: './nova-os.css'
 })

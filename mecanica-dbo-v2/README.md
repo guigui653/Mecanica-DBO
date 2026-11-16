@@ -28,6 +28,7 @@ No IntelliJ, rode `MecanicaDboApplication` com estas **variáveis de ambiente** 
 | Variável | Obrigatória | Padrão | Para quê |
 |---|---|---|---|
 | `APP_PASSWORD` | **sim** | — | Senha do login. Sem ela o sistema não sobe |
+| `CPF_CHAVE` | **sim** | — | Chave da criptografia do CPF (32 bytes em Base64; como gerar, abaixo). Sem ela o sistema não sobe |
 | `APP_USERNAME` | não | `admin` | Usuário do login |
 | `DB_URL` | não | `jdbc:postgresql://localhost:5432/mecanica_dbo` | Apontar para outro banco (ex.: uma cópia para teste) |
 | `DB_USERNAME` / `DB_PASSWORD` | não | `postgres` / `postgres` | Acesso ao PostgreSQL |
@@ -37,6 +38,18 @@ No IntelliJ, rode `MecanicaDboApplication` com estas **variáveis de ambiente** 
 
 A API sobe em `http://localhost:8080`.
 
+### A chave do CPF (`CPF_CHAVE`)
+
+O CPF fica **criptografado no banco** (AES-256-GCM). Para gerar a chave, uma vez, no PowerShell:
+
+```powershell
+$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)
+```
+
+- **Anote a chave em papel e guarde fora do PC**, junto com a senha dos backups. **Perder a chave = perder todos os CPFs**: nem restaurando um backup dá para lê-los.
+- **A chave acompanha o banco.** Ao levar o banco (ou restaurar um backup) para outro PC, o backend de lá precisa da **mesma** `CPF_CHAVE`.
+- A tela e o recibo mostram o CPF mascarado (`***.456.789-**`). A busca de clientes acha o CPF só pelo número completo.
+
 ## Banco de dados e Flyway
 
 A estrutura do banco está em `src/main/resources/db/migration`:
@@ -45,6 +58,7 @@ A estrutura do banco está em `src/main/resources/db/migration`:
 |---|---|
 | `V1__schema_inicial.sql` | Tabelas, enums, função e triggers de totais, constraints e índices (gerado do banco real em 29/10/2026) |
 | `V2__normalizar_placas.sql` | Placas só com letras e números (`JEH-3030` → `JEH3030`) + `CHECK` que impede hífen daqui em diante |
+| `V3__criptografar_cpf` (Java, em `com.mecanicadbo.migracao`) | CPF criptografado: cria `cpf_cifrado` e `cpf_hash`, converte os CPFs existentes e apaga a coluna `cpf` em claro. Para sem mudar nada se dois clientes tiverem o mesmo CPF. É em Java porque precisa da `CPF_CHAVE` |
 
 - **Banco vazio:** o Flyway roda todas as versões e cria tudo.
 - **Banco que já tinha tabelas antes do Flyway:** faz *baseline* na versão 1 e roda só as seguintes.

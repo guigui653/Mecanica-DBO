@@ -91,7 +91,7 @@
                        (click)="selecionarCliente(c)">
                     <div>
                       <strong>{{ c.nome }}</strong>
-                      <span class="cliente-info"> · Tel: {{ c.telefone1 }} {{ c.cpf ? ' · CPF: ' + c.cpf : '' }}</span>
+                      <span class="cliente-info"> · Tel: {{ c.telefone1 }} {{ c.cpf ? ' · CPF: ' + (c.cpf | cpf) : '' }}</span>
                     </div>
                     <button type="button" class="btn btn-sm btn-ghost">
                       {{ clienteSelecionado()?.id === c.id ? 'Selecionado ✓' : 'Selecionar' }}

@@ -17,16 +17,24 @@ public class ClienteService {
 
     private final ClienteRepository repo;
     private final OrdemServicoRepository osRepo;
+    private final CpfCripto cripto;
 
     // ------------------------------------------------------------------
     // Consultas
     // ------------------------------------------------------------------
 
-    /** Listagem da tela de clientes. Com ou sem termo, só ativos. */
+    /**
+     * Listagem da tela de clientes. Com ou sem termo, só ativos.
+     * O CPF está criptografado, então só é achado pelo número COMPLETO
+     * (11 dígitos, com ou sem pontos); nome e telefone acham por pedaço.
+     */
     @Transactional(readOnly = true)
     public List<Cliente> buscar(String termo) {
         if (termo == null || termo.isBlank()) return repo.findByAtivoTrueOrderByNome();
-        return repo.buscarPorTermo(termo.trim());
+        String digitos = Cpfs.soDigitos(termo);
+        // "" nunca é igual a um hash: sem CPF completo, a busca por CPF fica de fora.
+        String cpfHash = digitos.length() == 11 ? cripto.hash(digitos) : "";
+        return repo.buscarPorTermo(termo.trim(), cpfHash);
     }
 
     @Transactional(readOnly = true)
@@ -55,7 +63,7 @@ public class ClienteService {
 
         Cliente c = new Cliente();
         c.setNome(dados.nome().trim());
-        c.setCpf(cpf);
+        aplicarCpf(c, cpf);
         c.setTelefone1(dados.telefone1().trim());
         c.setTelefone2(vazioParaNull(dados.telefone2()));
         c.setEmail(vazioParaNull(dados.email()));
@@ -73,7 +81,7 @@ public class ClienteService {
         validarCpfDisponivel(cpf, id);
 
         c.setNome(dados.nome().trim());
-        c.setCpf(cpf);
+        aplicarCpf(c, cpf);
         c.setTelefone1(dados.telefone1().trim());
         c.setTelefone2(vazioParaNull(dados.telefone2()));
         c.setEmail(vazioParaNull(dados.email()));
@@ -112,16 +120,28 @@ public class ClienteService {
     // ------------------------------------------------------------------
 
     /**
-     * CPF em branco vira null antes de chegar no banco.
-     *
-     * A coluna cpf tem índice único, e para o PostgreSQL "" não é null: o
-     * segundo cliente sem CPF gravaria "" de novo e bateria no índice. Null,
-     * ao contrário, pode se repetir à vontade num índice único.
+     * CPF só com os números; em branco vira null (que pode se repetir no
+     * índice único, ao contrário de ""). Com algo digitado, exige os 11 números.
      */
     private String normalizarCpf(String cpf) {
-        if (cpf == null) return null;
-        String limpo = cpf.trim();
-        return limpo.isEmpty() ? null : limpo;
+        String digitos = Cpfs.soDigitos(cpf);
+        if (digitos == null || digitos.isEmpty()) {
+            if (cpf != null && !cpf.isBlank()) {
+                throw new RegraDeNegocioException("CPF inválido: use os 11 números, como 123.456.789-00.");
+            }
+            return null;
+        }
+        if (digitos.length() != 11) {
+            throw new RegraDeNegocioException("CPF deve ter 11 números (foram digitados " + digitos.length() + ").");
+        }
+        return digitos;
+    }
+
+    /** Grava o CPF só cifrado + o hash; o campo em claro fica só em memória para a resposta. */
+    private void aplicarCpf(Cliente c, String cpfDigitos) {
+        c.setCpf(cpfDigitos);
+        c.setCpfCifrado(cripto.cifrar(cpfDigitos));
+        c.setCpfHash(cripto.hash(cpfDigitos));
     }
 
     private String vazioParaNull(String valor) {
@@ -138,8 +158,8 @@ public class ClienteService {
     private void validarCpfDisponivel(String cpf, Long idAtual) {
         if (cpf == null) return;
 
-        // Sem filtrar por ativo: o índice único vale para a tabela toda.
-        repo.findByCpf(cpf).ifPresent(existente -> {
+        // Pelo hash (o CPF em si está cifrado). Sem filtrar por ativo: o índice único vale para a tabela toda.
+        repo.findByCpfHash(cripto.hash(cpf)).ifPresent(existente -> {
             if (existente.getId().equals(idAtual)) return;
 
             String situacao = Boolean.FALSE.equals(existente.getAtivo())

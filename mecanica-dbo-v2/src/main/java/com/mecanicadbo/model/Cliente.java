@@ -10,6 +10,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "cliente")
+@EntityListeners(ClienteCpfListener.class)
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
@@ -24,9 +25,23 @@ public class Cliente {
     @Column(nullable = false, length = 120)
     private String nome;
 
-    @Size(max = 14)
-    @Column(unique = true, length = 14)
+    /**
+     * CPF em números, SÓ EM MEMÓRIA: nunca vai para o banco. É preenchido ao
+     * carregar (ClienteCpfListener) e gravado cifrado pelo ClienteService.
+     * Vai no JSON para a tela, que o mostra mascarado.
+     */
+    @Transient
     private String cpf;
+
+    /** CPF criptografado (AES-GCM). Só o CpfCripto lê. */
+    @JsonIgnore
+    @Column(name = "cpf_cifrado", columnDefinition = "text")
+    private String cpfCifrado;
+
+    /** Impressão digital do CPF: índice único e busca pelo CPF completo. */
+    @JsonIgnore
+    @Column(name = "cpf_hash", length = 64)
+    private String cpfHash;
 
     @NotBlank(message = "Telefone é obrigatório")
     @Column(name = "telefone_1", nullable = false, length = 20)

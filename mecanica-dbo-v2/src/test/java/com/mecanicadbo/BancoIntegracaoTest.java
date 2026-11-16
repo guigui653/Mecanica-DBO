@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest(properties = {
         "spring.datasource.url=${TESTE_DB_URL}",
         "app.admin.password=teste-integracao",
+        "app.cpf.chave=AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",   // chave só de teste
         "spring.jpa.show-sql=false"
 })
 class BancoIntegracaoTest {
@@ -125,6 +126,30 @@ class BancoIntegracaoTest {
         clientes.inativar(clienteId);
         assertThat(clienteRepo.findById(clienteId)).get()
                 .extracting(c -> c.getAtivo()).isEqualTo(false);
+    }
+
+    @Test
+    void cpfFicaIlegivelNoBancoEVoltaAoLerOCliente() {
+        // CPF único por execução (11 números), para o teste poder rodar várias vezes.
+        String cpf = String.format("%011d", ThreadLocalRandom.current().nextLong(10_000_000_000L, 99_999_999_999L));
+        String formatado = cpf.substring(0, 3) + "." + cpf.substring(3, 6) + "." + cpf.substring(6, 9) + "-" + cpf.substring(9);
+
+        Long id = clientes.criar(new ClienteRequest("Integração CPF", formatado, "61900000000", null, null)).getId();
+
+        // Direto no banco: só o texto cifrado e o hash, nenhum pedaço do número.
+        Object[] linha = tx.execute(s -> (Object[]) em.createNativeQuery(
+                "SELECT cpf_cifrado, cpf_hash FROM cliente WHERE id = :id").setParameter("id", id).getSingleResult());
+        assertThat((String) linha[0]).startsWith("v1:").doesNotContain(cpf).doesNotContain(cpf.substring(3, 9));
+        assertThat((String) linha[1]).hasSize(64).doesNotContain(cpf);
+
+        // Pela aplicação: o CPF volta inteiro, e a busca pelo CPF completo acha o cliente.
+        assertThat(clientes.buscarPorId(id).getCpf()).isEqualTo(cpf);
+        assertThat(clientes.buscar(formatado)).extracting(c -> c.getId()).contains(id);
+
+        // O mesmo CPF digitado sem pontos é barrado como repetido.
+        assertThatThrownBy(() -> clientes.criar(new ClienteRequest("Integração CPF 2", cpf, "61900000001", null, null)))
+                .isInstanceOf(RegraDeNegocioException.class)
+                .hasMessageContaining("CPF já cadastrado");
     }
 
     @Test
