@@ -44,10 +44,14 @@ Abra `http://localhost:4200` e entre com o usuário `admin` (ou o definido em `A
 
 Sem ele, o resto do sistema funciona normalmente; o botão de importar nota só avisa que o leitor está desligado.
 
+No dia a dia: dois cliques em **`mecanica-dbo-ocr\iniciar-ocr.bat`** e deixe a janela aberta.
+
+Na primeira vez num PC novo, crie o ambiente Python do OCR (só ele usa estas bibliotecas):
+
 ```bash
 cd mecanica-dbo-ocr
-pip install -r requirements.txt
-python ocr_service.py
+py -m venv venv
+venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
 Precisa do [Tesseract](https://github.com/UB-Mannheim/tesseract/wiki) instalado (com o idioma português). Se ele não estiver em `C:\Program Files\Tesseract-OCR`, defina `TESSERACT_CMD` com o caminho do `tesseract.exe`.
