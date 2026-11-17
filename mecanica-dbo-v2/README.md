@@ -1,6 +1,6 @@
 # Mecânica DBO — Backend
 
-API REST do sistema de gestão da **Mecânica DBO**: Spring Boot 3.3, Java 21 e PostgreSQL.
+API REST do sistema de gestão da **Mecânica DBO**: Spring Boot 3.5, Java 21 e PostgreSQL.
 
 Para subir o sistema inteiro (banco, backend e frontend), veja o [README da raiz](../README.md).
 
@@ -10,7 +10,7 @@ Para subir o sistema inteiro (banco, backend e frontend), veja o [README da raiz
 
 | Tecnologia | Uso |
 |---|---|
-| Java 21 + Spring Boot 3.3.3 | API REST |
+| Java 21 + Spring Boot 3.5.16 | API REST |
 | Spring Data JPA / Hibernate 6.5 | Acesso ao banco (`ddl-auto=validate`: o Hibernate só confere, não cria tabelas) |
 | PostgreSQL | Banco `mecanica_dbo`, com enums nativos, triggers e coluna gerada |
 | Flyway 10 | Estrutura do banco versionada em `src/main/resources/db/migration` |

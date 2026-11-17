@@ -6,7 +6,7 @@ Sistema de gestão de ordens de serviço da **Mecânica DBO** (Recanto das Emas,
 
 | Pasta | O que é | Tecnologia |
 |---|---|---|
-| [`mecanica-dbo-v2/`](mecanica-dbo-v2/README.md) | Backend (API REST) | Spring Boot 3.3, Java 21, PostgreSQL, Flyway |
+| [`mecanica-dbo-v2/`](mecanica-dbo-v2/README.md) | Backend (API REST) | Spring Boot 3.5, Java 21, PostgreSQL, Flyway |
 | [`mecanica-dbo-front/`](mecanica-dbo-front/) | Frontend (telas) | Angular 22 |
 | [`scripts/`](scripts/LEIA-ME-backup.md) | Backup e restauração do banco | PowerShell |
 | `docs/rascunhos/` | Rascunhos e protótipos de design antigos, guardados só como referência | — |

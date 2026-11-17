@@ -6,10 +6,13 @@ São duas partes: **montar o pacote no seu PC** e **instalar no computador do do
 
 | O quê | Para quê |
 |---|---|
-| **`CPF_CHAVE`** (a que começa com `Dcyp213f`) | O instalador pede. Sem ela, os CPFs não abrem |
+| **`CPF_CHAVE`** (a mesma do seu PC) | O instalador pede. Sem ela, os CPFs não abrem |
 | Senha do PostgreSQL do computador do dono | Você escolhe na parte B, passo 2 |
 | Senha nova do login do sistema | Você escolhe na parte B, passo 4 |
 | Senha dos backups da nuvem | Você escolhe na parte B, passo 6 |
+| Chave de recuperação do BitLocker | Aparece na parte B, passo 8 |
+
+**Guarde o papel longe do notebook.** Se levarem os dois juntos, as senhas não protegem nada.
 
 ---
 
@@ -67,7 +70,7 @@ Copie a pasta **`MecanicaDBO`** do pendrive para a **Área de Trabalho**.
 
 4. Ele vai perguntar, uma de cada vez. As senhas não aparecem enquanto você digita, e isso é normal:
    - **Senha do PostgreSQL:** a do passo 2.
-   - **Senha do login:** crie uma nova (mínimo 8 caracteres), repita e **anote no papel**. O usuário é `admin`.
+   - **Senha do login:** crie uma nova (mínimo 10 caracteres), repita e **anote no papel**. O usuário é `admin`.
    - **CPF_CHAVE:** a do papel, letra por letra.
 
 5. No fim, o navegador abre sozinho no sistema. Entre com **admin** e a senha nova.
@@ -113,6 +116,17 @@ A pasta do pacote tem uma cópia do banco com os dados dos clientes. Depois que 
 - apague a pasta do **pendrive**;
 - no seu PC, apague a pasta **`pacote`** do projeto.
 
+### 8. Proteger o notebook contra roubo
+
+Sem isso, quem levar o notebook consegue copiar o banco (nomes, telefones, carros, valores). Com isso, o disco fica ilegível sem a senha do Windows.
+
+1. **Senha ou PIN no Windows:** Configurações → Contas → Opções de entrada → **PIN (Windows Hello)**.
+2. **Bloqueio automático:** Configurações → Contas → Opções de entrada → "Se você estiver ausente, quando o Windows deverá exigir que você entre novamente?" → **Quando o computador sair do modo de suspensão**. E em Configurações → Sistema → Energia → tela desliga em **5 minutos**.
+3. **Criptografia do disco:** Configurações → Privacidade e segurança → **Criptografia do dispositivo** → **Ativar**. (No Windows Pro aparece como **BitLocker**: Painel de Controle → Criptografia de Unidade de Disco BitLocker → Ativar.)
+4. **Anote a chave de recuperação:** em Configurações → Privacidade e segurança → Criptografia do dispositivo → **Chaves de recuperação do BitLocker**, ou no BitLocker → **Fazer backup da chave de recuperação** → **Imprimir**. Guarde junto com as outras senhas. Sem ela, se o Windows quebrar, o disco não abre mais.
+
+Se a opção "Criptografia do dispositivo" não aparecer, o notebook não suporta a criptografia grátis do Windows Home. Me avise que vemos outra saída.
+
 ---
 
 ## Atualizar o sistema depois
@@ -132,6 +146,7 @@ A pasta do pacote tem uma cópia do banco com os dados dos clientes. Depois que 
 | `Java 21 nao encontrado` | Feche o PowerShell, abra de novo e rode o instalador outra vez. Se continuar, refaça o passo 1 |
 | `PostgreSQL nao encontrado` | Refaça o passo 2 |
 | `Nao consegui entrar no PostgreSQL com essa senha` | É a senha criada ao instalar o PostgreSQL (passo 2) |
+| `Muito curta: minimo 10 caracteres` | A senha do login precisa de pelo menos 10 letras/números |
 | O atalho mostra "O sistema nao ligou" | Abra `C:\MecanicaDBO\logs\sistema.log` e veja as últimas linhas |
 | `A CPF_CHAVE não abre os CPFs deste banco` (no `sistema.log`) | A chave digitada não é a do papel. Apague a pasta `C:\MecanicaDBO\config` e rode o `instalar.ps1` de novo |
 | Backup da nuvem com erro | Veja `C:\MecanicaDBO\scripts\LEIA-ME-backup.md`, parte "Se o backup der erro" |

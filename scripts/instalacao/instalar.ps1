@@ -9,7 +9,8 @@
 #  O que faz:
 #   1. Pede as senhas (so na primeira vez) e guarda protegidas pelo Windows.
 #   2. Copia o sistema para C:\MecanicaDBO.
-#   3. Cria o banco a partir da copia que veio no pacote (so se ainda nao existir).
+#   3. Cria o banco a partir da copia que veio no pacote (so se ainda nao existir),
+#      com um usuario proprio no PostgreSQL ('mecanica'), que so mexe nesse banco.
 #   4. Agenda: ligar o sistema quando o Windows entrar + backup as 12h e 18h.
 #   5. Cria o atalho "Mecanica DBO" na Area de Trabalho e abre o sistema.
 #
@@ -20,7 +21,8 @@
 param(
     [string]$Destino = 'C:\MecanicaDBO',
     [string]$Banco   = 'mecanica_dbo',
-    [int]   $PortaPg = 5432
+    [int]   $PortaPg = 5432,
+    [string]$UsuarioBanco = 'mecanica'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -73,6 +75,27 @@ function Pedir-Senha-Postgres {
         Write-Host 'Nao consegui entrar no PostgreSQL com essa senha. Tente de novo.' -ForegroundColor Red
     }
     throw 'Senha do PostgreSQL errada 3 vezes. Confira a senha e rode o instalar.ps1 de novo.'
+}
+
+function Senha-Aleatoria {
+    # 32 caracteres hexadecimais. Ninguem precisa digitar: fica so na config protegida.
+    $bytes = New-Object byte[] 16
+    [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+    return -join ($bytes | ForEach-Object { $_.ToString('x2') })
+}
+
+function Psql-Postgres([string]$sql) {
+    return Pg 'psql' @('-h', 'localhost', '-p', "$PortaPg", '-U', 'postgres', '-w', '-d', 'postgres', '-tAc', $sql) -exigir
+}
+
+function Garantir-Usuario-Banco([string]$senha) {
+    # A senha e hexadecimal: nao tem aspas, entao pode ir direto no SQL.
+    $existe = Psql-Postgres "select 1 from pg_roles where rolname = '$UsuarioBanco'"
+    if ($existe -eq '1') {
+        Psql-Postgres "ALTER ROLE $UsuarioBanco LOGIN PASSWORD '$senha'" | Out-Null
+    } else {
+        Psql-Postgres "CREATE ROLE $UsuarioBanco LOGIN PASSWORD '$senha'" | Out-Null
+    }
 }
 
 function Gravar-PgPass([string]$senha) {
@@ -141,19 +164,17 @@ try {
     $config = Ler-Config $arquivoConfig
     if ($config) {
         Passo 'Sistema ja instalado: mantendo as senhas guardadas (atualizacao)'
-        $env:PGPASSWORD = $config.DB_PASSWORD
+        # O acesso como 'postgres' vem do pgpass.conf gravado na instalacao.
     } else {
         Passo 'Senhas (so desta vez)'
         $senhaPg = Pedir-Senha-Postgres
         Write-Host ''
         Write-Host 'Agora a senha de LOGIN do sistema (usuario: admin). Escolha uma nova e anote no papel.'
-        $senhaApp = Pedir-Senha-Nova 'Senha do login (minimo 8 caracteres)' 8
+        Write-Host 'Dica: tres palavras com numero, ex.: Oleo-Freio-Pneu-77'
+        $senhaApp = Pedir-Senha-Nova 'Senha do login (minimo 10 caracteres)' 10
         Write-Host ''
         $chave = Pedir-Cpf-Chave
-        $config = [pscustomobject]@{ APP_PASSWORD = $senhaApp; CPF_CHAVE = $chave; DB_PASSWORD = $senhaPg }
-        Gravar-Config $arquivoConfig $config
-        Gravar-PgPass $senhaPg
-        Write-Host 'Senhas guardadas (protegidas pelo Windows, so abrem neste usuario).' -ForegroundColor Green
+        Gravar-PgPass $senhaPg   # usado pelo backup automatico
     }
 
     Passo "Copiando o sistema para $Destino"
@@ -168,21 +189,44 @@ try {
     }
 
     Passo 'Banco de dados'
-    $existe = Pg 'psql' @('-h', 'localhost', '-p', "$PortaPg", '-U', 'postgres', '-w', '-d', 'postgres', '-tAc',
-                          "select 1 from pg_database where datname = '$Banco'") -exigir
+    $senhaBanco = $null
+    if (-not $config) {
+        $senhaBanco = Senha-Aleatoria
+        Garantir-Usuario-Banco $senhaBanco
+    }
+    $existe = Psql-Postgres "select 1 from pg_database where datname = '$Banco'"
     if ($existe -eq '1') {
         Write-Host "O banco '$Banco' ja existe: os dados ficam como estao."
     } else {
         $copia = Get-ChildItem (Join-Path $Pacote 'banco') -Filter '*.backup' -ErrorAction SilentlyContinue |
             Sort-Object LastWriteTime -Descending | Select-Object -First 1
-        Pg 'createdb' @('-h', 'localhost', '-p', "$PortaPg", '-U', 'postgres', '-w', $Banco) -exigir | Out-Null
+        Pg 'createdb' @('-h', 'localhost', '-p', "$PortaPg", '-U', 'postgres', '-w', '-O', $UsuarioBanco, $Banco) -exigir | Out-Null
         if ($copia) {
             Write-Host "Restaurando $($copia.Name)..."
-            Pg 'pg_restore' @('-h', 'localhost', '-p', "$PortaPg", '-U', 'postgres', '-w', '--no-owner', '-d', $Banco, $copia.FullName) -exigir | Out-Null
+            # --role: as tabelas ficam do usuario 'mecanica', que o sistema usa.
+            Pg 'pg_restore' @('-h', 'localhost', '-p', "$PortaPg", '-U', 'postgres', '-w', '--no-owner',
+                              "--role=$UsuarioBanco", '-d', $Banco, $copia.FullName) -exigir | Out-Null
             Write-Host 'Banco criado com os dados do pacote.' -ForegroundColor Green
         } else {
             Write-Host 'Banco criado vazio (o sistema cria as tabelas ao ligar).' -ForegroundColor Green
         }
+    }
+
+    if (-not $config) {
+        # Banco do usuario 'mecanica' (o normal): o sistema entra com ele.
+        # Banco antigo de outro dono: continua entrando como 'postgres'.
+        $dono = Psql-Postgres "select pg_get_userbyid(datdba) from pg_database where datname = '$Banco'"
+        if ($dono -eq $UsuarioBanco) {
+            $usuarioApp = $UsuarioBanco; $senhaDb = $senhaBanco
+        } else {
+            $usuarioApp = 'postgres'; $senhaDb = $senhaPg
+            Write-Host "Aviso: o banco ja existia e pertence a '$dono'; o sistema vai entrar como 'postgres'." -ForegroundColor Yellow
+        }
+        $config = [pscustomobject]@{
+            APP_PASSWORD = $senhaApp; CPF_CHAVE = $chave; DB_USERNAME = $usuarioApp; DB_PASSWORD = $senhaDb
+        }
+        Gravar-Config $arquivoConfig $config
+        Write-Host 'Senhas guardadas (protegidas pelo Windows, so abrem neste usuario).' -ForegroundColor Green
     }
     $env:PGPASSWORD = $null
 
