@@ -6,6 +6,9 @@
 #  Se a senha dos backups da nuvem estiver configurada, chama no fim o
 #  backup-nuvem.ps1 (copia trancada para o Google Drive).
 #
+#  Codigo de saida: 0 = tudo certo; 1 = o backup local falhou;
+#  2 = o local deu certo, mas a copia da nuvem falhou.
+#
 #  A senha NAO fica aqui: vem do %APPDATA%\postgresql\pgpass.conf.
 #  Veja scripts\LEIA-ME-backup.md.
 #
@@ -89,7 +92,7 @@ try {
     # dos backups (ex.: o de desenvolvimento), fica so o backup local.
     if (Test-Path $ArquivoSenhaNuvem) {
         & (Join-Path $PSScriptRoot 'backup-nuvem.ps1') -PastaBackups $PastaDestino -ArquivoSenha $ArquivoSenhaNuvem -Banco $Banco
-        if ($LASTEXITCODE -ne 0) { exit 1 }   # o local deu certo; o erro da nuvem ja esta no log
+        if ($LASTEXITCODE -ne 0) { exit 2 }   # 2 = o local deu certo, so a nuvem falhou (erro no log)
     }
 
     exit 0

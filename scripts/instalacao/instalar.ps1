@@ -14,7 +14,8 @@
 #   4. Agenda: ligar o sistema quando o Windows entrar + backup as 12h e 18h.
 #   5. Cria o atalho "Mecanica DBO" na Area de Trabalho e abre o sistema.
 #
-#  Pode rodar de novo para ATUALIZAR: mantem as senhas e o banco.
+#  Pode rodar de novo para ATUALIZAR: mantem as senhas e o banco, e faz
+#  um backup antes de trocar o sistema.
 #  Rode com o usuario do Windows que vai usar o sistema (nao precisa ser administrador).
 # ============================================================
 
@@ -30,11 +31,6 @@ $Pacote = $PSScriptRoot
 . (Join-Path $Pacote 'comum.ps1')
 $arquivoConfig = Join-Path $Destino 'config\sistema.dat'
 
-function Passo([string]$texto) {
-    Write-Host ''
-    Write-Host "== $texto" -ForegroundColor Cyan
-}
-
 # Roda um programa do PostgreSQL; devolve a saida. Erro so se $exigir.
 function Pg([string]$programa, [string[]]$argumentos, [switch]$exigir) {
     $ErrorActionPreference = 'Continue'
@@ -42,16 +38,6 @@ function Pg([string]$programa, [string[]]$argumentos, [switch]$exigir) {
     $script:ultimoCodigo = $LASTEXITCODE
     if ($exigir -and $LASTEXITCODE -ne 0) { throw "$programa falhou (codigo $LASTEXITCODE): $($saida.Trim())" }
     return $saida.Trim()
-}
-
-function Pedir-Senha-Nova([string]$pergunta, [int]$minimo) {
-    while ($true) {
-        $s1 = Texto-De (Read-Host $pergunta -AsSecureString)
-        $s2 = Texto-De (Read-Host 'Repita' -AsSecureString)
-        if ($s1 -ne $s2) { Write-Host 'As duas nao sao iguais. De novo.' -ForegroundColor Red; continue }
-        if ($s1.Length -lt $minimo) { Write-Host "Muito curta: minimo $minimo caracteres." -ForegroundColor Red; continue }
-        return $s1
-    }
 }
 
 function Pedir-Cpf-Chave {
@@ -111,13 +97,6 @@ function Gravar-PgPass([string]$senha) {
     Set-Content -Path $arquivo -Value $linhas -Encoding ASCII
 }
 
-function Parar-Sistema {
-    Get-CimInstance Win32_Process -Filter "Name = 'java.exe' OR Name = 'javaw.exe'" |
-        Where-Object { $_.CommandLine -like '*mecanica-dbo.jar*' } |
-        ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
-    for ($i = 0; $i -lt 20 -and (Sistema-NoAr); $i++) { Start-Sleep -Milliseconds 500 }
-}
-
 function Agendar-Tarefas {
     $usuario = "$env:USERDOMAIN\$env:USERNAME"
     $principal = New-ScheduledTaskPrincipal -UserId $usuario -LogonType Interactive -RunLevel Limited
@@ -165,6 +144,16 @@ try {
     if ($config) {
         Passo 'Sistema ja instalado: mantendo as senhas guardadas (atualizacao)'
         # O acesso como 'postgres' vem do pgpass.conf gravado na instalacao.
+
+        Passo 'Backup antes de atualizar'
+        # Se a versao nova der problema, os dados de um minuto antes estao guardados.
+        $backupAntes = Join-Path $Pacote 'scripts\backup-banco.ps1'   # o do pacote (versao nova)
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $backupAntes
+        if ($LASTEXITCODE -eq 2) {
+            Write-Host 'Backup local OK; a copia da nuvem falhou (veja o backup.log). Seguindo com a atualizacao.' -ForegroundColor Yellow
+        } elseif ($LASTEXITCODE -ne 0) {
+            throw 'O backup antes da atualizacao falhou, entao nada foi trocado. Veja C:\MecanicaDBO\backups\backup.log.'
+        }
     } else {
         Passo 'Senhas (so desta vez)'
         $senhaPg = Pedir-Senha-Postgres
@@ -184,7 +173,7 @@ try {
     New-Item -ItemType Directory -Force -Path $Destino, (Join-Path $Destino 'scripts'), (Join-Path $Destino 'logs') | Out-Null
     Copy-Item (Join-Path $Pacote 'app') $Destino -Recurse -Force
     Copy-Item (Join-Path $Pacote 'scripts\*') (Join-Path $Destino 'scripts') -Force
-    foreach ($nome in 'comum.ps1', 'iniciar-sistema.ps1', 'abrir-sistema.ps1', 'LEIA-ME-INSTALACAO.md') {
+    foreach ($nome in 'comum.ps1', 'iniciar-sistema.ps1', 'abrir-sistema.ps1', 'trocar-senha-login.ps1', 'LEIA-ME-INSTALACAO.md') {
         Copy-Item (Join-Path $Pacote $nome) $Destino -Force
     }
 

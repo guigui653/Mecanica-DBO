@@ -6,6 +6,28 @@
 $PortaSistema = 8080
 $EnderecoSistema = "http://127.0.0.1:$PortaSistema"
 
+function Passo([string]$texto) {
+    Write-Host ''
+    Write-Host "== $texto" -ForegroundColor Cyan
+}
+
+function Pedir-Senha-Nova([string]$pergunta, [int]$minimo) {
+    while ($true) {
+        $s1 = Texto-De (Read-Host $pergunta -AsSecureString)
+        $s2 = Texto-De (Read-Host 'Repita' -AsSecureString)
+        if ($s1 -ne $s2) { Write-Host 'As duas nao sao iguais. De novo.' -ForegroundColor Red; continue }
+        if ($s1.Length -lt $minimo) { Write-Host "Muito curta: minimo $minimo caracteres." -ForegroundColor Red; continue }
+        return $s1
+    }
+}
+
+function Parar-Sistema {
+    Get-CimInstance Win32_Process -Filter "Name = 'java.exe' OR Name = 'javaw.exe'" |
+        Where-Object { $_.CommandLine -like '*mecanica-dbo.jar*' } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+    for ($i = 0; $i -lt 20 -and (Sistema-NoAr); $i++) { Start-Sleep -Milliseconds 500 }
+}
+
 function Sistema-NoAr {
     $cliente = New-Object Net.Sockets.TcpClient
     try {
