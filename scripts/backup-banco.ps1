@@ -3,6 +3,8 @@
 #
 #  Gera <banco>_AAAA-MM-DD_HHmm.backup (pg_dump formato custom, comprimido),
 #  grava o resultado em backup.log e apaga backups com mais de 30 dias.
+#  Se a senha dos backups da nuvem estiver configurada, chama no fim o
+#  backup-nuvem.ps1 (copia trancada para o Google Drive).
 #
 #  A senha NAO fica aqui: vem do %APPDATA%\postgresql\pgpass.conf.
 #  Veja scripts\LEIA-ME-backup.md.
@@ -22,7 +24,8 @@ param(
     [int]   $Porta        = 5432,
     [string]$Usuario      = 'postgres',
     [string]$PgBin        = '',
-    [int]   $DiasRetencao = 30
+    [int]   $DiasRetencao = 30,
+    [string]$ArquivoSenhaNuvem = 'C:\MecanicaDBO\senha-backup.dat'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -81,6 +84,13 @@ try {
             Remove-Item $_.FullName -Force
             Escrever-Log "Removido backup antigo: $($_.Name)"
         }
+
+    # Copia trancada para o Google Drive, se configurada. Num PC sem a senha
+    # dos backups (ex.: o de desenvolvimento), fica so o backup local.
+    if (Test-Path $ArquivoSenhaNuvem) {
+        & (Join-Path $PSScriptRoot 'backup-nuvem.ps1') -PastaBackups $PastaDestino -ArquivoSenha $ArquivoSenhaNuvem -Banco $Banco
+        if ($LASTEXITCODE -ne 0) { exit 1 }   # o local deu certo; o erro da nuvem ja esta no log
+    }
 
     exit 0
 }

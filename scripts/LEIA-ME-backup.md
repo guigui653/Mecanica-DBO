@@ -6,6 +6,8 @@ O banco guarda todo o histórico da oficina: clientes, carros, ordens de serviç
 |---|---|
 | `backup-banco.ps1` | Gera um arquivo `.backup` com o banco inteiro e apaga os que têm mais de 30 dias |
 | `restaurar-banco.ps1` | Abre um `.backup` num banco **separado**, para conferir ou recuperar dados |
+| `configurar-senha-backup.ps1` | Guarda a senha dos backups da nuvem (uma vez só) |
+| `backup-nuvem.ps1` | Tranca o backup mais recente com a senha e copia para o Google Drive. Roda sozinho no fim do `backup-banco.ps1` |
 
 Os backups ficam em `C:\MecanicaDBO\backups`. O resultado de cada execução (deu certo ou deu erro) fica anotado em `C:\MecanicaDBO\backups\backup.log`.
 
@@ -62,13 +64,40 @@ O `-ExecutionPolicy Bypass` é necessário porque o Windows, por padrão, não d
 
 **Para testar:** clique com o botão direito na tarefa → **Executar**. Depois, abra o `backup.log` e veja se a última linha diz `OK`.
 
-## 4. Guardar uma cópia fora do computador (toda semana)
+## 4. Cópia no Google Drive (no computador da oficina)
 
-O backup no mesmo computador protege contra erro de digitação ou dado apagado, mas **não** contra HD queimado, roubo ou vírus. Uma vez por semana, copie a pasta `C:\MecanicaDBO\backups` (ou só o arquivo mais recente) para um **pendrive** ou para uma **nuvem** (Google Drive, OneDrive).
+O backup no mesmo computador protege contra erro de digitação ou dado apagado, mas **não** contra HD queimado, roubo ou vírus. Por isso, cada backup também vai para o Google Drive, **trancado com senha**.
+
+Faça uma vez só, no computador da oficina, com o **mesmo usuário do Windows** da tarefa agendada:
+
+1. **Instale o Google Drive e o 7-Zip** (PowerShell):
+
+   ```powershell
+   winget install Google.GoogleDrive
+   winget install 7zip.7zip
+   ```
+
+2. **Abra o Google Drive para computador** (menu Iniciar → "Google Drive") e entre com a conta Google da oficina. Ele cria uma unidade, normalmente `G:`, com a pasta `Meu Drive`.
+3. **Guarde a senha dos backups:**
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts\configurar-senha-backup.ps1
+   ```
+
+   **Anote a senha no papel**, junto com a `CPF_CHAVE`. Sem ela, os backups da nuvem não abrem.
+4. **Teste:** rode o backup (passo 2). Além do `OK: backup concluido`, deve aparecer `NUVEM: OK: ... copiado para G:\Meu Drive\Backups Mecanica DBO`. Confira no site drive.google.com se a pasta **Backups Mecanica DBO** apareceu.
+
+Daí em diante, o backup das 12h e das 18h também sobe para o Drive sozinho. Ficam os 60 mais recentes (30 dias). Um computador sem a senha configurada (por exemplo, o de desenvolvimento) faz só o backup local.
 
 ## 5. Restaurar um backup
 
 > **Os CPFs dos clientes estão criptografados no banco.** Um backup restaurado só mostra os CPFs se o sistema rodar com a **mesma `CPF_CHAVE`** de quando ele foi feito. Guarde essa chave junto com as outras senhas, fora do PC. (Backups anteriores a 16/11/2026 ainda têm o CPF legível.)
+
+### Backup que veio do Google Drive (`.7z`)
+
+1. Baixe o `.7z` do drive.google.com (pasta **Backups Mecanica DBO**).
+2. Clique com o botão direito → **7-Zip → Extrair aqui** e digite a **senha dos backups**. Sai o arquivo `.backup`.
+3. Siga abaixo, como um backup local.
 
 ### Para conferir ou consultar dados antigos (seguro)
 
@@ -109,4 +138,7 @@ Abra o `backup.log`. Os erros mais comuns são:
 |---|---|
 | `password authentication failed` ou `no password supplied` | O `pgpass.conf` está faltando, com senha errada, ou a tarefa está rodando com outro usuário do Windows |
 | `pg_dump.exe nao encontrado` | O PostgreSQL foi instalado em outra pasta. Rode com `-PgBin "C:\caminho\para\PostgreSQL\18\bin"` |
+| `NUVEM: ERRO: Pasta "Meu Drive" nao encontrada` | O Google Drive para computador está fechado ou desconectado. Abra e entre na conta |
+| `NUVEM: ERRO: Senha dos backups nao configurada` ou `Nao consegui abrir ...senha-backup.dat` | Rode o `configurar-senha-backup.ps1` com o mesmo usuário do Windows da tarefa agendada |
+| `NUVEM: ERRO: 7-Zip nao encontrado` | `winget install 7zip.7zip` |
 | `could not connect to server` | O serviço do PostgreSQL está parado. Abra **Serviços** do Windows e inicie `postgresql-x64-18` |
