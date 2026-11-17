@@ -41,6 +41,8 @@ Abra `http://localhost:4200` e entre com o usuário `admin` (ou o definido em `A
 
 ## Backup
 
+Para instalar no computador da oficina (sem IntelliJ, com o sistema ligando sozinho), siga o [guia de instalação](scripts/instalacao/LEIA-ME-INSTALACAO.md).
+
 O banco tem os dados reais da oficina. O script `scripts\backup-banco.ps1` gera uma cópia diária, e o [LEIA-ME de backup](scripts/LEIA-ME-backup.md) explica como agendar, restaurar e guardar uma cópia fora do computador.
 
 **Backups nunca vão para o GitHub** (`*.backup` está no `.gitignore`): têm nomes, CPFs e telefones de clientes.

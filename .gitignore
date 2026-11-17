@@ -11,4 +11,4 @@ pgpass.conf
 
 # Configurações locais de IDE (cada um tem as suas)
 .idea/
-/.vscode/
+/.vscode//pacote/

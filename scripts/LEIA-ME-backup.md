@@ -42,6 +42,8 @@ O `-ExecutionPolicy Bypass` é necessário porque o Windows, por padrão, não d
 
 ## 3. Agendar o backup automático (12h e 18h)
 
+> **No computador da oficina não precisa:** o `instalar.ps1` (veja `LEIA-ME-INSTALACAO.md`) já agenda o backup sozinho. Os passos abaixo são para um PC montado na mão, como o de desenvolvimento.
+
 1. Aperte a tecla Windows, digite **Agendador de Tarefas** e abra.
 2. No painel da direita, clique em **Criar Tarefa...** (não use "Criar Tarefa Básica").
 3. Aba **Geral**:

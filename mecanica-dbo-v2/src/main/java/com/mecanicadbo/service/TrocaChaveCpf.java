@@ -70,6 +70,31 @@ public class TrocaChaveCpf {
         }
     }
 
+    /**
+     * Confere, ao subir, se a CPF_CHAVE abre os CPFs deste banco (testa um).
+     * Chave errada (ex.: banco levado para outro PC com outra chave) para o
+     * sistema já na partida, com a explicação, em vez de dar erro na tela de
+     * clientes. Banco sem CPF: nada a conferir.
+     */
+    public void conferirChave() {
+        String amostra;
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement st = con.prepareStatement(
+                     "SELECT cpf_cifrado FROM cliente WHERE cpf_cifrado IS NOT NULL LIMIT 1");
+             ResultSet rs = st.executeQuery()) {
+            if (!rs.next()) return;
+            amostra = rs.getString(1);
+        } catch (SQLException e) {
+            throw new IllegalStateException("Falha ao conferir a CPF_CHAVE no banco.", e);
+        }
+        try {
+            atual.decifrar(amostra);
+        } catch (IllegalStateException e) {
+            throw new IllegalStateException("A CPF_CHAVE não abre os CPFs deste banco: não é a chave que os trancou. "
+                    + "Use a chave anotada no papel (a mesma do computador de onde o banco veio).");
+        }
+    }
+
     private Resultado trocar(Connection con, CpfCripto antiga) throws SQLException {
         Map<Long, String> cifrados = new LinkedHashMap<>();
         try (PreparedStatement st = con.prepareStatement(
