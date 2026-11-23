@@ -28,6 +28,7 @@ try {
 
     $env:APP_PASSWORD           = $config.APP_PASSWORD
     $env:CPF_CHAVE              = $config.CPF_CHAVE
+    $env:DB_USERNAME            = $(if ($config.DB_USERNAME) { $config.DB_USERNAME } else { 'postgres' })
     $env:DB_PASSWORD            = $config.DB_PASSWORD
     $env:SPRING_PROFILES_ACTIVE = 'prod'
     $env:APP_SITE               = ($Pasta -replace '\\', '/') + '/app/site/'
