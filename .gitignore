@@ -12,3 +12,6 @@ pgpass.conf
 # Configurações locais de IDE (cada um tem as suas)
 .idea/
 /.vscode/
+
+# Pacote de instalacao (tem copia do banco com dados de clientes)
+/pacote/

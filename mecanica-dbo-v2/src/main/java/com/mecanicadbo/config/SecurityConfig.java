@@ -110,6 +110,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/login", "/api/auth/me", "/api/auth/logout").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                // Fora de /api só há as telas do Angular (perfil prod): HTML, JS e CSS, sem dados.
+                // Os dados continuam exigindo login, porque passam todos por /api.
+                .requestMatchers(req -> !req.getRequestURI().startsWith("/api/")).permitAll()
                 .anyRequest().authenticated())
             .formLogin(f -> f.disable())
             .httpBasic(b -> b.disable())
