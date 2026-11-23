@@ -137,7 +137,21 @@ Se a opção "Criptografia do dispositivo" não aparecer, o notebook não suport
    powershell -ExecutionPolicy Bypass -File scripts\gerar-pacote.ps1 -SemBanco
    ```
 
-2. No computador do dono: copie a pasta nova e rode o `instalar.ps1` de novo (parte B, passo 4). Ele **não pergunta as senhas** e **não mexe no banco**: só troca o sistema e liga de novo.
+2. No computador do dono: copie a pasta nova e rode o `instalar.ps1` de novo (parte B, passo 4). Ele **não pergunta as senhas** e **não mexe no banco**: primeiro **faz um backup** (`C:\MecanicaDBO\backups`, e no Drive), depois troca o sistema e liga de novo.
+
+**Guarde o pacote anterior** (por exemplo, renomeie para `MecanicaDBO-2026-11-17`). Se a versão nova der problema, rode o `instalar.ps1` do pacote anterior para voltar. Se a versão nova tiver mudado o banco, o sistema antigo pode não ligar: aí é preciso restaurar o backup feito antes da atualização (veja `C:\MecanicaDBO\scripts\LEIA-ME-backup.md`). Me chame antes de fazer isso.
+
+## Trocar a senha do login
+
+No computador do dono, no PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\MecanicaDBO\trocar-senha-login.ps1
+```
+
+Ele pede a senha nova duas vezes e religa o sistema. A `CPF_CHAVE`, as outras senhas e os dados não mudam.
+
+> Este script chega ao computador do dono **na próxima atualização** (o `instalar.ps1` copia ele para `C:\MecanicaDBO`).
 
 ## Se algo der errado
 
