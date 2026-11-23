@@ -10,7 +10,7 @@ import { AtendimentoRequest, AtendimentoService, DadosAbertura } from '../../../
 import { Veiculo, Combustivel } from '../../../shared/models/veiculo.model';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
-import { CpfPipe, erroDocumento, formatarDocumentoDigitando, rotuloDocumento } from '../../../shared/pipes/cpf.pipe';
+import { CpfPipe, documentoDosCampos, formatarCnpjDigitando, formatarCpfDigitando, rotuloDocumento } from '../../../shared/pipes/cpf.pipe';
 import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 
 /**
@@ -66,11 +66,19 @@ export class NovaOs implements OnInit {
   novoNomeCliente = signal('');
   novoTelefoneCliente = signal('');
   novoCpfCliente = signal('');
-  /** Formata no próprio campo enquanto a pessoa digita (CPF ou CNPJ). */
-  alterarDocumento(evento: Event): void {
+  novoCnpjCliente = signal('');
+
+  /** Formata no próprio campo enquanto a pessoa digita. */
+  alterarCpf(evento: Event): void {
     const campo = evento.target as HTMLInputElement;
-    campo.value = formatarDocumentoDigitando(campo.value);
+    campo.value = formatarCpfDigitando(campo.value);
     this.novoCpfCliente.set(campo.value);
+  }
+
+  alterarCnpj(evento: Event): void {
+    const campo = evento.target as HTMLInputElement;
+    campo.value = formatarCnpjDigitando(campo.value);
+    this.novoCnpjCliente.set(campo.value);
   }
   readonly rotuloDoc = rotuloDocumento;
 
@@ -311,12 +319,12 @@ export class NovaOs implements OnInit {
         this.erro.set('Telefone do cliente é obrigatório.');
         return null;
       }
-      const erroDoc = erroDocumento(this.novoCpfCliente());
-      if (erroDoc) {
-        this.erro.set(erroDoc);
+      const doc = documentoDosCampos(this.novoCpfCliente(), this.novoCnpjCliente());
+      if (doc.erro) {
+        this.erro.set(doc.erro);
         return null;
       }
-      dono = { novoCliente: { nome, telefone1: telefone, cpf: this.novoCpfCliente().trim() || undefined } };
+      dono = { novoCliente: { nome, telefone1: telefone, cpf: doc.doc } };
     }
 
     const marca = this.marca().trim();
@@ -354,7 +362,8 @@ export class NovaOs implements OnInit {
     const texto = `${e?.error?.mensagem ?? ''} ${Object.keys(e?.error?.campos ?? {}).join(' ')}`;
     let id: string | null = null;
     if (/placa/i.test(texto)) id = 'nova-placa';
-    else if (/cpf|cnpj|documento/i.test(texto)) id = 'novo-cpf';
+    else if (/cnpj/i.test(texto)) id = 'novo-cnpj';
+    else if (/cpf|documento/i.test(texto)) id = 'novo-cpf';
     else if (/novoCliente/.test(texto)) id = 'novo-nome';
     else if (/novoVeiculo/.test(texto)) id = 'veic-marca';
     else if (/previs/i.test(texto)) id = 'nova-previsao';

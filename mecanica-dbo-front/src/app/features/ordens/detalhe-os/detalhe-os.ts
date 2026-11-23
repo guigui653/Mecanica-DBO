@@ -87,6 +87,27 @@ export class DetalheOs implements OnInit {
   /** OS entregue vira registro histórico: nada mais é editável. */
   somenteLeitura = computed(() => this.os()?.status === 'ENTREGUE');
 
+  /** Barra de etapas: Aberta → Em andamento → Concluída → Entregue. */
+  etapas = computed(() => {
+    const ordem: StatusOs[] = ['ABERTA', 'EM_ANDAMENTO', 'CONCLUIDA', 'ENTREGUE'];
+    const cores: Record<StatusOs, string> = {
+      ABERTA: 'var(--status-aberta)',
+      EM_ANDAMENTO: 'var(--status-em-andamento)',
+      CONCLUIDA: 'var(--status-concluida)',
+      ENTREGUE: 'var(--status-entregue)'
+    };
+    const atual = this.os()?.status;
+    const posicao = atual ? ordem.indexOf(atual) : -1;
+    return ordem.map((status, i) => ({
+      status,
+      numero: i + 1,
+      rotulo: this.rotulo(status),
+      cor: cores[status],
+      feita: i <= posicao,
+      atual: i === posicao
+    }));
+  });
+
   proximoPasso = computed(() => {
     const st = this.os()?.status;
     return st ? PROXIMO_STATUS[st] ?? null : null;

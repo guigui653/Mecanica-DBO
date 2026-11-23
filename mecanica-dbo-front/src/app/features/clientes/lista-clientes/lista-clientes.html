@@ -34,7 +34,7 @@
   @if (!cs) {
     <!-- LISTA DE CLIENTES -->
     <div class="search-bar">
-      <input class="input" type="text" placeholder="Nome, CPF/CNPJ, telefone ou e-mail"
+      <input class="input" type="text" placeholder="Nome, CPF/CNPJ ou telefone"
              [ngModel]="termoBusca()" (ngModelChange)="termoBusca.set($event)">
       <button type="button" class="btn btn-secondary" (click)="abrirForm()">Novo cliente</button>
     </div>
@@ -147,12 +147,7 @@
               <div class="info-label">Telefone</div>
               <span class="tabular">{{ cs.telefone1 }}</span>
             </div>
-            @if (cs.email) {
-              <div>
-                <div class="info-label">E-mail</div>
-                <span>{{ cs.email }}</span>
-              </div>
-            }
+
           </div>
 
           <hr class="hr">

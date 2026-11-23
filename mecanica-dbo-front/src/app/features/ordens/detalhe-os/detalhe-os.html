@@ -44,6 +44,17 @@
       </div>
     </div>
 
+    <!-- ── ETAPAS DA OS ──────────────────────────────────── -->
+    <ol class="etapas" aria-label="Etapas da ordem de serviço">
+      @for (e of etapas(); track e.status) {
+        <li class="etapa" [class.feita]="e.feita" [class.atual]="e.atual"
+            [style.--cor-etapa]="e.cor" [attr.aria-current]="e.atual ? 'step' : null">
+          <span class="etapa-marca">{{ e.feita && !e.atual ? '✓' : e.numero }}</span>
+          <span class="etapa-nome">{{ e.rotulo }}</span>
+        </li>
+      }
+    </ol>
+
     @if (somenteLeitura()) {
       <div class="aviso-leitura">
         Esta OS foi entregue e está fechada para edição. O histórico fica

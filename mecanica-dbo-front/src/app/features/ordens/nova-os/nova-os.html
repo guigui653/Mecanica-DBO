@@ -120,10 +120,16 @@
                      [ngModel]="novoTelefoneCliente()" (ngModelChange)="novoTelefoneCliente.set($event)" [disabled]="salvando()">
             </div>
             <div class="field">
-              <label for="novo-cpf">CPF ou CNPJ (opcional)</label>
-              <input id="novo-cpf" name="novoCpf" class="input" placeholder="CPF da pessoa ou CNPJ da empresa" maxlength="18"
+              <label for="novo-cpf">CPF (opcional) · pessoa física</label>
+              <input id="novo-cpf" name="novoCpf" class="input" placeholder="000.000.000-00" maxlength="14"
+                     inputmode="numeric" autocomplete="off"
+                     [value]="novoCpfCliente()" (input)="alterarCpf($event)" [disabled]="salvando()">
+            </div>
+            <div class="field">
+              <label for="novo-cnpj">CNPJ (opcional) · empresa</label>
+              <input id="novo-cnpj" name="novoCnpj" class="input" placeholder="00.000.000/0000-00" maxlength="18"
                      autocomplete="off"
-                     [value]="novoCpfCliente()" (input)="alterarDocumento($event)" [disabled]="salvando()">
+                     [value]="novoCnpjCliente()" (input)="alterarCnpj($event)" [disabled]="salvando()">
             </div>
           </div>
         }

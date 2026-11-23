@@ -138,19 +138,18 @@
             </div>
 
             <div class="field">
-              <label for="cad-cpf">CPF ou CNPJ (opcional)
-                @if (tipoDoc()) { <span class="tipo-doc">{{ tipoDoc() === 'CNPJ' ? 'empresa' : 'pessoa física' }}</span> }
-              </label>
-              <input id="cad-cpf" class="input" placeholder="CPF da pessoa ou CNPJ da empresa" maxlength="18"
-                     autocomplete="off"
-                     [value]="cpf()" (input)="alterarDocumento($event)"
+              <label for="cad-cpf">CPF (opcional) <span class="tipo-doc">pessoa física</span></label>
+              <input id="cad-cpf" class="input" placeholder="000.000.000-00" maxlength="14"
+                     inputmode="numeric" autocomplete="off"
+                     [value]="cpf()" (input)="alterarCpf($event)"
                      [disabled]="salvando()">
             </div>
 
             <div class="field">
-              <label for="cad-email">E-mail (opcional)</label>
-              <input id="cad-email" type="email" class="input" placeholder="cliente@email.com"
-                     [ngModel]="email()" (ngModelChange)="email.set($event)" name="email"
+              <label for="cad-cnpj">CNPJ (opcional) <span class="tipo-doc">empresa</span></label>
+              <input id="cad-cnpj" class="input" placeholder="00.000.000/0000-00" maxlength="18"
+                     autocomplete="off"
+                     [value]="cnpj()" (input)="alterarCnpj($event)"
                      [disabled]="salvando()">
             </div>
           </div>

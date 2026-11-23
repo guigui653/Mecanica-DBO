@@ -89,6 +89,43 @@ export function formatarDocumentoDigitando(texto: string): string {
   return r;
 }
 
+/** Campo de CPF: só números, até 11, como 000.000.000-00. */
+export function formatarCpfDigitando(texto: string): string {
+  return formatarDocumentoDigitando(texto.replace(/\D/g, '').slice(0, 11));
+}
+
+/** Campo de CNPJ: números e letras (CNPJ alfanumérico), até 14, como 00.000.000/0000-00. */
+export function formatarCnpjDigitando(texto: string): string {
+  const d = limparDocumento(texto).slice(0, 14);
+  let r = d.slice(0, 2);
+  if (d.length > 2) r += '.' + d.slice(2, 5);
+  if (d.length > 5) r += '.' + d.slice(5, 8);
+  if (d.length > 8) r += '/' + d.slice(8, 12);
+  if (d.length > 12) r += '-' + d.slice(12);
+  return r;
+}
+
+/**
+ * Formulário com um campo de CPF e outro de CNPJ: confere e devolve o
+ * documento a gravar (ou a mensagem de erro). Os dois vazios = sem documento.
+ */
+export function documentoDosCampos(cpf: string, cnpj: string): { doc?: string; erro?: string } {
+  const c = limparDocumento(cpf);
+  const j = limparDocumento(cnpj);
+  if (c && j) return { erro: 'Preencha só o CPF (pessoa física) ou só o CNPJ (empresa), não os dois.' };
+  if (c) {
+    if (c.length !== 11) return { erro: 'CPF incompleto: são 11 números.' };
+    if (!cpfValido(c)) return { erro: 'CPF inválido: confira os números.' };
+    return { doc: c };
+  }
+  if (j) {
+    if (j.length !== 14) return { erro: 'CNPJ incompleto: são 14 caracteres.' };
+    if (!cnpjValido(j)) return { erro: 'CNPJ inválido: confira os caracteres.' };
+    return { doc: j };
+  }
+  return {};
+}
+
 /** Documento completo, formatado: "529.982.247-25" ou "12.ABC.345/01DE-35". */
 export function formatarCpf(doc: string | null | undefined): string {
   const d = limparDocumento(doc);

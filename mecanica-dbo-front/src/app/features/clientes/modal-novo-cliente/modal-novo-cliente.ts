@@ -8,7 +8,7 @@ import { Cliente } from '../../../shared/models/cliente.model';
 import { Combustivel } from '../../../shared/models/veiculo.model';
 import { VeiculoResumo } from '../../../shared/models/ordem-servico.model';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
-import { erroDocumento, formatarDocumentoDigitando, tipoDocumento } from '../../../shared/pipes/cpf.pipe';
+import { documentoDosCampos, formatarCnpjDigitando, formatarCpfDigitando } from '../../../shared/pipes/cpf.pipe';
 import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 
 @Component({
@@ -49,19 +49,24 @@ export class ModalNovoCliente implements OnInit {
   // ── Formulário: Cliente ──
   nome = signal('');
   telefone = signal('');
+  /** Pessoa física: CPF. Empresa: CNPJ. Preenche um ou outro (ou nenhum). */
   cpf = signal('');
-  /** "Pessoa física" / "Empresa", conforme o documento digitado. */
-  tipoDoc = computed(() => tipoDocumento(this.cpf()));
+  cnpj = signal('');
 
-  /** Formata no próprio campo enquanto a pessoa digita (CPF ou CNPJ). */
-  alterarDocumento(evento: Event): void {
+  /** Formata no próprio campo enquanto a pessoa digita. */
+  alterarCpf(evento: Event): void {
     const campo = evento.target as HTMLInputElement;
-    const formatado = formatarDocumentoDigitando(campo.value);
-    campo.value = formatado;
-    this.cpf.set(formatado);
+    campo.value = formatarCpfDigitando(campo.value);
+    this.cpf.set(campo.value);
     this.erro.set('');
   }
-  email = signal('');
+
+  alterarCnpj(evento: Event): void {
+    const campo = evento.target as HTMLInputElement;
+    campo.value = formatarCnpjDigitando(campo.value);
+    this.cnpj.set(campo.value);
+    this.erro.set('');
+  }
 
   // ── Formulário: Veículo ──
   placa = signal('');
@@ -138,7 +143,7 @@ export class ModalNovoCliente implements OnInit {
   /** Algo foi digitado e ainda não foi salvo? */
   temDadosNaoSalvos(): boolean {
     if (this.sucesso()) return false;
-    const textos = [this.nome(), this.telefone(), this.cpf(), this.email(),
+    const textos = [this.nome(), this.telefone(), this.cpf(), this.cnpj(),
                     this.placa(), this.marca(), this.modelo(), this.cor()];
     return textos.some(t => t.trim() !== '') || this.anoFabricacao() !== null
       || (this.clienteEscolhido() !== null && !this.clienteInicial());
@@ -180,7 +185,7 @@ export class ModalNovoCliente implements OnInit {
         this.erro.set('Informe o telefone ou WhatsApp de contato.');
         return;
       }
-      const erroDoc = erroDocumento(this.cpf());
+      const { erro: erroDoc } = documentoDosCampos(this.cpf(), this.cnpj());
       if (erroDoc) {
         this.erro.set(erroDoc);
         return;
@@ -220,8 +225,7 @@ export class ModalNovoCliente implements OnInit {
             novoCliente: {
               nome,
               telefone1: telefone,
-              cpf: this.cpf().trim() || undefined,
-              email: this.email().trim() || undefined
+              cpf: documentoDosCampos(this.cpf(), this.cnpj()).doc
             }
           }),
       novoVeiculo: {
