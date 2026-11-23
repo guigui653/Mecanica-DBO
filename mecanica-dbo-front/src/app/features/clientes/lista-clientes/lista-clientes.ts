@@ -10,6 +10,7 @@ import { OrdemServicoService } from '../../../core/services/ordem-servico';
 import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { FormCliente } from '../form-cliente/form-cliente';
+import { ModalNovoCliente } from '../modal-novo-cliente/modal-novo-cliente';
 import { VeiculosDoCliente } from '../veiculos-do-cliente/veiculos-do-cliente';
 import { CpfPipe, formatarCpf } from '../../../shared/pipes/cpf.pipe';
 
@@ -31,7 +32,7 @@ const FILTROS_COMPLETOS =['Todos', 'Com OS aberta', 'Inativos há 1 ano'];
 @Component({
   selector: 'app-lista-clientes',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, VeiculosDoCliente, CpfPipe],
+  imports: [CommonModule, FormsModule, MatDialogModule, VeiculosDoCliente, CpfPipe, ModalNovoCliente],
   templateUrl: './lista-clientes.html',
   styleUrl: './lista-clientes.css'
 })
@@ -151,8 +152,22 @@ export class ListaClientes implements OnInit {
     this.router.navigate(['/ordens/nova'], id ? { queryParams: { clienteId: id } } : {});
   }
 
+  /** Cadastro de cliente novo: o mesmo cadastro completo do painel (cliente + carro). */
+  cadastroAberto = signal(false);
+
+  aoFecharCadastro(salvou: boolean) {
+    this.cadastroAberto.set(false);
+    if (salvou) this.carregar();
+  }
+
+  /** Editar cadastro de um cliente que já existe. */
   abrirForm(cliente?: ClienteExt) {
-    const ref = this.dialog.open(FormCliente, { data: cliente ?? null });
+    if (!cliente) {
+      this.cadastroAberto.set(true);
+      return;
+    }
+    // disableClose: clique fora ou Esc não fecham e não perdem o que foi digitado.
+    const ref = this.dialog.open(FormCliente, { data: cliente, disableClose: true });
     ref.afterClosed().subscribe(salvou => {
       if (salvou) this.carregar();
     });

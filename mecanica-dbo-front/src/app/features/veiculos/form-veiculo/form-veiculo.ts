@@ -160,7 +160,6 @@ export class FormVeiculo implements OnInit {
         this.erro.set(mensagemDoErro(e, 'Não foi possível salvar o veículo.'));
         this.salvando.set(false);
         this.form.enable();
-        this.ref.disableClose = false;
       }
     });
   }

@@ -57,7 +57,8 @@ class BancoIntegracaoTest {
     }
 
     private Long abrirOs(String nomeCliente, String placa) {
-        var r = atendimento.registrar(new AtendimentoRequest(
+        var r = atendimentogitgit add . push
+        git log --oneline -2.registrar(new AtendimentoRequest(
                 null, new ClienteRequest(nomeCliente, null, "61900000000", null, null),
                 null, new VeiculoRequest(placa, "Fiat", "Uno", null, "Branco", "HIBRIDO", null),
                 new CriarOsRequest(1000, null, null, "teste de integração", null)));

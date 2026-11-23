@@ -1,10 +1,11 @@
 <div class="view-header">
   <div class="view-title-group">
-    <div class="kicker">CONSULTA</div>
+    <div class="kicker">CADASTRO</div>
     <h1 class="title">Veículos</h1>
+    <p class="subtitulo-lista">{{ todos().length }} cadastrado(s)</p>
   </div>
   <div class="actions">
-    <button type="button" class="btn btn-secondary" (click)="abrirCadastroVeiculo()">Cadastrar veículo</button>
+    <button type="button" class="btn btn-secondary" (click)="abrirCadastroVeiculo()">Novo veículo</button>
     <button type="button" class="btn btn-primary" (click)="abrirNovaOs()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
         <path d="M12 5v14M5 12h14"></path>
@@ -16,40 +17,57 @@
 
 <div class="view-content">
 
-  <div class="veiculos-layout">
+  @if (!veiculo() && !carregando() && !buscaRealizada() && !erro()) {
+    <!-- LISTA DE VEÍCULOS -->
+    <div class="busca-lista">
+      <input class="input" type="search" placeholder="Buscar por placa, modelo, marca, cor ou dono"
+             [ngModel]="termo()" (ngModelChange)="termo.set($event)" aria-label="Buscar veículo">
+    </div>
 
-    <!-- Coluna Esquerda: Busca por Placa -->
-    <section class="busca-side">
-      <h3 style="margin: 0 0 4px; font-size: 22px;">Busca por placa</h3>
-      <p class="busca-desc">
-        Digite a placa para ver o veículo, o proprietário e todo o histórico de serviços.
-      </p>
-
-      <div class="plate-input-row">
-        <input class="input plate-input" type="text" placeholder="ABC1D23"
-               [ngModel]="placa()" (ngModelChange)="placa.set($event)" (keyup.enter)="buscar()" maxlength="8"
-               [disabled]="carregando() || carregandoHistorico()" aria-label="Placa do veículo">
-        <button type="button" class="btn btn-primary btn-search-plate" (click)="buscar()" [disabled]="carregando() || carregandoHistorico()">
-          Buscar
-        </button>
+    @if (carregandoLista()) {
+      <div class="spinner-wrap" role="status">Carregando veículos…</div>
+    } @else if (erroLista()) {
+      <div class="not-found-box" role="alert">
+        <p>{{ erroLista() }}</p>
+        <button type="button" class="btn btn-secondary" (click)="carregarLista()">Tentar novamente</button>
       </div>
-
-      <div class="plate-hint">
-        Aceita placa antiga (ABC1234) e Mercosul (ABC1D23).
-      </div>
-
-      <hr class="hr">
-
-      <div class="recent-label">CONSULTAS RECENTES</div>
-      <div class="recent-chips">
-        @for (p of recentes(); track p) {
-          <button type="button" class="recent-plate-btn" (click)="selecionarPlaca(p)">
-            {{ p | placa }}
-          </button>
+    } @else {
+      <div class="card tabela-card">
+        <div class="table-scroll"><table class="table">
+          <thead>
+            <tr>
+              <th>Placa</th><th>Veículo</th><th>Ano</th><th>Cor</th><th>Proprietário</th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of lista(); track v.id) {
+              <tr class="linha-clicavel" (click)="abrirFicha(v)" title="Ver ficha e histórico">
+                <td><span class="placa-chip">{{ v.placa | placa }}</span></td>
+                <td>{{ v.marca }} {{ v.modelo }}</td>
+                <td class="tabular">{{ v.anoFabricacao || '—' }}</td>
+                <td>{{ v.cor || '—' }}</td>
+                <td>{{ v.cliente?.nome || '—' }}</td>
+                <td class="col-actions">
+                  <button type="button" class="btn btn-ghost" (click)="editar(v, $event)">Editar</button>
+                  <button type="button" class="btn btn-ghost" (click)="inativar(v, $event)">Inativar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table></div>
+        @if (lista().length === 0) {
+          <div class="table-empty">
+            {{ termo().trim() ? 'Nenhum veículo encontrado para essa busca.' : 'Nenhum veículo cadastrado ainda.' }}
+          </div>
         }
-        @if (recentes().length === 0) { <p class="text-faint">Nenhuma consulta recente.</p> }
       </div>
-    </section>
+    }
+  } @else {
+
+  <button type="button" class="btn btn-ghost voltar-lista" (click)="voltarParaLista()">← Voltar para a lista</button>
+
+  <div class="veiculos-layout so-ficha">
 
     <!-- Coluna Direita: Ficha do Veículo -->
     <section class="card-side">
@@ -131,6 +149,7 @@
             <button type="button" class="btn btn-ghost" (click)="imprimirHistorico()">
               Imprimir histórico
             </button>
+            <button type="button" class="btn btn-ghost" (click)="editar(v)">Editar dados</button>
           </div>
         </div>
       } @else if (buscaRealizada()) {
@@ -147,5 +166,10 @@
     </section>
 
   </div>
+  }
 
 </div>
+
+@if (cadastroAberto()) {
+  <app-modal-novo-cliente [comecarComClienteExistente]="true" (fechado)="aoFecharCadastro($event)" />
+}

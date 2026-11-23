@@ -5,9 +5,9 @@
     <div class="modal-header">
       <div>
         <div class="modal-kicker">{{ sucesso() ? 'CADASTRO CONCLUÍDO' : 'CADASTRO RÁPIDO' }}</div>
-        <h2 class="modal-title">{{ sucesso() ? 'Pronto para atendimento' : 'Novo cliente com veículo' }}</h2>
+        <h2 class="modal-title">{{ sucesso() ? 'Pronto para atendimento' : (modoCliente() === 'existente' ? 'Novo veículo' : 'Novo cliente com veículo') }}</h2>
         @if (!sucesso()) {
-          <p class="modal-subtitle">Cadastre o proprietário e o carro de forma direta no sistema.</p>
+          <p class="modal-subtitle">{{ modoCliente() === 'existente' ? 'Escolha o cliente e cadastre o carro dele.' : 'Cadastre o proprietário e o carro de forma direta no sistema.' }}</p>
         }
       </div>
       <button type="button" class="btn-close" (click)="fechar()" title="Fechar">
@@ -27,7 +27,7 @@
           </svg>
         </div>
 
-        <h3 class="sucesso-titulo">Cliente e veículo cadastrados!</h3>
+        <h3 class="sucesso-titulo">{{ modoCliente() === 'existente' ? 'Veículo cadastrado!' : 'Cliente e veículo cadastrados!' }}</h3>
         <p class="sucesso-sub">O cadastro já está salvo e disponível no banco de dados.</p>
 
         <div class="resumo-card">
@@ -80,8 +80,48 @@
           <div class="secao-header">
             <span class="secao-num">1</span>
             <h3 class="secao-titulo">Dados do Proprietário</h3>
+            @if (!clienteInicial()) {
+              <div class="modo-cliente" role="group" aria-label="Proprietário">
+                <button type="button" [class.ativo]="modoCliente() === 'novo'" [disabled]="salvando()"
+                        (click)="mudarModo('novo')">Cliente novo</button>
+                <button type="button" [class.ativo]="modoCliente() === 'existente'" [disabled]="salvando()"
+                        (click)="mudarModo('existente')">Já é cliente</button>
+              </div>
+            }
           </div>
 
+          @if (modoCliente() === 'existente') {
+            @if (clienteEscolhido(); as c) {
+              <div class="cliente-escolhido">
+                <div>
+                  <strong>{{ c.nome }}</strong>
+                  <span class="text-sm text-soft">Tel: {{ c.telefone1 }}</span>
+                </div>
+                @if (!clienteInicial()) {
+                  <button type="button" class="btn btn-ghost" [disabled]="salvando()" (click)="trocarCliente()">Trocar</button>
+                }
+              </div>
+            } @else {
+              <div class="field">
+                <label for="cad-busca-cliente">Buscar cliente <span class="req">*</span></label>
+                <input id="cad-busca-cliente" class="input" placeholder="Digite o nome ou o telefone"
+                       autocomplete="off"
+                       [ngModel]="buscaCliente()" (ngModelChange)="buscaCliente.set($event)" name="buscaCliente"
+                       [disabled]="salvando()">
+              </div>
+              @if (clientesEncontrados().length) {
+                <ul class="lista-clientes-busca">
+                  @for (c of clientesEncontrados(); track c.id) {
+                    <li><button type="button" (click)="escolherCliente(c)">
+                      <strong>{{ c.nome }}</strong><span>{{ c.telefone1 }}</span>
+                    </button></li>
+                  }
+                </ul>
+              } @else if (buscaCliente().trim()) {
+                <p class="text-sm text-soft">Nenhum cliente encontrado. Para cadastrar, use "Cliente novo".</p>
+              }
+            }
+          } @else {
           <div class="grid-2">
             <div class="field">
               <label for="cad-nome">Nome completo <span class="req">*</span></label>
@@ -111,6 +151,7 @@
                      [disabled]="salvando()">
             </div>
           </div>
+          }
         </div>
 
         <!-- 2. Dados do Veículo -->
@@ -184,7 +225,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
-            <span>Salvar cliente e veículo</span>
+            <span>{{ modoCliente() === 'existente' ? 'Salvar veículo' : 'Salvar cliente e veículo' }}</span>
           }
         </button>
       </div>

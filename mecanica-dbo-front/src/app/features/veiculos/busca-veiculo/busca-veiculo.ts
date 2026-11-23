@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,6 +11,8 @@ import { FormVeiculo } from '../form-veiculo/form-veiculo';
 import { Veiculo } from '../../../shared/models/veiculo.model';
 import { OrdemServico, ROTULOS_STATUS, StatusOs, TAG_STATUS } from '../../../shared/models/ordem-servico.model';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
+import { ModalNovoCliente } from '../../clientes/modal-novo-cliente/modal-novo-cliente';
+import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 
 interface HistoricoItem {
   id?: number;
@@ -32,11 +34,11 @@ interface VeiculoExt extends Veiculo {
 @Component({
   selector: 'app-busca-veiculo',
   standalone: true,
-  imports: [CommonModule, FormsModule, PlacaPipe],
+  imports: [CommonModule, FormsModule, PlacaPipe, ModalNovoCliente],
   templateUrl: './busca-veiculo.html',
   styleUrl: './busca-veiculo.css'
 })
-export class BuscaVeiculo {
+export class BuscaVeiculo implements OnInit {
   private service = inject(VeiculoService);
   private osService = inject(OrdemServicoService);
   private router = inject(Router);
@@ -51,6 +53,83 @@ export class BuscaVeiculo {
   recentes            = signal<string[]>([]);
   erro                = signal('');
   historicoErro       = signal('');
+
+  // ── Lista de todos os veículos ──
+  todos          = signal<Veiculo[]>([]);
+  carregandoLista = signal(false);
+  erroLista      = signal('');
+  termo          = signal('');
+  cadastroAberto = signal(false);
+  lista = computed(() => {
+    const q = this.termo().trim().toLowerCase();
+    const qPlaca = q.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!q) return this.todos();
+    return this.todos().filter(v =>
+      (qPlaca && v.placa.includes(qPlaca))
+      || `${v.marca} ${v.modelo} ${v.cor ?? ''} ${v.cliente?.nome ?? ''}`.toLowerCase().includes(q));
+  });
+
+  ngOnInit(): void {
+    this.carregarLista();
+  }
+
+  carregarLista(): void {
+    this.carregandoLista.set(true);
+    this.erroLista.set('');
+    this.service.listar().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: l => {
+        this.todos.set([...l].sort((a, b) => a.placa.localeCompare(b.placa)));
+        this.carregandoLista.set(false);
+      },
+      error: e => {
+        this.carregandoLista.set(false);
+        this.erroLista.set(mensagemDoErro(e, 'Não foi possível carregar os veículos.'));
+      }
+    });
+  }
+
+  /** Abre a ficha (dados, dono e histórico) do veículo clicado na lista. */
+  abrirFicha(v: Veiculo): void {
+    this.selecionarPlaca(v.placa);
+  }
+
+  voltarParaLista(): void {
+    this.veiculo.set(null);
+    this.buscaRealizada.set(false);
+    this.erro.set('');
+    this.placa.set('');
+  }
+
+  editar(v: Veiculo, evento?: Event): void {
+    evento?.stopPropagation();
+    this.dialog.open(FormVeiculo, {
+      width: '640px', maxWidth: '95vw', disableClose: true,
+      data: { veiculo: v, clienteId: v.cliente?.id }
+    }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((salvo: Veiculo | false) => {
+      if (!salvo) return;
+      this.carregarLista();
+      if (this.veiculo()?.id === v.id) this.selecionarPlaca(salvo.placa);
+    });
+  }
+
+  inativar(v: Veiculo, evento?: Event): void {
+    evento?.stopPropagation();
+    if (!v.id) return;
+    if (!confirm(`Tirar ${v.marca} ${v.modelo} (${v.placa}) da lista de veículos?\n\n`
+        + 'O histórico de ordens de serviço dele continua guardado.')) return;
+    this.service.inativar(v.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        if (this.veiculo()?.id === v.id) this.voltarParaLista();
+        this.carregarLista();
+      },
+      error: e => alert(mensagemDoErro(e, 'Não foi possível inativar o veículo.'))
+    });
+  }
+
+  aoFecharCadastro(salvou: boolean): void {
+    this.cadastroAberto.set(false);
+    if (salvou) this.carregarLista();
+  }
 
   buscar(): void {
     if (this.carregando() || this.carregandoHistorico()) return;
@@ -143,13 +222,8 @@ export class BuscaVeiculo {
     window.print();
   }
 
+  /** Veículo novo: o mesmo cadastro completo do painel (já começa em "Já é cliente"). */
   abrirCadastroVeiculo(): void {
-    this.dialog.open(FormVeiculo, { width: '640px', maxWidth: '95vw', data: null })
-      .afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((v: Veiculo | undefined) => {
-        if (v?.placa) {
-          this.placa.set(v.placa);
-          this.buscar();
-        }
-      });
+    this.cadastroAberto.set(true);
   }
 }

@@ -187,7 +187,7 @@
 
 .not-found-title {
   font-family: var(--font-heading);
-  font-weight: 400;
+  font-weight: 700;
   font-size: 22px;
   margin-bottom: 6px;
 }
@@ -202,4 +202,42 @@
   .veiculos-layout {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Lista de veículos ─────────────────────────────────── */
+.subtitulo-lista {
+  margin: 2px 0 0;
+  color: var(--color-text-soft);
+  font-size: 13px;
+}
+.busca-lista {
+  margin-bottom: 14px;
+}
+.busca-lista .input {
+  width: 100%;
+}
+.tabela-card {
+  padding: 6px 8px;
+}
+.linha-clicavel {
+  cursor: pointer;
+}
+.linha-clicavel:hover td {
+  background: var(--color-hover);
+}
+.placa-chip {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--color-hover);
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.voltar-lista {
+  margin-bottom: 12px;
+  padding-left: 0;
+}
+.veiculos-layout.so-ficha {
+  grid-template-columns: minmax(0, 760px);
 }

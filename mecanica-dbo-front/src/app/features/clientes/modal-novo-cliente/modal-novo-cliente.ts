@@ -1,8 +1,9 @@
-import { Component, HostListener, inject, output, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AtendimentoService } from '../../../core/services/atendimento';
+import { ClienteService } from '../../../core/services/cliente';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { Combustivel } from '../../../shared/models/veiculo.model';
 import { VeiculoResumo } from '../../../shared/models/ordem-servico.model';
@@ -16,8 +17,29 @@ import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
   templateUrl: './modal-novo-cliente.html',
   styleUrl: './modal-novo-cliente.css'
 })
-export class ModalNovoCliente {
+export class ModalNovoCliente implements OnInit {
   private atendimentoService = inject(AtendimentoService);
+  private clienteService = inject(ClienteService);
+
+  /** Já abre com este cliente escolhido (ex.: "carro novo" na ficha do cliente). */
+  clienteInicial = input<Cliente | null>(null);
+  /** Começa no modo "Já é cliente" (ex.: botão "Novo veículo" da aba Veículos). */
+  comecarComClienteExistente = input(false);
+
+  // ── Proprietário: novo ou já cadastrado ──
+  modoCliente = signal<'novo' | 'existente'>('novo');
+  clienteEscolhido = signal<Cliente | null>(null);
+  buscaCliente = signal('');
+  private todosClientes = signal<Cliente[]>([]);
+  clientesEncontrados = computed(() => {
+    const q = this.buscaCliente().trim().toLowerCase();
+    if (!q) return [];
+    const digitos = q.replace(/\D/g, '');
+    return this.todosClientes()
+      .filter(c => c.nome.toLowerCase().includes(q)
+        || (digitos.length >= 3 && (c.telefone1 ?? '').replace(/\D/g, '').includes(digitos)))
+      .slice(0, 6);
+  });
   private router = inject(Router);
 
   /** Emite true se algo foi salvo com sucesso (para o pai recarregar dados) */
@@ -55,6 +77,39 @@ export class ModalNovoCliente {
     'GNV'
   ];
 
+  ngOnInit(): void {
+    const inicial = this.clienteInicial();
+    if (inicial) {
+      this.modoCliente.set('existente');
+      this.clienteEscolhido.set(inicial);
+    } else if (this.comecarComClienteExistente()) {
+      this.mudarModo('existente');
+    }
+  }
+
+  mudarModo(modo: 'novo' | 'existente'): void {
+    this.modoCliente.set(modo);
+    this.erro.set('');
+    if (modo === 'existente' && this.todosClientes().length === 0) {
+      this.clienteService.listar().subscribe({
+        next: lista => this.todosClientes.set(lista.filter(c => c.ativo !== false)),
+        error: e => this.erro.set(mensagemDoErro(e))
+      });
+    }
+  }
+
+  escolherCliente(c: Cliente): void {
+    this.clienteEscolhido.set(c);
+    this.buscaCliente.set('');
+    this.erro.set('');
+  }
+
+  trocarCliente(): void {
+    this.clienteEscolhido.set(null);
+    this.mudarModo('existente');
+  }
+
+  /** Esc age como o X: pergunta antes de jogar fora o que foi digitado. */
   @HostListener('document:keydown.escape')
   aoPressionarEsc(): void {
     if (!this.salvando()) {
@@ -62,10 +117,19 @@ export class ModalNovoCliente {
     }
   }
 
-  aoClicarBackdrop(evento: MouseEvent): void {
-    if (!this.salvando()) {
-      this.fechar();
-    }
+  /**
+   * Clique fora da janela NÃO fecha: era fácil perder tudo o que foi
+   * digitado com um clique sem querer. Para sair, use o X ou "Cancelar".
+   */
+  aoClicarBackdrop(_evento: MouseEvent): void {}
+
+  /** Algo foi digitado e ainda não foi salvo? */
+  temDadosNaoSalvos(): boolean {
+    if (this.sucesso()) return false;
+    const textos = [this.nome(), this.telefone(), this.cpf(), this.email(),
+                    this.placa(), this.marca(), this.modelo(), this.cor()];
+    return textos.some(t => t.trim() !== '') || this.anoFabricacao() !== null
+      || (this.clienteEscolhido() !== null && !this.clienteInicial());
   }
 
   alterarPlaca(valor: string): void {
@@ -83,18 +147,27 @@ export class ModalNovoCliente {
     const modelo = this.modelo().trim();
     const cor = this.cor().trim();
 
+    const existente = this.modoCliente() === 'existente';
+
     // ── Validações amigáveis ──
-    if (!nome) {
-      this.erro.set('Informe o nome do proprietário.');
-      return;
-    }
-    if (nome.length < 2) {
-      this.erro.set('O nome deve ter pelo menos 2 caracteres.');
-      return;
-    }
-    if (!telefone) {
-      this.erro.set('Informe o telefone ou WhatsApp de contato.');
-      return;
+    if (existente) {
+      if (!this.clienteEscolhido()?.id) {
+        this.erro.set('Escolha o cliente: digite o nome ou o telefone e clique nele na lista.');
+        return;
+      }
+    } else {
+      if (!nome) {
+        this.erro.set('Informe o nome do proprietário.');
+        return;
+      }
+      if (nome.length < 2) {
+        this.erro.set('O nome deve ter pelo menos 2 caracteres.');
+        return;
+      }
+      if (!telefone) {
+        this.erro.set('Informe o telefone ou WhatsApp de contato.');
+        return;
+      }
     }
     if (!placa) {
       this.erro.set('Informe a placa do veículo.');
@@ -124,12 +197,16 @@ export class ModalNovoCliente {
     // Se a placa já existir, o cliente também não é gravado — e um novo
     // clique não cria cliente repetido.
     this.atendimentoService.registrar({
-      novoCliente: {
-        nome,
-        telefone1: telefone,
-        cpf: this.cpf().trim() || undefined,
-        email: this.email().trim() || undefined
-      },
+      ...(existente
+        ? { clienteId: this.clienteEscolhido()!.id }
+        : {
+            novoCliente: {
+              nome,
+              telefone1: telefone,
+              cpf: this.cpf().trim() || undefined,
+              email: this.email().trim() || undefined
+            }
+          }),
       novoVeiculo: {
         placa,
         marca,
@@ -167,6 +244,10 @@ export class ModalNovoCliente {
   }
 
   fechar(): void {
+    if (this.temDadosNaoSalvos()
+        && !confirm('Sair sem salvar? O que foi digitado neste cadastro será perdido.')) {
+      return;
+    }
     this.fechado.emit(this.sucesso());
   }
 }

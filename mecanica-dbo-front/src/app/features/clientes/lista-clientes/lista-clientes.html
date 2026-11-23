@@ -249,3 +249,7 @@
   }
 
 </div>
+
+@if (cadastroAberto()) {
+  <app-modal-novo-cliente (fechado)="aoFecharCadastro($event)" />
+}

@@ -8,6 +8,11 @@ export class VeiculoService {
   private http = inject(HttpClient);
   private base = '/veiculos';
 
+  /** GET /veiculos — todos os ativos, com o dono */
+  listar(): Observable<Veiculo[]> {
+    return this.http.get<Veiculo[]>(this.base);
+  }
+
   /** GET /veiculos/placa/{placa} */
   buscarPorPlaca(placa: string): Observable<Veiculo> {
     return this.http.get<Veiculo>(`${this.base}/placa/${placa}`);

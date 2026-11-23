@@ -15,6 +15,11 @@ describe('Consulta de veículo sem dados fictícios', () => {
     }).compileComponents();
     const fixture = TestBed.createComponent(BuscaVeiculo); tela = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController); fixture.detectChanges();
+    // Ao abrir, a tela carrega a lista de todos os veículos.
+    http.expectOne('/veiculos').flush([
+      { id: 1, placa: 'ABC1D23', marca: 'Toyota', modelo: 'Corolla', cor: 'Prata', combustivel: 'FLEX', cliente: { id: 1, nome: 'Fernanda', telefone1: '1' } },
+      { id: 2, placa: 'XYZ9876', marca: 'Fiat', modelo: 'Uno', cor: 'Branco', combustivel: 'FLEX', cliente: { id: 2, nome: 'Carlos', telefone1: '2' } }
+    ]);
   });
   afterEach(() => http.verify());
   it('usa o proprietário e o histórico real inclusive para uma placa do antigo protótipo', () => {
@@ -27,6 +32,12 @@ describe('Consulta de veículo sem dados fictícios', () => {
     expect(tela.rotuloStatus(tela.veiculo()?.status)).toBe('Entregue');
     expect(tela.veiculo()?.historico).toHaveLength(1);
     expect(tela.veiculo()?.historico[0].servico).toBe('Serviço real');
+  });
+  it('lista todos os veículos e filtra por placa, modelo ou dono', () => {
+    expect(tela.lista()).toHaveLength(2);
+    tela.termo.set('corolla'); expect(tela.lista().map(v => v.placa)).toEqual(['ABC1D23']);
+    tela.termo.set('xyz-98'); expect(tela.lista().map(v => v.placa)).toEqual(['XYZ9876']);
+    tela.termo.set('carlos'); expect(tela.lista().map(v => v.placa)).toEqual(['XYZ9876']);
   });
   it('aceita a placa digitada com hífen', () => {
     tela.placa.set('qpd-8734'); tela.buscar();
