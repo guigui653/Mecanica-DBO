@@ -50,6 +50,34 @@ class CpfCriptoTest {
         assertThat(cripto.hash(null)).isNull();
     }
 
+    /** A chave do exemplo do README, digitada no lugar de uma gerada. */
+    static final String CHAVE_DE_EXEMPLO = "x".repeat(43) + "=";
+
+    @Test
+    void recusaChaveDeExemploComoChaveAtual() {
+        assertThatThrownBy(() -> new CpfCripto(CHAVE_DE_EXEMPLO)).hasMessageContaining("exemplo");
+        assertThatThrownBy(() -> new CpfCripto("A".repeat(43) + "=")).hasMessageContaining("exemplo");
+    }
+
+    @Test
+    void aceitaChaveDeExemploComoChaveAntigaParaConseguirSairDela() {
+        CpfCripto antiga = CpfCripto.daChaveAntiga(CHAVE_DE_EXEMPLO);
+        assertThat(antiga.decifrar(antiga.cifrar("12345678900"))).isEqualTo("12345678900");
+    }
+
+    @Test
+    void aceitaAChaveEntreAspas() {
+        CpfCripto comAspas = new CpfCripto("\"" + CHAVE_TESTE + "\"");
+        assertThat(comAspas.mesmaChaveQue(cripto)).isTrue();
+        assertThat(comAspas.decifrar(cripto.cifrar("12345678900"))).isEqualTo("12345678900");
+    }
+
+    @Test
+    void digitalDistingueChavesSemRevelalas() {
+        assertThat(new CpfCripto(CHAVE_TESTE).mesmaChaveQue(cripto)).isTrue();
+        assertThat(new CpfCripto("HyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4=").mesmaChaveQue(cripto)).isFalse();
+    }
+
     @Test
     void mascaraMostraSoOMeio() {
         assertThat(Cpfs.mascarar("123.456.789-00")).isEqualTo("***.456.789-**");

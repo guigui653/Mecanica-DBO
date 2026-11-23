@@ -1,5 +1,6 @@
 package com.mecanicadbo.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,7 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.stream.IntStream;
 
 /**
  * Criptografia do CPF no banco.
@@ -35,25 +37,67 @@ public class CpfCripto {
 
     private final SecretKeySpec chaveCifra;
     private final SecretKeySpec chaveBusca;
+    private final String digital;
     private final SecureRandom aleatorio = new SecureRandom();
 
+    @Autowired
     public CpfCripto(@Value("${app.cpf.chave:}") String chaveMestraBase64) {
-        if (chaveMestraBase64 == null || chaveMestraBase64.isBlank()) {
-            throw new IllegalStateException(
-                    "Defina a variável de ambiente CPF_CHAVE (chave da criptografia do CPF) antes de iniciar o sistema. "
-                  + "Veja o README do backend para gerar uma.");
-        }
-        byte[] mestra;
-        try {
-            mestra = Base64.getDecoder().decode(chaveMestraBase64.trim());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalStateException("A CPF_CHAVE não é um Base64 válido.", e);
-        }
-        if (mestra.length != 32) {
-            throw new IllegalStateException("A CPF_CHAVE precisa ter 32 bytes (44 caracteres em Base64); tem " + mestra.length + ".");
+        this(chaveMestraBase64, "CPF_CHAVE", true);
+    }
+
+    /**
+     * Para abrir CPFs gravados com uma chave antiga (troca de chave). Aceita
+     * chave fraca, justamente para conseguir sair dela.
+     */
+    public static CpfCripto daChaveAntiga(String chaveBase64) {
+        return new CpfCripto(chaveBase64, "CPF_CHAVE_ANTIGA", false);
+    }
+
+    private CpfCripto(String chaveMestraBase64, String nomeVariavel, boolean exigirChaveForte) {
+        byte[] mestra = lerChave(chaveMestraBase64, nomeVariavel);
+        if (exigirChaveForte && pareceChaveDeExemplo(mestra)) {
+            throw new IllegalStateException("A " + nomeVariavel + " parece uma chave de exemplo (ex.: \"xxxx...\"), "
+                  + "não uma chave gerada. Gere uma de verdade (veja o README do backend). "
+                  + "Se os CPFs já foram gravados com ela, passe-a em CPF_CHAVE_ANTIGA para a troca.");
         }
         this.chaveCifra = new SecretKeySpec(derivar(mestra, "mecanica-dbo:cpf:cifra"), "AES");
         this.chaveBusca = new SecretKeySpec(derivar(mestra, "mecanica-dbo:cpf:busca"), "HmacSHA256");
+        this.digital = HexFormat.of().formatHex(derivar(mestra, "mecanica-dbo:cpf:digital"));
+    }
+
+    private static byte[] lerChave(String base64, String nomeVariavel) {
+        if (base64 == null || base64.isBlank()) {
+            throw new IllegalStateException(
+                    "Defina a variável de ambiente " + nomeVariavel + " (chave da criptografia do CPF) antes de iniciar o sistema. "
+                  + "Veja o README do backend para gerar uma.");
+        }
+        String limpa = base64.trim();
+        if (limpa.length() >= 2 && limpa.startsWith("\"") && limpa.endsWith("\"")) {
+            limpa = limpa.substring(1, limpa.length() - 1).trim();   // aspas coladas junto no IntelliJ
+        }
+        byte[] mestra;
+        try {
+            mestra = Base64.getDecoder().decode(limpa);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("A " + nomeVariavel + " não é um Base64 válido.", e);
+        }
+        if (mestra.length != 32) {
+            throw new IllegalStateException("A " + nomeVariavel + " precisa ter 32 bytes (44 caracteres em Base64); tem " + mestra.length + ".");
+        }
+        return mestra;
+    }
+
+    /**
+     * Chave gerada ao acaso tem quase sempre 25+ bytes diferentes entre os 32.
+     * Menos de 16 é sinal de texto digitado ("xxxx...", "AAAA...", "1234...").
+     */
+    static boolean pareceChaveDeExemplo(byte[] chave) {
+        return IntStream.range(0, chave.length).map(i -> chave[i] & 0xff).distinct().count() < 16;
+    }
+
+    /** Identifica a chave sem revelá-la: duas instâncias com a mesma chave têm a mesma digital. */
+    public boolean mesmaChaveQue(CpfCripto outra) {
+        return digital.equals(outra.digital);
     }
 
     /** "12345678900" → "v1:<base64 de IV + texto cifrado>". null continua null. */
