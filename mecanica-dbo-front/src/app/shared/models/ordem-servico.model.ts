@@ -72,10 +72,10 @@ export const ROTULOS_STATUS: Record<StatusOs, string> = {
 
 /** Cor da etiqueta (classe "tag-*") nas listas. */
 export const TAG_STATUS: Record<StatusOs, string> = {
-  ABERTA: 'tag-outline',
-  EM_ANDAMENTO: 'tag-accent',
-  CONCLUIDA: 'tag-accent-2',
-  ENTREGUE: 'tag-neutral'
+  ABERTA: 'tag-status-aberta',
+  EM_ANDAMENTO: 'tag-status-andamento',
+  CONCLUIDA: 'tag-status-concluida',
+  ENTREGUE: 'tag-status-entregue'
 };
 
 /** Classe do selo de status (classe "badge-*") no painel e no detalhe da OS. */

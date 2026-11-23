@@ -1,5 +1,5 @@
 /* ============================================================
-   Layout principal — sidebar clara (estilo protótipo) + conteúdo
+   Layout principal — menu lateral escuro + conteúdo
    Arquivo: src/app/app.css
    ============================================================ */
 
@@ -14,36 +14,49 @@
   flex: none;
   width: var(--sidebar-width);
   background: var(--sidebar-bg);
-  border-right: 1px solid var(--color-divider);
-  color: var(--color-text);
+  color: var(--sidebar-texto);
   display: flex;
   flex-direction: column;
-  padding-top: 24px;
+  padding-top: 22px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
 .sidebar-brand {
-  padding: 0 20px 22px;
-  border-bottom: 1px solid var(--color-divider);
-  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px 22px;
+  margin-bottom: 4px;
+}
+
+.brand-logo {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--color-accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: -0.04em;
 }
 
 .brand-name {
   font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 20px;
+  font-weight: 700;
+  font-size: 16px;
   line-height: 1.15;
-  color: var(--color-text);
-  letter-spacing: -0.01em;
+  color: #fff;
 }
 
 .brand-tag {
-  font-family: var(--font-body);
-  font-size: 9.5px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  font-weight: 600;
-  margin-top: 5px;
+  font-size: 12px;
+  color: var(--sidebar-texto);
+  margin-top: 2px;
 }
 
 /* ── NAVEGAÇÃO ──────────────────────────────────────────── */
@@ -51,8 +64,8 @@
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 0 10px;
+  gap: 4px;
+  padding: 0 12px;
 }
 
 .nav-item {
@@ -60,26 +73,24 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 12px 9px 10px;
-  border-radius: var(--radius);
-  font-size: 13.5px;
-  color: var(--color-text);
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sidebar-texto);
   text-decoration: none;
-  border-left: 3px solid transparent;
-  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .nav-item:hover {
-  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-  color: var(--color-text);
+  background: var(--sidebar-hover);
+  color: #fff;
   text-decoration: none;
 }
 
 .nav-item.active {
   background: var(--nav-ativo-bg);
-  color: var(--color-accent-texto);
-  font-weight: 500;
-  border-left-color: var(--color-accent);
+  color: #fff;
 }
 
 .nav-item svg {
@@ -89,24 +100,28 @@
 
 .nav-count {
   margin-left: auto;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: var(--sidebar-hover);
   font-size: 11.5px;
+  text-align: center;
   font-variant-numeric: tabular-nums;
-  color: var(--color-text-faint);
-  transition: color 0.12s ease;
+  color: #d1d5db;
 }
 
 .nav-item.active .nav-count {
-  color: var(--color-accent-texto);
-  font-weight: 500;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
 }
 
 /* ── RODAPÉ DA SIDEBAR ──────────────────────────────────── */
 
 .sidebar-foot {
   margin-top: auto;
-  padding: 16px 20px 20px;
-  font-size: 11.5px;
-  color: var(--color-text-soft);
+  padding: 16px 18px 20px;
+  font-size: 12px;
+  color: #6b7280;
   line-height: 1.4;
 }
 
@@ -117,15 +132,28 @@
 }
 
 .sync-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--color-accent);
+  background: #10b981;
   flex: none;
 }
 
 .sync-dot.offline {
   background: var(--color-danger);
+}
+
+/* Botões do rodapé no fundo escuro */
+.sidebar-foot .btn-ghost {
+  color: var(--sidebar-texto);
+  border: 1px solid #2b2f3a;
+  border-radius: 8px;
+}
+
+.sidebar-foot .btn-ghost:hover:not(:disabled) {
+  color: #fff;
+  background: var(--sidebar-hover);
+  border-color: #4b5563;
 }
 
 .btn-tema {
@@ -153,9 +181,9 @@
 
   .sidebar {
     width: 100%;
+    height: auto;
+    position: static;
     padding-top: 14px;
-    border-right: none;
-    border-bottom: 1px solid var(--color-divider);
   }
 
   .sidebar-nav {
@@ -165,14 +193,7 @@
   }
 
   .nav-item {
-    border-left: none;
-    border-bottom: 3px solid transparent;
     padding: 8px 10px;
-  }
-
-  .nav-item.active {
-    border-left: none;
-    border-bottom-color: var(--color-accent);
   }
 
   .nav-item span:not(.nav-count) {

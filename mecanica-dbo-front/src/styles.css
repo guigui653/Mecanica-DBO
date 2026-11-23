@@ -1,56 +1,59 @@
 /* ============================================================
    MECÂNICA DBO — Design System
-   Extraído do protótipo do Claude Design
+   Visual "Gestão de oficina": laranja + menu lateral escuro
+   (vindo do projeto mecanica-dbo-web). Tudo sai destas variáveis.
    Arquivo: src/styles.css (global)
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
   /* ── Cores ────────────────────────────────────────────── */
-  --color-bg:          #faf9f7;
+  --color-bg:          #f4f5f7;
   --color-surface:     #ffffff;
-  --color-text:        #1a1917;
+  --color-text:        #111827;
   --color-text-soft:   color-mix(in srgb, var(--color-text) 60%, transparent);
   --color-text-faint:  color-mix(in srgb, var(--color-text) 45%, transparent);
   --color-divider:     color-mix(in srgb, var(--color-text) 12%, transparent);
   --color-hover:       color-mix(in srgb, var(--color-text) 6%, transparent);
 
-  --color-accent:      #b68235;   /* dourado da oficina */
-  --color-accent-700:  #8f6526;
+  --color-accent:      #f97316;   /* laranja da oficina */
+  --color-accent-700:  #ea580c;
   --color-accent-soft: color-mix(in srgb, var(--color-accent) 12%, transparent);
 
-  --color-dark:        #1a1917;   /* sidebar e tela de login */
-  --color-on-dark:     #f3f2f2;
+  --color-dark:        #14161c;   /* menu lateral e tela de login */
+  --color-on-dark:     #f3f4f6;
 
   /* ── Status da OS ─────────────────────────────────────── */
-  --status-aberta:        #b68235;
-  --status-em-andamento:  #2b6cb0;
-  --status-concluida:     #2f855a;
-  --status-entregue:      #4a5568;
+  --status-aberta:        #3b82f6;
+  --status-em-andamento:  #d97706;
+  --status-concluida:     #059669;
+  --status-entregue:      #64748b;
 
   /* ── Tipografia ───────────────────────────────────────── */
-  --font-heading: 'Fraunces', Georgia, serif;
+  --font-heading: 'Inter', -apple-system, 'Segoe UI', sans-serif;
   --font-body:    'Inter', -apple-system, 'Segoe UI', sans-serif;
 
   /* ── Elevação e forma ─────────────────────────────────── */
-  --radius:    4px;
-  --radius-sm: 2px;
-  --shadow-sm: 0 1px 2px rgba(26, 25, 23, 0.06);
-  --shadow-lg: 0 12px 32px rgba(26, 25, 23, 0.14);
+  --radius:    10px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05);
+  --shadow-lg: 0 25px 60px rgba(17, 24, 39, 0.25);
 
   /* ── Avisos (fundos derivam destas cores com color-mix) ─ */
   --color-danger:       #c53030;
   --color-danger-forte: #9b2c2c;   /* toast de erro */
   --color-success:      #2f855a;
   --color-warning:      #b78103;
-  --color-accent-texto: #a3722a;   /* dourado usado como texto (item ativo, etiquetas) */
-  --tag2-bg:            #fdf3d7;
-  --tag2-texto:         #926b1c;
+  --color-accent-texto: #c2410c;   /* laranja usado como texto (item ativo, etiquetas) */
+  --tag2-bg:            #ffedd5;
+  --tag2-texto:         #9a3412;
 
-  /* ── Menu lateral ─────────────────────────────────────── */
-  --sidebar-bg:         #fbf9f6;
-  --nav-ativo-bg:       #f3ede2;
+  /* ── Menu lateral (escuro nos dois temas) ─────────────── */
+  --sidebar-bg:         #14161c;
+  --sidebar-hover:      #1d2028;
+  --sidebar-texto:      #9ca3af;
+  --nav-ativo-bg:       var(--color-accent);
 
   /* ── Espaçamento ──────────────────────────────────────── */
   --sidebar-width: 240px;
@@ -64,31 +67,32 @@
    não precisam saber qual tema está ativo.
    ============================================================ */
 :root[data-tema="escuro"] {
-  --color-bg:          #161513;
-  --color-surface:     #201e1b;
-  --color-text:        #ece9e4;
+  --color-bg:          #0f1115;
+  --color-surface:     #181b22;
+  --color-text:        #e5e7eb;
 
-  --color-accent:      #c9954a;   /* o dourado da oficina, um pouco mais claro para ter contraste */
-  --color-accent-700:  #dcae67;
-  --color-accent-texto:#dcae67;
+  --color-accent:      #f97316;   /* o mesmo laranja: tem contraste no escuro */
+  --color-accent-700:  #fb923c;
+  --color-accent-texto:#fdba74;
 
-  --color-dark:        #0f0e0c;
-  --color-on-dark:     #f3f2f2;
+  --color-dark:        #0b0d11;
+  --color-on-dark:     #f3f4f6;
 
-  --status-aberta:       #d1a052;
-  --status-em-andamento: #5b9bd5;
-  --status-concluida:    #4caf7d;
-  --status-entregue:     #9aa5b4;
+  --status-aberta:       #60a5fa;
+  --status-em-andamento: #fbbf24;
+  --status-concluida:    #34d399;
+  --status-entregue:     #94a3b8;
 
   --color-danger:       #f07272;
   --color-danger-forte: #b23a3a;
   --color-success:      #5cbf8a;
   --color-warning:      #e0b04a;
-  --tag2-bg:            color-mix(in srgb, #e0b04a 16%, transparent);
-  --tag2-texto:         #e7c27a;
+  --tag2-bg:            color-mix(in srgb, #fb923c 16%, transparent);
+  --tag2-texto:         #fdba74;
 
-  --sidebar-bg:         #1b1a17;
-  --nav-ativo-bg:       color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+  --sidebar-bg:         #0b0d11;
+  --sidebar-hover:      #161a21;
+  --nav-ativo-bg:       var(--color-accent);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
@@ -119,14 +123,14 @@ body {
 
 h1, h2, h3, h4 {
   font-family: var(--font-heading);
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin: 0 0 12px;
 }
 
-h1 { font-size: 30px; }
-h2 { font-size: 24px; }
-h3 { font-size: 19px; }
+h1 { font-size: 26px; }
+h2 { font-size: 20px; }
+h3 { font-size: 16px; }
 
 a {
   color: var(--color-accent);
@@ -154,8 +158,8 @@ td.valor {
   justify-content: center;
   gap: 7px;
   font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 13.5px;
+  font-weight: 600;
   padding: 9px 16px;
   min-height: 38px;
   border: 1px solid transparent;
@@ -393,7 +397,7 @@ td.valor {
 .card-title {
   font-family: var(--font-heading);
   font-size: 17px;
-  font-weight: 500;
+  font-weight: 700;
   margin: 0;
 }
 
@@ -414,7 +418,7 @@ td.valor {
 .metric-value {
   font-family: var(--font-heading);
   font-size: 30px;
-  font-weight: 500;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
   margin-top: 6px;
@@ -519,7 +523,7 @@ td.valor {
 .dialog-title {
   font-family: var(--font-heading);
   font-size: 19px;
-  font-weight: 500;
+  font-weight: 700;
   padding: 20px 22px 0;
   margin: 0;
 }
@@ -587,7 +591,7 @@ td.valor {
 .page-title {
   font-family: var(--font-heading);
   font-size: 27px;
-  font-weight: 400;
+  font-weight: 700;
   margin: 0;
 }
 
@@ -700,6 +704,19 @@ td.valor {
   background: transparent;
 }
 
+/* — situação da OS: uma cor por status (as mesmas do painel) — */
+.tag-status-aberta,
+.tag-status-andamento,
+.tag-status-concluida,
+.tag-status-entregue {
+  border-radius: 99px;
+  font-weight: 600;
+}
+.tag-status-aberta     { background: color-mix(in srgb, var(--status-aberta) 14%, transparent);       color: var(--status-aberta); }
+.tag-status-andamento  { background: color-mix(in srgb, var(--status-em-andamento) 16%, transparent); color: var(--status-em-andamento); }
+.tag-status-concluida  { background: color-mix(in srgb, var(--status-concluida) 14%, transparent);    color: var(--status-concluida); }
+.tag-status-entregue   { background: color-mix(in srgb, var(--status-entregue) 16%, transparent);     color: var(--status-entregue); }
+
 /* — chips de filtro — */
 .chip {
   font-family: var(--font-body);
@@ -777,7 +794,7 @@ td.valor {
   font-family: var(--font-heading);
   font-size: 34px;
   margin: 0;
-  font-weight: 400;
+  font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.015em;
 }
