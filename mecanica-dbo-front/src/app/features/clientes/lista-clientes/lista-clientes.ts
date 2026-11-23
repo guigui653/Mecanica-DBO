@@ -12,7 +12,7 @@ import { Cliente } from '../../../shared/models/cliente.model';
 import { FormCliente } from '../form-cliente/form-cliente';
 import { ModalNovoCliente } from '../modal-novo-cliente/modal-novo-cliente';
 import { VeiculosDoCliente } from '../veiculos-do-cliente/veiculos-do-cliente';
-import { CpfPipe, formatarCpf } from '../../../shared/pipes/cpf.pipe';
+import { CpfPipe, formatarCpf, rotuloDocumento, tipoDocumento } from '../../../shared/pipes/cpf.pipe';
 
 export interface ClienteExt extends Cliente {
   totalVeiculos?: number;
@@ -54,6 +54,8 @@ export class ListaClientes implements OnInit {
   avisoExclusao = signal<AvisoExclusao | null>(null);
   /** CPF inteiro na ficha só quando a pessoa clica em "Mostrar"; volta a esconder ao trocar de cliente. */
   mostrarCpf = signal(false);
+  readonly rotuloDoc = rotuloDocumento;
+  ehEmpresa(c: { cpf?: string }): boolean { return tipoDocumento(c.cpf) === 'CNPJ'; }
 
   filtros     = signal<string[]>(FILTROS_COMPLETOS);
   filtroAtivo = signal('Todos');

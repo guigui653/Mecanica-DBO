@@ -25,15 +25,15 @@ public class ClienteService {
 
     /**
      * Listagem da tela de clientes. Com ou sem termo, só ativos.
-     * O CPF está criptografado, então só é achado pelo número COMPLETO
-     * (11 dígitos, com ou sem pontos); nome e telefone acham por pedaço.
+     * O CPF/CNPJ está criptografado, então só é achado pelo documento COMPLETO
+     * (com ou sem pontos); nome e telefone acham por pedaço.
      */
     @Transactional(readOnly = true)
     public List<Cliente> buscar(String termo) {
         if (termo == null || termo.isBlank()) return repo.findByAtivoTrueOrderByNome();
-        String digitos = Cpfs.soDigitos(termo);
-        // "" nunca é igual a um hash: sem CPF completo, a busca por CPF fica de fora.
-        String cpfHash = digitos.length() == 11 ? cripto.hash(digitos) : "";
+        String doc = Documentos.limpar(termo);
+        // "" nunca é igual a um hash: sem CPF/CNPJ completo, a busca por documento fica de fora.
+        String cpfHash = Documentos.tipo(doc) != null ? cripto.hash(doc) : "";
         return repo.buscarPorTermo(termo.trim(), cpfHash);
     }
 
@@ -58,7 +58,7 @@ public class ClienteService {
      */
     @Transactional
     public Cliente criar(ClienteRequest dados) {
-        String cpf = normalizarCpf(dados.cpf());
+        String cpf = normalizarDocumento(dados.cpf(), null);
         validarCpfDisponivel(cpf, null);
 
         Cliente c = new Cliente();
@@ -77,7 +77,7 @@ public class ClienteService {
     public Cliente atualizar(Long id, ClienteRequest dados) {
         Cliente c = buscarPorId(id);
 
-        String cpf = normalizarCpf(dados.cpf());
+        String cpf = normalizarDocumento(dados.cpf(), c.getCpf());
         validarCpfDisponivel(cpf, id);
 
         c.setNome(dados.nome().trim());
@@ -120,21 +120,33 @@ public class ClienteService {
     // ------------------------------------------------------------------
 
     /**
-     * CPF só com os números; em branco vira null (que pode se repetir no
-     * índice único, ao contrário de ""). Com algo digitado, exige os 11 números.
+     * CPF (pessoa física) ou CNPJ (empresa), limpo: só números e letras
+     * maiúsculas. Em branco vira null (que pode se repetir no índice único,
+     * ao contrário de ""). Com algo digitado, confere os dígitos verificadores
+     * pela regra da Receita (ver Documentos).
+     *
+     * @param atual documento que o cliente já tem (na edição). Se não mudou,
+     *              não é reconferido: cadastros antigos, feitos antes desta
+     *              conferência, continuam podendo ser editados.
      */
-    private String normalizarCpf(String cpf) {
-        String digitos = Cpfs.soDigitos(cpf);
-        if (digitos == null || digitos.isEmpty()) {
-            if (cpf != null && !cpf.isBlank()) {
-                throw new RegraDeNegocioException("CPF inválido: use os 11 números, como 123.456.789-00.");
-            }
-            return null;
+    private String normalizarDocumento(String doc, String atual) {
+        String limpo = Documentos.limpar(doc);
+        if (limpo == null) return null;
+        if (limpo.equals(atual)) return limpo;
+
+        Documentos.Tipo tipo = Documentos.tipo(limpo);
+        if (tipo == null) {
+            throw new RegraDeNegocioException(
+                    "Documento inválido: use o CPF (11 números, como 123.456.789-09) "
+                  + "ou o CNPJ (14 caracteres, como 12.345.678/0001-95).");
         }
-        if (digitos.length() != 11) {
-            throw new RegraDeNegocioException("CPF deve ter 11 números (foram digitados " + digitos.length() + ").");
+        if (tipo == Documentos.Tipo.CPF && !Documentos.cpfValido(limpo)) {
+            throw new RegraDeNegocioException("CPF inválido: confira os números (os dois últimos não conferem).");
         }
-        return digitos;
+        if (tipo == Documentos.Tipo.CNPJ && !Documentos.cnpjValido(limpo)) {
+            throw new RegraDeNegocioException("CNPJ inválido: confira os caracteres (os dois últimos não conferem).");
+        }
+        return limpo;
     }
 
     /** Grava o CPF só cifrado + o hash; o campo em claro fica só em memória para a resposta. */
@@ -166,7 +178,7 @@ public class ClienteService {
                     ? " (cliente inativo — reative o cadastro em vez de criar outro)"
                     : "";
             throw new RegraDeNegocioException(
-                    "CPF já cadastrado para: " + existente.getNome() + situacao);
+                    Documentos.rotulo(cpf) + " já cadastrado para: " + existente.getNome() + situacao);
         });
     }
 }

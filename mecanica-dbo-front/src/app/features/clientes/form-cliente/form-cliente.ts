@@ -8,6 +8,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { ClienteService } from '../../../core/services/cliente';
 import { Cliente } from '../../../shared/models/cliente.model';
 
+import { erroDocumento, formatarCpf, formatarDocumentoDigitando, limparDocumento } from '../../../shared/pipes/cpf.pipe';
+import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
+
 @Component({
   selector: 'app-form-cliente',
   standalone: true,
@@ -24,8 +27,9 @@ import { Cliente } from '../../../shared/models/cliente.model';
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>CPF</mat-label>
-          <input matInput formControlName="cpf" maxlength="14">
+          <mat-label>CPF ou CNPJ</mat-label>
+          <input matInput formControlName="cpf" maxlength="18" autocomplete="off"
+                 (input)="formatarDocumento()">
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -72,13 +76,26 @@ export class FormCliente {
 
   form = this.fb.group({
     nome: [this.data?.nome ?? '', [Validators.required, Validators.maxLength(120)]],
-    cpf: [this.data?.cpf ?? ''],
+    cpf: [formatarCpf(this.data?.cpf ?? '')],
     telefone1: [this.data?.telefone1 ?? '', Validators.required],
     telefone2: [this.data?.telefone2 ?? ''],
     email: [this.data?.email ?? '', Validators.email],
   });
 
+  formatarDocumento() {
+    const ctrl = this.form.controls.cpf;
+    ctrl.setValue(formatarDocumentoDigitando(ctrl.value ?? ''), { emitEvent: false });
+  }
+
   salvar() {
+    // Documento que já estava no cadastro não é reconferido (igual ao backend).
+    const doc = this.form.value.cpf ?? '';
+    const mudou = limparDocumento(doc) !== limparDocumento(this.data?.cpf);
+    const erroDoc = mudou ? erroDocumento(doc) : null;
+    if (erroDoc) {
+      this.erro = erroDoc;
+      return;
+    }
     this.salvando = true;
     this.erro = '';
     const payload = this.form.value as Cliente;
@@ -90,7 +107,7 @@ export class FormCliente {
     req.subscribe({
       next: () => this.ref.close(true),
       error: (e) => {
-        this.erro = e.error?.message ?? 'Erro ao salvar cliente';
+        this.erro = mensagemDoErro(e, 'Erro ao salvar cliente');
         this.salvando = false;
       }
     });

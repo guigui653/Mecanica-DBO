@@ -1,6 +1,6 @@
 package com.mecanicadbo.service.pdf;
 
-import com.mecanicadbo.service.Cpfs;
+import com.mecanicadbo.service.Documentos;
 import com.mecanicadbo.service.Placas;
 
 import java.math.BigDecimal;
@@ -72,8 +72,10 @@ public final class ReciboMontador {
 
         Map<String, Object> cli = new LinkedHashMap<>();
         cli.put("nome", texto(cliente.get("nome")));
-        // Recibo vai para a mão do cliente: CPF sempre mascarado (***.456.789-**).
-        cli.put("cpf", texto(Cpfs.mascarar(texto(cliente.get("cpf"), ""))));
+        // Recibo vai para a mão do cliente: CPF mascarado (***.456.789-**); CNPJ (público) completo.
+        String doc = texto(cliente.get("cpf"), "");
+        cli.put("cpf", texto(Documentos.mascarar(doc)));
+        cli.put("docRotulo", Documentos.rotulo(doc));
         cli.put("telefone", texto(cliente.get("telefone1")));
         r.put("cliente", cli);
 

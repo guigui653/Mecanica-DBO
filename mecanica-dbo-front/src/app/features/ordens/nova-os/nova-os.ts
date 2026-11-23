@@ -10,7 +10,7 @@ import { AtendimentoRequest, AtendimentoService, DadosAbertura } from '../../../
 import { Veiculo, Combustivel } from '../../../shared/models/veiculo.model';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
-import { CpfPipe } from '../../../shared/pipes/cpf.pipe';
+import { CpfPipe, erroDocumento, formatarDocumentoDigitando, rotuloDocumento } from '../../../shared/pipes/cpf.pipe';
 import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 
 /**
@@ -66,6 +66,13 @@ export class NovaOs implements OnInit {
   novoNomeCliente = signal('');
   novoTelefoneCliente = signal('');
   novoCpfCliente = signal('');
+  /** Formata no próprio campo enquanto a pessoa digita (CPF ou CNPJ). */
+  alterarDocumento(evento: Event): void {
+    const campo = evento.target as HTMLInputElement;
+    campo.value = formatarDocumentoDigitando(campo.value);
+    this.novoCpfCliente.set(campo.value);
+  }
+  readonly rotuloDoc = rotuloDocumento;
 
   // Form Novo Veículo
   marca = signal('');
@@ -188,7 +195,7 @@ export class NovaOs implements OnInit {
   buscarClientes(): void {
     const termo = this.termoCliente().trim();
     if (!termo) {
-      this.erro.set('Digite o nome, CPF ou telefone para buscar o cliente.');
+      this.erro.set('Digite o nome, CPF/CNPJ ou telefone para buscar o cliente.');
       return;
     }
     this.buscandoCliente.set(true);
@@ -304,6 +311,11 @@ export class NovaOs implements OnInit {
         this.erro.set('Telefone do cliente é obrigatório.');
         return null;
       }
+      const erroDoc = erroDocumento(this.novoCpfCliente());
+      if (erroDoc) {
+        this.erro.set(erroDoc);
+        return null;
+      }
       dono = { novoCliente: { nome, telefone1: telefone, cpf: this.novoCpfCliente().trim() || undefined } };
     }
 
@@ -342,7 +354,7 @@ export class NovaOs implements OnInit {
     const texto = `${e?.error?.mensagem ?? ''} ${Object.keys(e?.error?.campos ?? {}).join(' ')}`;
     let id: string | null = null;
     if (/placa/i.test(texto)) id = 'nova-placa';
-    else if (/cpf/i.test(texto)) id = 'novo-cpf';
+    else if (/cpf|cnpj|documento/i.test(texto)) id = 'novo-cpf';
     else if (/novoCliente/.test(texto)) id = 'novo-nome';
     else if (/novoVeiculo/.test(texto)) id = 'veic-marca';
     else if (/previs/i.test(texto)) id = 'nova-previsao';

@@ -8,6 +8,7 @@ import { Cliente } from '../../../shared/models/cliente.model';
 import { Combustivel } from '../../../shared/models/veiculo.model';
 import { VeiculoResumo } from '../../../shared/models/ordem-servico.model';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
+import { erroDocumento, formatarDocumentoDigitando, tipoDocumento } from '../../../shared/pipes/cpf.pipe';
 import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 
 @Component({
@@ -49,6 +50,17 @@ export class ModalNovoCliente implements OnInit {
   nome = signal('');
   telefone = signal('');
   cpf = signal('');
+  /** "Pessoa física" / "Empresa", conforme o documento digitado. */
+  tipoDoc = computed(() => tipoDocumento(this.cpf()));
+
+  /** Formata no próprio campo enquanto a pessoa digita (CPF ou CNPJ). */
+  alterarDocumento(evento: Event): void {
+    const campo = evento.target as HTMLInputElement;
+    const formatado = formatarDocumentoDigitando(campo.value);
+    campo.value = formatado;
+    this.cpf.set(formatado);
+    this.erro.set('');
+  }
   email = signal('');
 
   // ── Formulário: Veículo ──
@@ -166,6 +178,11 @@ export class ModalNovoCliente implements OnInit {
       }
       if (!telefone) {
         this.erro.set('Informe o telefone ou WhatsApp de contato.');
+        return;
+      }
+      const erroDoc = erroDocumento(this.cpf());
+      if (erroDoc) {
+        this.erro.set(erroDoc);
         return;
       }
     }

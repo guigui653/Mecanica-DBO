@@ -19,7 +19,8 @@ public record ClienteRequest(
         @Size(max = 120, message = "Nome deve ter no máximo 120 caracteres")
         String nome,
 
-        @Size(max = 14, message = "CPF deve ter no máximo 14 caracteres")
+        /** CPF ou CNPJ (com ou sem pontuação). O nome do campo ficou "cpf" para não quebrar as telas. */
+        @Size(max = 18, message = "CPF/CNPJ deve ter no máximo 18 caracteres")
         String cpf,
 
         @NotBlank(message = "Telefone é obrigatório")

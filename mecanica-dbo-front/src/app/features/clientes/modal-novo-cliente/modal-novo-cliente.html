@@ -124,7 +124,7 @@
           } @else {
           <div class="grid-2">
             <div class="field">
-              <label for="cad-nome">Nome completo <span class="req">*</span></label>
+              <label for="cad-nome">Nome completo ou da empresa <span class="req">*</span></label>
               <input id="cad-nome" class="input" placeholder="Ex: Carlos Silva"
                      [ngModel]="nome()" (ngModelChange)="nome.set($event)" name="nome"
                      [disabled]="salvando()" autofocus>
@@ -138,9 +138,12 @@
             </div>
 
             <div class="field">
-              <label for="cad-cpf">CPF (opcional)</label>
-              <input id="cad-cpf" class="input" placeholder="000.000.000-00"
-                     [ngModel]="cpf()" (ngModelChange)="cpf.set($event)" name="cpf"
+              <label for="cad-cpf">CPF ou CNPJ (opcional)
+                @if (tipoDoc()) { <span class="tipo-doc">{{ tipoDoc() === 'CNPJ' ? 'empresa' : 'pessoa física' }}</span> }
+              </label>
+              <input id="cad-cpf" class="input" placeholder="CPF da pessoa ou CNPJ da empresa" maxlength="18"
+                     autocomplete="off"
+                     [value]="cpf()" (input)="alterarDocumento($event)"
                      [disabled]="salvando()">
             </div>
 

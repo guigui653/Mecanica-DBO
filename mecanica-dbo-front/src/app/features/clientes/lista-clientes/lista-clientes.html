@@ -34,7 +34,7 @@
   @if (!cs) {
     <!-- LISTA DE CLIENTES -->
     <div class="search-bar">
-      <input class="input" type="text" placeholder="Nome, CPF, telefone ou e-mail"
+      <input class="input" type="text" placeholder="Nome, CPF/CNPJ, telefone ou e-mail"
              [ngModel]="termoBusca()" (ngModelChange)="termoBusca.set($event)">
       <button type="button" class="btn btn-secondary" (click)="abrirForm()">Novo cliente</button>
     </div>
@@ -124,14 +124,16 @@
       <!-- Coluna esquerda: Card de informações -->
       <section class="card-side">
         <div class="detail-card">
-          <div class="card-kicker">PESSOA FÍSICA</div>
+          <div class="card-kicker">{{ ehEmpresa(cs) ? 'EMPRESA' : 'PESSOA FÍSICA' }}</div>
           <div class="detail-client-name">{{ cs.nome }}</div>
           <hr class="hr">
 
           <div class="info-list">
             <div>
-              <div class="info-label">Documento</div>
-              @if (cs.cpf) {
+              <div class="info-label">{{ cs.cpf ? rotuloDoc(cs.cpf) : 'Documento' }}</div>
+              @if (cs.cpf && ehEmpresa(cs)) {
+                <span class="tabular">{{ cs.cpf | cpf:'completo' }}</span>
+              } @else if (cs.cpf) {
                 <span class="tabular">{{ cs.cpf | cpf:(mostrarCpf() ? 'completo' : 'mascarado') }}</span>
                 <button type="button" class="btn btn-ghost btn-mostrar-cpf" (click)="mostrarCpf.set(!mostrarCpf())"
                         [attr.aria-label]="mostrarCpf() ? 'Esconder o CPF' : 'Mostrar o CPF completo'">

@@ -74,7 +74,7 @@
         @if (modoCliente() === 'buscar') {
           <div class="busca-cliente-box">
             <div class="field">
-              <label for="busca-cliente-termo">Buscar por nome, CPF ou telefone</label>
+              <label for="busca-cliente-termo">Buscar por nome, CPF/CNPJ ou telefone</label>
               <div class="row-busca">
                 <input id="busca-cliente-termo" name="termoCliente" class="input" placeholder="Digite parte do nome ou telefone"
                        [ngModel]="termoCliente()" (ngModelChange)="termoCliente.set($event)" [disabled]="salvando() || buscandoCliente()">
@@ -91,7 +91,7 @@
                        (click)="selecionarCliente(c)">
                     <div>
                       <strong>{{ c.nome }}</strong>
-                      <span class="cliente-info"> · Tel: {{ c.telefone1 }} {{ c.cpf ? ' · CPF: ' + (c.cpf | cpf) : '' }}</span>
+                      <span class="cliente-info"> · Tel: {{ c.telefone1 }} {{ c.cpf ? ' · ' + rotuloDoc(c.cpf) + ': ' + (c.cpf | cpf) : '' }}</span>
                     </div>
                     <button type="button" class="btn btn-sm btn-ghost">
                       {{ clienteSelecionado()?.id === c.id ? 'Selecionado ✓' : 'Selecionar' }}
@@ -120,9 +120,10 @@
                      [ngModel]="novoTelefoneCliente()" (ngModelChange)="novoTelefoneCliente.set($event)" [disabled]="salvando()">
             </div>
             <div class="field">
-              <label for="novo-cpf">CPF (opcional)</label>
-              <input id="novo-cpf" name="novoCpf" class="input" placeholder="000.000.000-00"
-                     [ngModel]="novoCpfCliente()" (ngModelChange)="novoCpfCliente.set($event)" [disabled]="salvando()">
+              <label for="novo-cpf">CPF ou CNPJ (opcional)</label>
+              <input id="novo-cpf" name="novoCpf" class="input" placeholder="CPF da pessoa ou CNPJ da empresa" maxlength="18"
+                     autocomplete="off"
+                     [value]="novoCpfCliente()" (input)="alterarDocumento($event)" [disabled]="salvando()">
             </div>
           </div>
         }

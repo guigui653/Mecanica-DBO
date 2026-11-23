@@ -150,7 +150,11 @@ class BancoIntegracaoTest {
     @Test
     void cpfFicaIlegivelNoBancoEVoltaAoLerOCliente() {
         // CPF único por execução (11 números), para o teste poder rodar várias vezes.
-        String cpf = String.format("%011d", ThreadLocalRandom.current().nextLong(10_000_000_000L, 99_999_999_999L));
+        String sorteado;
+        do {   // CPF aleatório com os dígitos verificadores certos
+            sorteado = String.format("%011d", ThreadLocalRandom.current().nextLong(10_000_000_000L, 99_999_999_999L));
+        } while (!com.mecanicadbo.service.Documentos.cpfValido(sorteado));
+        final String cpf = sorteado;
         String formatado = cpf.substring(0, 3) + "." + cpf.substring(3, 6) + "." + cpf.substring(6, 9) + "-" + cpf.substring(9);
 
         Long id = clientes.criar(new ClienteRequest("Integração CPF", formatado, "61900000000", null, null)).getId();

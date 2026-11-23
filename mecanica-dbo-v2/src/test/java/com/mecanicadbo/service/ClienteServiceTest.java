@@ -45,19 +45,19 @@ class ClienteServiceTest {
     void cpfEGravadoSoCifradoEComOHash() {
         when(repo.findByCpfHash(any())).thenReturn(Optional.empty());
 
-        Cliente novo = service.criar(new ClienteRequest("Bete", "123.456.789-00", "61900000000", null, null));
+        Cliente novo = service.criar(new ClienteRequest("Bete", "529.982.247-25", "61900000000", null, null));
 
-        assertThat(novo.getCpf()).isEqualTo("12345678900");                       // só em memória
-        assertThat(novo.getCpfCifrado()).startsWith("v1:").doesNotContain("123456");
-        assertThat(cripto.decifrar(novo.getCpfCifrado())).isEqualTo("12345678900");
-        assertThat(novo.getCpfHash()).isEqualTo(cripto.hash("12345678900"));
+        assertThat(novo.getCpf()).isEqualTo("52998224725");                       // só em memória
+        assertThat(novo.getCpfCifrado()).startsWith("v1:").doesNotContain("529982");
+        assertThat(cripto.decifrar(novo.getCpfCifrado())).isEqualTo("52998224725");
+        assertThat(novo.getCpfHash()).isEqualTo(cripto.hash("52998224725"));
     }
 
     @Test
     void cpfRepetidoEmOutroFormatoEBarradoPeloHash() {
-        when(repo.findByCpfHash(cripto.hash("12345678900"))).thenReturn(Optional.of(cliente));
+        when(repo.findByCpfHash(cripto.hash("52998224725"))).thenReturn(Optional.of(cliente));
 
-        assertThatThrownBy(() -> service.criar(new ClienteRequest("Outro", "12345678900", "6100", null, null)))
+        assertThatThrownBy(() -> service.criar(new ClienteRequest("Outro", "52998224725", "6100", null, null)))
                 .isInstanceOf(RegraDeNegocioException.class)
                 .hasMessageContaining("CPF já cadastrado para: Diogo");
         verify(repo, never()).save(any());
@@ -67,7 +67,7 @@ class ClienteServiceTest {
     void cpfIncompletoEsemCpfSaoTratados() {
         assertThatThrownBy(() -> service.criar(new ClienteRequest("X", "123.456", "6100", null, null)))
                 .isInstanceOf(RegraDeNegocioException.class)
-                .hasMessageContaining("11 números");
+                .hasMessageContaining("Documento inválido");
 
         Cliente semCpf = service.criar(new ClienteRequest("Sem CPF", "  ", "6100", null, null));
         assertThat(semCpf.getCpfCifrado()).isNull();
@@ -75,9 +75,49 @@ class ClienteServiceTest {
     }
 
     @Test
+    void cnpjDeEmpresaInclusiveAlfanumerico() {
+        when(repo.findByCpfHash(any())).thenReturn(Optional.empty());
+
+        Cliente empresa = service.criar(new ClienteRequest("Transportes Ltda", "11.222.333/0001-81", "6100", null, null));
+        assertThat(empresa.getCpf()).isEqualTo("11222333000181");
+        assertThat(cripto.decifrar(empresa.getCpfCifrado())).isEqualTo("11222333000181");
+
+        Cliente nova = service.criar(new ClienteRequest("Empresa Nova", "12.abc.345/01de-35", "6100", null, null));
+        assertThat(nova.getCpf()).isEqualTo("12ABC34501DE35");
+    }
+
+    @Test
+    void digitosVerificadoresErradosSaoRecusados() {
+        assertThatThrownBy(() -> service.criar(new ClienteRequest("X", "529.982.247-24", "6100", null, null)))
+                .isInstanceOf(RegraDeNegocioException.class).hasMessageContaining("CPF inválido");
+        assertThatThrownBy(() -> service.criar(new ClienteRequest("X", "11.222.333/0001-82", "6100", null, null)))
+                .isInstanceOf(RegraDeNegocioException.class).hasMessageContaining("CNPJ inválido");
+        verify(repo, never()).save(any());
+    }
+
+    @Test
+    void cnpjRepetidoAvisaComONomeCerto() {
+        when(repo.findByCpfHash(cripto.hash("11222333000181"))).thenReturn(Optional.of(cliente));
+        assertThatThrownBy(() -> service.criar(new ClienteRequest("Outra", "11222333000181", "6100", null, null)))
+                .isInstanceOf(RegraDeNegocioException.class)
+                .hasMessageContaining("CNPJ já cadastrado para: Diogo");
+    }
+
+    @Test
+    void edicaoSemMexerNoDocumentoAntigoNaoReconfere() {
+        // Cadastro antigo, de antes da conferência dos dígitos.
+        cliente.setCpf("12345678900");
+        when(repo.findByCpfHash(any())).thenReturn(Optional.of(cliente));
+
+        Cliente salvo = service.atualizar(8L, new ClienteRequest("Diogo Silva", "123.456.789-00", "6100", null, null));
+        assertThat(salvo.getNome()).isEqualTo("Diogo Silva");
+        assertThat(salvo.getCpf()).isEqualTo("12345678900");
+    }
+
+    @Test
     void buscaPorCpfSoComONumeroCompleto() {
-        service.buscar("123.456.789-00");
-        verify(repo).buscarPorTermo("123.456.789-00", cripto.hash("12345678900"));
+        service.buscar("529.982.247-25");
+        verify(repo).buscarPorTermo("529.982.247-25", cripto.hash("52998224725"));
 
         service.buscar("456");
         verify(repo).buscarPorTermo("456", "");
