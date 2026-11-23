@@ -89,6 +89,14 @@ export class OrdemServicoService {
   }
 
   /** DELETE /ordens/{osId}/pecas/{itemId} */
+  atualizarPeca(osId: number, itemId: number, item: ItemPeca): Observable<OrdemServico> {
+    return this.http.put<OrdemServico>(`${this.base}/${osId}/pecas/${itemId}`, item);
+  }
+
+  atualizarServico(osId: number, itemId: number, item: ItemServico): Observable<OrdemServico> {
+    return this.http.put<OrdemServico>(`${this.base}/${osId}/servicos/${itemId}`, item);
+  }
+
   removerPeca(osId: number, itemId: number): Observable<OrdemServico> {
     return this.http.delete<OrdemServico>(`${this.base}/${osId}/pecas/${itemId}`);
   }

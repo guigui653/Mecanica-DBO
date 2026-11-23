@@ -159,7 +159,7 @@
               </thead>
               <tbody>
                 @for (p of pecas(); track p.id) {
-                  <tr>
+                  <tr [class.linha-editando]="editandoPecaId() === p.id">
                     <td>
                       {{ p.descricao }}
                       @if (p.pagoPeloCliente) {
@@ -178,6 +178,9 @@
                       <td class="col-actions">
                         <button class="btn btn-ghost"
                                 [disabled]="salvando()"
+                                (click)="editarPeca(p)">Editar</button>
+                        <button class="btn btn-ghost"
+                                [disabled]="salvando() || editandoPecaId() === p.id"
                                 (click)="removerPeca(p)">Remover</button>
                       </td>
                     }
@@ -190,7 +193,11 @@
           @if (!somenteLeitura()) {
             <div class="linha-nova">
               <div class="field campo-desc">
-                <label for="pdesc">Nova peça</label>
+                <label for="pdesc">{{ editandoPecaId() ? 'Corrigindo peça' : 'Nova peça' }}
+                  @if (editandoPecaId()) {
+                    <button type="button" class="link-cancelar" [disabled]="salvando()" (click)="cancelarEdicaoPeca()">cancelar</button>
+                  }
+                </label>
                 <input id="pdesc" class="input" maxlength="200" [disabled]="salvando()"
                        [class.is-invalid]="pErro() && !pDescricao().trim()"
                        [ngModel]="pDescricao()"
@@ -214,9 +221,12 @@
                        (ngModelChange)="pValor.set($event); pErro.set(null)"
                        placeholder="74,28">
               </div>
-              <button class="btn btn-secondary btn-add"
+              <button class="btn btn-add"
+                      [class.btn-primary]="editandoPecaId() !== null"
+                      [class.btn-secondary]="editandoPecaId() === null"
                       [disabled]="salvando()"
-                      (click)="adicionarPeca()">Adicionar</button>
+                      (click)="adicionarPeca()">{{ editandoPecaId() ? 'Salvar alteração' : 'Adicionar' }}</button>
+
             </div>
 
             <label class="radio" style="margin-top:2px">
@@ -253,7 +263,7 @@
               </thead>
               <tbody>
                 @for (s of servicos(); track s.id) {
-                  <tr>
+                  <tr [class.linha-editando]="editandoServicoId() === s.id">
                     <td>{{ s.descricao }}</td>
                     <td class="col-right">
                       {{ s.valor | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
@@ -262,6 +272,9 @@
                       <td class="col-actions">
                         <button class="btn btn-ghost"
                                 [disabled]="salvando()"
+                                (click)="editarServico(s)">Editar</button>
+                        <button class="btn btn-ghost"
+                                [disabled]="salvando() || editandoServicoId() === s.id"
                                 (click)="removerServico(s)">Remover</button>
                       </td>
                     }
@@ -274,7 +287,11 @@
           @if (!somenteLeitura()) {
             <div class="linha-nova">
               <div class="field campo-desc">
-                <label for="sdesc">Novo serviço</label>
+                <label for="sdesc">{{ editandoServicoId() ? 'Corrigindo serviço' : 'Novo serviço' }}
+                  @if (editandoServicoId()) {
+                    <button type="button" class="link-cancelar" [disabled]="salvando()" (click)="cancelarEdicaoServico()">cancelar</button>
+                  }
+                </label>
                 <input id="sdesc" class="input" maxlength="200" [disabled]="salvando()"
                        [class.is-invalid]="sErro() && !sDescricao().trim()"
                        [ngModel]="sDescricao()"
@@ -289,9 +306,12 @@
                        (ngModelChange)="sValor.set($event); sErro.set(null)"
                        placeholder="200,00">
               </div>
-              <button class="btn btn-secondary btn-add"
+              <button class="btn btn-add"
+                      [class.btn-primary]="editandoServicoId() !== null"
+                      [class.btn-secondary]="editandoServicoId() === null"
                       [disabled]="salvando()"
-                      (click)="adicionarServico()">Adicionar</button>
+                      (click)="adicionarServico()">{{ editandoServicoId() ? 'Salvar alteração' : 'Adicionar' }}</button>
+
             </div>
 
             @if (sErro()) {

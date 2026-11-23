@@ -164,6 +164,50 @@ public class OrdemServicoService {
         return salvo;
     }
 
+    /** Corrige uma peça já lançada (descrição, quantidade, valor, pago pelo cliente). */
+    @Transactional
+    public ItemPeca atualizarPeca(Long osId, Long itemId, ItemPecaRequest dados) {
+        ItemPeca item = itemPecaRepo.findById(itemId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException(
+                        "Peça não encontrada: id=" + itemId));
+        if (!item.getOrdemServico().getId().equals(osId)) {
+            throw new RegraDeNegocioException("Item não pertence a esta OS");
+        }
+        OrdemServico os = item.getOrdemServico();
+        garantirEditavel(os);
+
+        item.setDescricao(dados.descricao().trim());
+        item.setQuantidade(dados.quantidade() != null ? dados.quantidade() : BigDecimal.ONE);
+        item.setValorUnitario(dados.valorUnitario());
+        item.setPagoPeloCliente(Boolean.TRUE.equals(dados.pagoPeloCliente()));
+
+        entityManager.flush();
+        // valor_total (coluna gerada) e os totais da OS (trigger) vêm do banco.
+        entityManager.refresh(item);
+        entityManager.refresh(os);
+        return item;
+    }
+
+    /** Corrige um serviço (mão de obra) já lançado. */
+    @Transactional
+    public ItemServico atualizarServico(Long osId, Long itemId, ItemServicoRequest dados) {
+        ItemServico item = itemServicoRepo.findById(itemId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException(
+                        "Serviço não encontrado: id=" + itemId));
+        if (!item.getOrdemServico().getId().equals(osId)) {
+            throw new RegraDeNegocioException("Item não pertence a esta OS");
+        }
+        OrdemServico os = item.getOrdemServico();
+        garantirEditavel(os);
+
+        item.setDescricao(dados.descricao().trim());
+        item.setValor(dados.valor());
+
+        entityManager.flush();
+        entityManager.refresh(os);
+        return item;
+    }
+
     @Transactional
     public void removerPeca(Long osId, Long itemId) {
         ItemPeca item = itemPecaRepo.findById(itemId)

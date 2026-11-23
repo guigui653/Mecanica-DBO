@@ -116,6 +116,17 @@ public class OrdemServicoController {
                 .body(consulta.buscarCompleta(id));
     }
 
+    @PutMapping("/{osId}/pecas/{itemId}")
+    @Operation(summary = "Corrigir peça da OS")
+    public OrdemServicoDTO atualizarPeca(
+            @PathVariable Long osId,
+            @PathVariable Long itemId,
+            @RequestBody @Valid ItemPecaRequest item
+    ) {
+        service.atualizarPeca(osId, itemId, item);
+        return consulta.buscarCompleta(osId);
+    }
+
     @DeleteMapping("/{osId}/pecas/{itemId}")
     @Operation(summary = "Remover peça da OS")
     public OrdemServicoDTO removerPeca(
@@ -135,6 +146,17 @@ public class OrdemServicoController {
         service.adicionarServico(id, item);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(consulta.buscarCompleta(id));
+    }
+
+    @PutMapping("/{osId}/servicos/{itemId}")
+    @Operation(summary = "Corrigir serviço da OS")
+    public OrdemServicoDTO atualizarServico(
+            @PathVariable Long osId,
+            @PathVariable Long itemId,
+            @RequestBody @Valid ItemServicoRequest item
+    ) {
+        service.atualizarServico(osId, itemId, item);
+        return consulta.buscarCompleta(osId);
     }
 
     @DeleteMapping("/{osId}/servicos/{itemId}")

@@ -60,6 +60,10 @@ export class DetalheOs implements OnInit {
   pQuantidade = signal('');
   pValor      = signal<number | null>(null);
   pPagoCliente = signal(false);
+  /** Peça sendo corrigida (o formulário de baixo vira "editar"); null = lançando nova. */
+  editandoPecaId = signal<number | null>(null);
+  /** Serviço sendo corrigido; null = lançando novo. */
+  editandoServicoId = signal<number | null>(null);
   pErro       = signal<string | null>(null);
 
   // ── Formulário de novo serviço ────────────────────────────
@@ -262,13 +266,17 @@ export class DetalheOs implements OnInit {
       pagoPeloCliente: this.pPagoCliente()
     };
 
+    const editando = this.editandoPecaId();
     this.salvando.set(true);
-    this.service.adicionarPeca(id, item).subscribe({
+    const pedido = editando
+      ? this.service.atualizarPeca(id, editando, item)
+      : this.service.adicionarPeca(id, item);
+    pedido.subscribe({
       next: os => {
         this.aplicar(os, false);
         this.limparFormPeca();
         this.salvando.set(false);
-        this.notificar('Peça adicionada');
+        this.notificar(editando ? 'Peça corrigida' : 'Peça adicionada');
       },
       error: (e: HttpErrorResponse) => {
         this.salvando.set(false);
@@ -296,7 +304,24 @@ export class DetalheOs implements OnInit {
     });
   }
 
+  /** Leva a peça para o formulário de baixo, para corrigir. */
+  editarPeca(item: ItemPeca): void {
+    if (!item.id || this.salvando() || this.somenteLeitura()) return;
+    this.editandoPecaId.set(item.id);
+    this.pDescricao.set(item.descricao);
+    this.pQuantidade.set(String(item.quantidade ?? 1).replace('.', ','));
+    this.pValor.set(item.valorUnitario);
+    this.pPagoCliente.set(!!item.pagoPeloCliente);
+    this.pErro.set(null);
+    queueMicrotask(() => document.getElementById('pdesc')?.focus());
+  }
+
+  cancelarEdicaoPeca(): void {
+    this.limparFormPeca();
+  }
+
   private limparFormPeca(): void {
+    this.editandoPecaId.set(null);
     this.pDescricao.set('');
     this.pQuantidade.set('');
     this.pValor.set(null);
@@ -327,20 +352,43 @@ export class DetalheOs implements OnInit {
 
     const item: ItemServico = { descricao: desc, valor: this.sValor()! };
 
+    const editando = this.editandoServicoId();
     this.salvando.set(true);
-    this.service.adicionarServico(id, item).subscribe({
+    const pedido = editando
+      ? this.service.atualizarServico(id, editando, item)
+      : this.service.adicionarServico(id, item);
+    pedido.subscribe({
       next: os => {
         this.aplicar(os, false);
-        this.sDescricao.set('');
-        this.sValor.set(null);
+        this.limparFormServico();
         this.salvando.set(false);
-        this.notificar('Serviço adicionado');
+        this.notificar(editando ? 'Serviço corrigido' : 'Serviço adicionado');
       },
       error: (e: HttpErrorResponse) => {
         this.salvando.set(false);
         this.notificar(mensagemDoErro(e), true);
       }
     });
+  }
+
+  editarServico(item: ItemServico): void {
+    if (!item.id || this.salvando() || this.somenteLeitura()) return;
+    this.editandoServicoId.set(item.id);
+    this.sDescricao.set(item.descricao);
+    this.sValor.set(item.valor);
+    this.sErro.set(null);
+    queueMicrotask(() => document.getElementById('sdesc')?.focus());
+  }
+
+  cancelarEdicaoServico(): void {
+    this.limparFormServico();
+  }
+
+  private limparFormServico(): void {
+    this.editandoServicoId.set(null);
+    this.sDescricao.set('');
+    this.sValor.set(null);
+    this.sErro.set(null);
   }
 
   removerServico(item: ItemServico): void {

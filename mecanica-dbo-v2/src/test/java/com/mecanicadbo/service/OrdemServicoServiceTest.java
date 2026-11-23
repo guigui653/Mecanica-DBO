@@ -85,6 +85,23 @@ class OrdemServicoServiceTest {
     }
 
     @Test
+    void naoEditaItemDeOsEntregueNemDeOutraOs() {
+        var item = new com.mecanicadbo.model.ItemPeca();
+        item.setId(9L);
+        item.setOrdemServico(os);
+        when(itemPecaRepo.findById(9L)).thenReturn(Optional.of(item));
+        ItemPecaRequest dados = new ItemPecaRequest("Filtro", BigDecimal.ONE, new BigDecimal("50"), false);
+
+        assertThatThrownBy(() -> service.atualizarPeca(4L, 9L, dados))
+                .isInstanceOf(RegraDeNegocioException.class).hasMessageContaining("não pertence");
+
+        os.setStatus(StatusOs.ENTREGUE);
+        assertThatThrownBy(() -> service.atualizarPeca(3L, 9L, dados))
+                .isInstanceOf(RegraDeNegocioException.class).hasMessageContaining("entregue");
+        assertThat(item.getDescricao()).isNull();
+    }
+
+    @Test
     void soApagaOsEntregue() {
         assertThatThrownBy(() -> service.excluir(3L)).isInstanceOf(RegraDeNegocioException.class);
         verify(osRepo, never()).delete(any());
