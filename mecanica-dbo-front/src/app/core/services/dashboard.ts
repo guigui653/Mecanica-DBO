@@ -2,7 +2,15 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Cliente } from '../../shared/models/cliente.model';
-import { OrdemServico } from '../../shared/models/ordem-servico.model';
+import { OrdemServico, StatusOs } from '../../shared/models/ordem-servico.model';
+
+/** Um mês do gráfico de faturamento. */
+export interface FaturamentoMes {
+  ano: number;
+  /** 1 a 12 */
+  mes: number;
+  total: number;
+}
 
 /** Espelha o DashboardResumoDTO do backend: já vem contado pelo banco. */
 export interface DashboardResumo {
@@ -20,6 +28,14 @@ export interface DashboardResumo {
   prontas: OrdemServico[];
   /** Clientes cadastrados no mês corrente, mais recentes primeiro. */
   clientesDoMes: Cliente[];
+  /** Faturamento dos últimos 6 meses, do mais antigo ao atual. */
+  faturamentoMensal: FaturamentoMes[];
+  /** Quantas OS existem em cada situação. */
+  osPorStatus: Record<StatusOs, number>;
+  /** As 5 OS mais recentes. */
+  ultimasOs: OrdemServico[];
+  /** Veículos ativos. */
+  totalVeiculos: number;
 }
 
 @Injectable({ providedIn: 'root' })

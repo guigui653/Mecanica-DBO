@@ -17,6 +17,10 @@ import java.util.Optional;
  */
 public interface VeiculoRepository extends JpaRepository<Veiculo, Long> {
 
+    /** Veículos ativos (painel). */
+    long countByAtivoTrue();
+
+
     @Query("SELECT v FROM Veiculo v JOIN FETCH v.cliente c WHERE v.id = :id")
     Optional<Veiculo> buscarComCliente(@Param("id") Long id);
 

@@ -125,6 +125,15 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
                                             @Param("inicio") LocalDate inicio,
                                             @Param("fim") LocalDate fim);
 
+    /** Últimas OS abertas no sistema (painel), com veículo e cliente. */
+    @Query("""
+        SELECT os FROM OrdemServico os
+        JOIN FETCH os.veiculo v
+        JOIN FETCH v.cliente c
+        ORDER BY os.id DESC
+    """)
+    List<OrdemServico> buscarMaisRecentes(org.springframework.data.domain.Pageable limite);
+
     /** Contadores do dashboard, sem carregar as OS. */
     long countByStatus(StatusOs status);
 

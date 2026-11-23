@@ -95,6 +95,42 @@
         </div>
       </div>
 
+      <!-- GRÁFICO + ORDENS POR STATUS ────────────────────── -->
+      <div class="graficos">
+        <div class="section-card grafico-card">
+          <div class="section-head">
+            <h2 class="section-title">Faturamento · últimos 6 meses</h2>
+          </div>
+          <div class="barras" role="img"
+               [attr.aria-label]="'Faturamento dos últimos 6 meses: ' + barrasFaturamento().map(b => b.rotulo + ' ' + valorCurto(b.total)).join(', ')">
+            @for (b of barrasFaturamento(); track b.rotulo) {
+              <div class="barra" [class.barra-atual]="b.atual">
+                <span class="barra-valor">{{ b.total ? valorCurto(b.total) : '' }}</span>
+                <i [style.height.%]="b.altura"></i>
+                <span class="barra-mes">{{ b.rotulo }}</span>
+              </div>
+            }
+          </div>
+          <p class="grafico-nota">Soma das ordens entregues em cada mês.</p>
+        </div>
+
+        <div class="section-card grafico-card">
+          <div class="section-head">
+            <h2 class="section-title">Ordens por status</h2>
+          </div>
+          <div class="distribuicao">
+            @for (d of distribuicaoStatus(); track d.status) {
+              <div class="dist-linha">
+                <span>{{ d.rotulo }}</span>
+                <div class="dist-trilho"><i [style.width.%]="d.largura" [style.background]="d.cor"></i></div>
+                <b class="tabular">{{ d.qtd }}</b>
+              </div>
+            }
+          </div>
+          <p class="grafico-nota">{{ totalClientes() }} clientes · {{ totalVeiculos() }} veículos cadastrados</p>
+        </div>
+      </div>
+
       <!-- ORDENS EM ANDAMENTO ─────────────────────────────── -->
       @if (patioOrdenado().length > 0) {
         <div class="section-card">
@@ -181,6 +217,40 @@
               }
             </tbody>
           </table>
+        </div>
+      }
+
+      <!-- ÚLTIMAS ORDENS DE SERVIÇO ──────────────────────── -->
+      @if (ultimasOs().length > 0) {
+        <div class="section-card">
+          <div class="section-head">
+            <h2 class="section-title">Últimas ordens de serviço</h2>
+            <a routerLink="/ordens" class="link-ver-todas">Ver todas →</a>
+          </div>
+          <div class="table-scroll"><table class="table">
+            <thead>
+              <tr>
+                <th>Nº</th>
+                <th>CLIENTE</th>
+                <th>VEÍCULO</th>
+                <th>ENTRADA</th>
+                <th>SITUAÇÃO</th>
+                <th class="col-right">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (os of ultimasOs(); track os.id) {
+                <tr class="clickable" [routerLink]="['/ordens', os.id]">
+                  <td class="os-num">#{{ os.id }}</td>
+                  <td>{{ os.veiculo?.cliente?.nome || '—' }}</td>
+                  <td>{{ os.veiculo?.modelo }} · {{ os.veiculo?.placa }}</td>
+                  <td class="text-faint text-sm">{{ os.dataEntrada | date:'dd/MM/yyyy':'':'pt-BR' }}</td>
+                  <td><span class="tag" [ngClass]="tagStatus(os)">{{ labelStatus(os) }}</span></td>
+                  <td class="col-right tabular">{{ os.totalGeral | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table></div>
         </div>
       }
 

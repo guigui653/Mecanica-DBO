@@ -83,6 +83,25 @@ class BancoIntegracaoTest {
     }
 
     @Test
+    void editarPecaEServicoRecalculaOsTotais() {
+        Long osId = abrirOs("Integração Editar Itens", placaNova());
+        ordens.adicionarPeca(osId, new ItemPecaRequest("Filtro", new BigDecimal("2"), new BigDecimal("10.00"), false));
+        ordens.adicionarServico(osId, new ItemServicoRequest("Mão de obra", new BigDecimal("30.00")));
+        OrdemServicoDTO antes = consulta.buscarCompleta(osId);
+        Long pecaId = antes.itensPeca().get(0).id();
+        Long servId = antes.itensServico().get(0).id();
+
+        ordens.atualizarPeca(osId, pecaId, new ItemPecaRequest("Filtro de óleo", new BigDecimal("3"), new BigDecimal("12.50"), false));
+        ordens.atualizarServico(osId, servId, new ItemServicoRequest("Troca de óleo", new BigDecimal("50.00")));
+
+        OrdemServicoDTO os = consulta.buscarCompleta(osId);
+        assertThat(os.itensPeca().get(0).descricao()).isEqualTo("Filtro de óleo");
+        assertThat(os.itensPeca().get(0).valorTotal()).isEqualByComparingTo("37.50");
+        assertThat(os.itensServico().get(0).descricao()).isEqualTo("Troca de óleo");
+        assertThat(os.totalGeral()).isEqualByComparingTo("87.50");   // 37,50 + 50,00
+    }
+
+    @Test
     void atendimentoComPlacaRepetidaNaoDeixaClienteOrfao() {
         String placa = placaNova();
         abrirOs("Integração Dono Original", placa);
@@ -161,5 +180,15 @@ class BancoIntegracaoTest {
         assertThat(r.noPatio()).isGreaterThanOrEqualTo(1);
         assertThat(r.patio()).extracting(OrdemServicoDTO::id).contains(osId);
         assertThat(r.faturamentoMes()).isNotNull();
+
+        assertThat(r.faturamentoMensal()).hasSize(6);
+        var mesAtual = r.faturamentoMensal().get(5);
+        assertThat(mesAtual.ano()).isEqualTo(LocalDate.now().getYear());
+        assertThat(mesAtual.mes()).isEqualTo(LocalDate.now().getMonthValue());
+        assertThat(mesAtual.total()).isEqualByComparingTo(r.faturamentoMes());
+        assertThat(r.osPorStatus()).containsKeys(com.mecanicadbo.model.StatusOs.values());
+        assertThat(r.osPorStatus().get(com.mecanicadbo.model.StatusOs.ABERTA)).isGreaterThanOrEqualTo(1);
+        assertThat(r.ultimasOs()).hasSizeLessThanOrEqualTo(5).extracting(OrdemServicoDTO::id).first().isEqualTo(osId);
+        assertThat(r.totalVeiculos()).isGreaterThanOrEqualTo(1);
     }
 }
