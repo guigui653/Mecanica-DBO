@@ -63,14 +63,24 @@
             @if (o.veiculo?.anoFabricacao) { · {{ o.veiculo?.anoFabricacao }} }
           </div>
         </div>
+        @if (o.veiculo?.id) {
+          <button type="button" class="btn btn-ghost btn-editar-faixa" [disabled]="editandoCadastro()"
+                  (click)="editarVeiculo()" title="Corrigir placa, marca, modelo, cor…">Editar</button>
+        }
       </div>
 
       <div class="divisor-vertical"></div>
 
-      <div>
-        <div class="metric-label">Proprietário</div>
-        <div class="cliente-nome">{{ o.veiculo?.cliente?.nome ?? '—' }}</div>
-        <div class="text-sm text-faint">{{ o.veiculo?.cliente?.telefone1 }}</div>
+      <div class="proprietario-bloco">
+        <div>
+          <div class="metric-label">Proprietário</div>
+          <div class="cliente-nome">{{ o.veiculo?.cliente?.nome ?? '—' }}</div>
+          <div class="text-sm text-faint">{{ o.veiculo?.cliente?.telefone1 }}</div>
+        </div>
+        @if (o.veiculo?.cliente?.id) {
+          <button type="button" class="btn btn-ghost btn-editar-faixa" [disabled]="editandoCadastro()"
+                  (click)="editarCliente()" title="Corrigir nome, telefone, CPF/CNPJ…">Editar</button>
+        }
       </div>
     </div>
 

@@ -7,6 +7,11 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { OrdemServicoService } from '../../../core/services/ordem-servico';
+import { ClienteService } from '../../../core/services/cliente';
+import { VeiculoService } from '../../../core/services/veiculo';
+import { MatDialog } from '@angular/material/dialog';
+import { FormCliente } from '../../clientes/form-cliente/form-cliente';
+import { FormVeiculo } from '../../veiculos/form-veiculo/form-veiculo';
 import { PlacaPipe } from '../../../shared/pipes/placa.pipe';
 import { mensagemDoErro } from '../../../core/utils/mensagem-erro';
 import {
@@ -33,6 +38,12 @@ export class DetalheOs implements OnInit {
   private router  = inject(Router);
   private service = inject(OrdemServicoService);
   private destroyRef = inject(DestroyRef);
+  private clienteService = inject(ClienteService);
+  private veiculoService = inject(VeiculoService);
+  private dialog = inject(MatDialog);
+
+  /** Abrindo a janela de edição do cliente ou do veículo. */
+  editandoCadastro = signal(false);
   private idSolicitado: number | null = null;
   private carga?: Subscription;
 
@@ -159,6 +170,65 @@ export class DetalheOs implements OnInit {
 
   recarregar(): void {
     if (this.idSolicitado) this.carregar(this.idSolicitado);
+  }
+
+  // ── Corrigir cadastro do proprietário e do veículo ───────
+  //
+  // Busca o cadastro completo (a OS só traz um resumo; abrir o formulário com o
+  // resumo apagaria telefone 2 e e-mail ao salvar). Depois de salvar, atualiza
+  // só o quadro do veículo/proprietário: o que estiver sendo digitado na OS
+  // (diagnóstico, km...) não se perde.
+
+  editarCliente(): void {
+    const id = this.os()?.veiculo?.cliente?.id;
+    if (!id || this.editandoCadastro()) return;
+    this.editandoCadastro.set(true);
+    this.clienteService.buscarPorId(id).subscribe({
+      next: cliente => {
+        this.dialog.open(FormCliente, { data: cliente, disableClose: true })
+          .afterClosed().subscribe(salvou => {
+            this.editandoCadastro.set(false);
+            if (salvou) this.atualizarQuadroDoVeiculo('Cadastro do cliente atualizado');
+          });
+      },
+      error: e => {
+        this.editandoCadastro.set(false);
+        this.notificar(mensagemDoErro(e), true);
+      }
+    });
+  }
+
+  editarVeiculo(): void {
+    const v = this.os()?.veiculo;
+    if (!v?.id || this.editandoCadastro()) return;
+    this.editandoCadastro.set(true);
+    this.veiculoService.buscarPorId(v.id).subscribe({
+      next: veiculo => {
+        this.dialog.open(FormVeiculo, {
+          width: '640px', maxWidth: '95vw', disableClose: true,
+          data: { veiculo, clienteId: v.cliente?.id }
+        }).afterClosed().subscribe(salvo => {
+          this.editandoCadastro.set(false);
+          if (salvo) this.atualizarQuadroDoVeiculo('Dados do veículo atualizados');
+        });
+      },
+      error: e => {
+        this.editandoCadastro.set(false);
+        this.notificar(mensagemDoErro(e), true);
+      }
+    });
+  }
+
+  private atualizarQuadroDoVeiculo(mensagem: string): void {
+    const id = this.os()?.id;
+    if (!id) return;
+    this.service.buscarPorId(id).subscribe({
+      next: os => {
+        this.os.update(atual => atual ? { ...atual, veiculo: os.veiculo } : os);
+        this.notificar(mensagem);
+      },
+      error: e => this.notificar(mensagemDoErro(e), true)
+    });
   }
 
   // ── Salvar dados da OS ────────────────────────────────────

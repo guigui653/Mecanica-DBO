@@ -209,3 +209,14 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Botões "Editar" do quadro do veículo e do proprietário */
+.proprietario-bloco {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.btn-editar-faixa {
+  align-self: center;
+  border: 1px solid var(--color-divider);
+}
